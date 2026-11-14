@@ -2077,13 +2077,14 @@ ui <- fluidPage(
         .g18-panel .g18-detail-copy small { display:block; color:#768b9d; line-height:1.6; font-size:12px; margin-top:3px; }
         .g18-panel .g18-detail-action { font-size:12px; color:#527a99; font-weight:750; background:white; border-radius:7px; padding:7px 9px; white-space:nowrap; }
         .g18-panel .g18-detail-content { padding:16px 18px 21px; }
-        /* v19：全體比較圖及五項回測摘要 */
+        /* v20：全體 GARCH 單色排名；季度回測樣式保持 v19。 */
         .g19-all-garch .g19-all-chart { overflow-y:auto; max-height:880px; border:1px solid #e0e9f0; border-radius:10px; padding:7px 6px; background:#fff; }
+        .g20-all-garch .g18-stat-grid { grid-template-columns:repeat(2,minmax(0,1fr)); max-width:740px; }
         .g18-panel .g19-bt-stat-grid { grid-template-columns:repeat(5,minmax(0,1fr)); }
         .g19-all-garch .g18-stat-value { font-size:19px; }
         @media(max-width:1120px) { .g18-panel .g19-bt-stat-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
         @media(max-width:950px) { .g18-panel .g18-stat-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-        @media(max-width:550px) { .g18-panel .g18-stat-grid { grid-template-columns:1fr; } .g18-panel .g19-bt-stat-grid { grid-template-columns:1fr; } .g18-panel .g18-stat-value { font-size:18px; } .g18-panel .g18-detail-copy small { font-size:11px; } }
+        @media(max-width:550px) { .g18-panel .g18-stat-grid { grid-template-columns:1fr; } .g20-all-garch .g18-stat-grid { grid-template-columns:1fr; } .g18-panel .g19-bt-stat-grid { grid-template-columns:1fr; } .g18-panel .g18-stat-value { font-size:18px; } .g18-panel .g18-detail-copy small { font-size:11px; } }
         .home-small-note { color:#7b8794; font-size:12px; margin:13px 0 0; }
         .home-legacy { margin-top:4px; }
         @media(max-width:900px) { .home-compare-grid { grid-template-columns:1fr; } .home-center { order:3; } .home-heading { flex-wrap:wrap; } .home-date { white-space:normal; } }
@@ -2633,20 +2634,20 @@ ui <- fluidPage(
           ),
 
           # --------------------------------------------------
-          # 3. v19 全體 GARCH：全部可估計股票直接比較預測與歷史波動
+          # 3. v20 全體 GARCH：單色預測波動排名，細節於下方展開
           # --------------------------------------------------
           tabPanel(
             "GARCH 診斷：全體",
-            div(class = "g18-panel g19-all-garch",
-              h3("0050 成分股｜整體波動分析"),
-              p(class = "g18-intro", "一次比較所有可估計股票的未來一季預測年化波動與近一年歷史年化波動，不需先篩選高低類別。"),
+            div(class = "g18-panel g19-all-garch g20-all-garch",
+              h3("0050 成分股｜未來波動預測"),
+              p(class = "g18-intro", "哪些股票未來的價格波動可能比較劇烈？利用 GARCH 模型比較未來 63 個交易日的預測年化波動。"),
               actionButton("g10_run_all", "執行全體 GARCH 估計", class = "btn-primary"),
               p(class = "g18-hint", "首次使用需執行估計；切換頁籤不會重算。估計期間沿用單檔 GARCH 的設定。"),
               uiOutput("g18_g_summary"),
-              h4("全部股票｜未來預測與近一年歷史波動"),
-              p(class = "g18-hint", "藍色：未來 63 日整體預測年化波動；米色：近一年實現年化波動。越高表示預期價格起伏越大，不代表股票一定下跌。"),
+              h4("全體股票｜預測年化波動排名"),
+              p(class = "g18-hint", "每檔只顯示一根藍色長條，依未來 63 日預測年化波動由高至低排列；數值越高，代表模型預期價格起伏幅度越大，並非股價漲跌方向。"),
               uiOutput("g18_g_chart_box"),
-              p(class = "g18-hint", "圖表依預測波動由高至低排列；只納入兩種波動皆有有效數值的股票。個股預測波動的平均值不等於 0010 組合波動。"),
+              p(class = "g18-hint", "圖表顯示所有有效預測股票；近一年歷史波動、波動比值與模型參數仍可在下方展開查看。個股波動不等於 0010 整體組合波動。"),
               tags$details(class = "g18-detail",
                 tags$summary(
                   span(class = "g18-detail-icon", "01"),
@@ -11544,13 +11545,12 @@ server <- function(input, output, session) {
     g10_store(tbl)
   })
   
-  # v19：直接展示全部可用成分股的預測／歷史年化波動。
-  # 不再按比值分類；不重新估計，僅讀取 g10_store() 快取。
+  # v20：全體預測波動排名，只需要有效預測值；歷史波動不影響股票納入。
+  # 共用 v19 的既有快取與輸出 ID，避免影響其他頁面。
   g19_g_valid <- shiny::reactive({
     g <- g10_store()
     shiny::req(!is.null(g), is.data.frame(g))
-    valid <- is.finite(g$forecast_vol) & g$forecast_vol > 0 &
-      is.finite(g$real_vol) & g$real_vol > 0
+    valid <- is.finite(g$forecast_vol) & g$forecast_vol > 0
     g[valid, , drop = FALSE]
   })
 
@@ -11568,20 +11568,18 @@ server <- function(input, output, session) {
     }
     x <- g19_g_valid()
     tags$div(class = "g18-stat-grid",
-      g18_stat_box("可比較股票", nrow(x), paste0("共估計 ", nrow(g), " 檔")),
-      g18_stat_box("無有效波動比較", nrow(g) - nrow(x), "包含資料不足或估計未成功"),
-      g18_stat_box("平均預測年化波動", if (nrow(x)) sprintf("%.1f%%", 100 * mean(x$forecast_vol)) else "—", "各檔有效預測波動的算術平均"),
-      g18_stat_box("平均近一年歷史波動", if (nrow(x)) sprintf("%.1f%%", 100 * mean(x$real_vol)) else "—", "同一批可比較股票的算術平均")
+      g18_stat_box("有效預測股票", paste0(nrow(x), " 檔"), paste0("全體估計產生 ", nrow(g), " 筆結果；有效預測值列入排名")),
+      g18_stat_box("預測年化波動中位數", if (nrow(x)) sprintf("%.1f%%", 100 * stats::median(x$forecast_vol)) else "—", "所有有效預測股票的中位數，非 0010 組合波動")
     )
   })
 
   output$g18_g_chart_box <- shiny::renderUI({
     g <- g10_store()
     if (is.null(g) || !is.data.frame(g)) {
-      return(tags$div(class = "g18-placeholder", "估計完成後將直接顯示全部有效股票的雙色波動長條圖。"))
+      return(tags$div(class = "g18-placeholder", "估計完成後將顯示全部有效股票的預測波動單色排名圖。"))
     }
     x <- g19_g_valid()
-    if (!nrow(x)) return(tags$div(class = "g18-placeholder", "目前沒有可同時比較預測與歷史波動的股票。"))
+    if (!nrow(x)) return(tags$div(class = "g18-placeholder", "目前沒有有效的 GARCH 預測波動數值，請檢查估計結果。"))
     tags$div(class = "g19-all-chart",
       plotOutput("g19_all_vol_bars", height = paste0(max(450L, nrow(x) * 32L), "px")))
   })
@@ -11610,20 +11608,18 @@ server <- function(input, output, session) {
     shiny::req(nrow(x) > 0)
     x <- x[order(x$forecast_vol, decreasing = TRUE), , drop = FALSE]
     labs <- paste0(get_stock_name(x$symbol), "（", x$symbol, "）")
-    d <- rbind(
-      data.frame(label = labs, value = as.numeric(x$forecast_vol), series = "未來預測波動"),
-      data.frame(label = labs, value = as.numeric(x$real_vol), series = "近一年歷史波動")
-    )
-    d$label <- factor(d$label, levels = rev(labs))
-    d$series <- factor(d$series, levels = c("未來預測波動", "近一年歷史波動"))
-    ggplot2::ggplot(d, ggplot2::aes(x = label, y = value, fill = series)) +
-      ggplot2::geom_col(position = ggplot2::position_dodge(width = .78), width = .7) +
+    d <- data.frame(label = factor(labs, levels = rev(labs)),
+                    value = as.numeric(x$forecast_vol), stringsAsFactors = FALSE)
+    ggplot2::ggplot(d, ggplot2::aes(x = label, y = value)) +
+      ggplot2::geom_col(fill = "#6d96ba", width = .7) +
       ggplot2::coord_flip() +
-      ggplot2::scale_fill_manual(values = c("未來預測波動" = "#6d96ba", "近一年歷史波動" = "#cbb29b")) +
-      ggplot2::scale_y_continuous(labels = function(z) sprintf("%.0f%%", 100 * z), expand = ggplot2::expansion(mult = c(0, .06))) +
-      ggplot2::labs(x = NULL, y = "年化波動率", fill = NULL) +
+      ggplot2::scale_y_continuous(labels = function(z) sprintf("%.0f%%", 100 * z),
+                                  expand = ggplot2::expansion(mult = c(0, .20))) +
+      ggplot2::geom_text(ggplot2::aes(label = sprintf("%.1f%%", 100 * value)),
+                         hjust = -0.12, size = 3.1, colour = "#3e607b") +
+      ggplot2::labs(x = NULL, y = "預測年化波動率") +
       ggplot2::theme_minimal(base_size = 12) +
-      ggplot2::theme(legend.position = "top", axis.text.y = ggplot2::element_text(size = 9),
+      ggplot2::theme(axis.text.y = ggplot2::element_text(size = 9),
                      panel.grid.major.y = ggplot2::element_blank())
   })
 
