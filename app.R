@@ -1698,9 +1698,16 @@ ui <- fluidPage(
 
         .dashboard-footer { text-align:center; color:#8b99a8; font-size:13px; padding-top:22px; }
 
+        /* v8：首頁視覺微調，所有其他分頁樣式維持原樣 */
+        .v8-up { color:#d94b4b !important; font-weight:800; }
+        .v8-down { color:#238a58 !important; font-weight:800; }
+        .v8-flat { color:#5e7185 !important; }
+        .home-data-foot p { margin-bottom:5px; }
+        .home-intro .home-side { min-height:385px; }
+        @media (max-width:700px) { .home-intro .home-side { min-height:0; } }
         /* v7 首頁：左右對照，只影響總覽新元件 */
         .home-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
-        .home-heading h2 { margin:0; }
+        .home-heading h2 { margin:0; font-size:clamp(38px,5vw,58px); line-height:1.1; letter-spacing:1px; }
         .home-date { color:#60758a; font-size:13px; white-space:nowrap; padding-top:6px; }
         .home-qualifier { background:#f6f8fa; padding:12px 15px; border-radius:9px; font-size:13px; line-height:1.7; color:#556779; margin:16px 0 8px; }
         .home-window { font-size:13px; color:#60758a; margin-bottom:14px; }
@@ -1709,7 +1716,7 @@ ui <- fluidPage(
         .home-side-0010 { background:#eef5fc; border-color:#d6e5f3; }
         .home-side-0050 { background:#fff5f1; border-color:#f1e0d9; }
         .home-center { background:#f8fafc; text-align:center; padding-left:11px; padding-right:11px; }
-        .home-side h2 { font-size:26px; font-weight:800; text-align:center; margin:0 0 3px; }
+        .home-side h2 { font-size:34px; font-weight:800; text-align:center; margin:0 0 3px; }
         .home-side-subtitle { text-align:center; color:#708092; font-size:12px; min-height:21px; margin:0 0 12px; }
         .home-stat { border-top:1px solid rgba(130,148,168,.20); padding:9px 0; display:flex; justify-content:space-between; align-items:center; gap:8px; }
         .home-stat span { font-size:13px; color:#677789; }
@@ -1760,387 +1767,90 @@ ui <- fluidPage(
       "總覽",
       div(class = "section-box home-intro",
           div(class = "home-heading",
-              div(h2("0010 vs 0050"),
-                  p(class = "page-description", "自訂十檔投資組合與元大台灣50｜同期間績效與風險比較")),
-              div(class = "home-date", "最新資料：", textOutput("v7_home_date", inline = TRUE))),
-          div(class = "home-qualifier",
-              strong("比較口徑："),
-              "本區為『目前選出的 0010 名單及權重』自上次季末起回溯試算的本期持有表現；",
-              "非當時已確立持股的正式策略回測，也未扣交易成本。",
-              "完整的 T+1、含成本逐季回測請至「0010組合 → 季度再平衡回測」。"),
-          div(class = "home-window", "比較區間：", textOutput("v7_home_period", inline = TRUE)),
+              div(h2("0010 VS 0050"),
+                  p(class = "page-description", "自訂十檔組合與元大台灣50｜績效與風險對照")),
+              div(class = "home-date", "資料更新至：", textOutput("v7_home_date", inline = TRUE))),
+          div(class = "home-window", "共同比較期間：", textOutput("v7_home_period", inline = TRUE)),
           div(class = "home-compare-grid",
               div(class = "home-side home-side-0010",
                   h2("0010"), p("自訂十檔投資組合", class = "home-side-subtitle"),
-                  div(class = "home-stat", span("本期累積報酬"), strong(textOutput("v7_10_ret", inline = TRUE))),
-                  div(class = "home-stat", span("年化報酬"), strong(textOutput("v7_10_ann", inline = TRUE))),
-                  div(class = "home-stat", span("最大回撤"), strong(textOutput("v7_10_mdd", inline = TRUE))),
-                  div(class = "home-stat", span("年化波動"), strong(textOutput("v7_10_vol", inline = TRUE))),
-                  div(class = "home-stat", span("Sharpe 比率"), strong(textOutput("v7_10_sharpe", inline = TRUE)))),
+                  div(class = "home-stat", span("本期累積報酬"), strong(uiOutput("v7_10_ret", inline = TRUE))),
+                  div(class = "home-stat", span("年化報酬"), strong(uiOutput("v7_10_ann", inline = TRUE))),
+                  div(class = "home-stat", span("最大回撤"), strong(uiOutput("v7_10_mdd", inline = TRUE))),
+                  div(class = "home-stat", span("年化波動"), strong(uiOutput("v7_10_vol", inline = TRUE))),
+                  div(class = "home-stat", span("Sharpe 比率"), strong(uiOutput("v7_10_sharpe", inline = TRUE)))),
               div(class = "home-side home-center",
                   h2("VS"), p("0010 − 0050", class = "home-side-subtitle"),
-                  div(class = "home-stat", span("超額報酬"), strong(textOutput("v7_diff_ret", inline = TRUE))),
-                  div(class = "home-stat", span("年化報酬差"), strong(textOutput("v7_diff_ann", inline = TRUE))),
-                  div(class = "home-stat", span("最大回撤差"), strong(textOutput("v7_diff_mdd", inline = TRUE))),
-                  div(class = "home-stat", span("年化波動差"), strong(textOutput("v7_diff_vol", inline = TRUE))),
-                  div(class = "home-stat", span("Sharpe 差"), strong(textOutput("v7_diff_sharpe", inline = TRUE)))),
+                  div(class = "home-stat", span("超額報酬"), strong(uiOutput("v7_diff_ret", inline = TRUE))),
+                  div(class = "home-stat", span("年化報酬差"), strong(uiOutput("v7_diff_ann", inline = TRUE))),
+                  div(class = "home-stat", span("最大回撤差"), strong(uiOutput("v7_diff_mdd", inline = TRUE))),
+                  div(class = "home-stat", span("年化波動差"), strong(uiOutput("v7_diff_vol", inline = TRUE))),
+                  div(class = "home-stat", span("Sharpe 差"), strong(uiOutput("v7_diff_sharpe", inline = TRUE)))),
               div(class = "home-side home-side-0050",
                   h2("0050"), p("元大台灣50 ETF", class = "home-side-subtitle"),
-                  div(class = "home-stat", span("本期累積報酬"), strong(textOutput("v7_50_ret", inline = TRUE))),
-                  div(class = "home-stat", span("年化報酬"), strong(textOutput("v7_50_ann", inline = TRUE))),
-                  div(class = "home-stat", span("最大回撤"), strong(textOutput("v7_50_mdd", inline = TRUE))),
-                  div(class = "home-stat", span("年化波動"), strong(textOutput("v7_50_vol", inline = TRUE))),
-                  div(class = "home-stat", span("Sharpe 比率"), strong(textOutput("v7_50_sharpe", inline = TRUE))))
+                  div(class = "home-stat", span("本期累積報酬"), strong(uiOutput("v7_50_ret", inline = TRUE))),
+                  div(class = "home-stat", span("年化報酬"), strong(uiOutput("v7_50_ann", inline = TRUE))),
+                  div(class = "home-stat", span("最大回撤"), strong(uiOutput("v7_50_mdd", inline = TRUE))),
+                  div(class = "home-stat", span("年化波動"), strong(uiOutput("v7_50_vol", inline = TRUE))),
+                  div(class = "home-stat", span("Sharpe 比率"), strong(uiOutput("v7_50_sharpe", inline = TRUE))))
           ),
-          p(class = "home-small-note", "百分比差額以百分點（pp）表示；樣本不足時顯示 —。年化指標基於本期交易日數推算，期間太短時不宜單獨解讀。")
+          p(class = "home-small-note", "漲跌數字：漲紅、跌綠。差額以百分點（pp）表示；風險指標不以正負代表好壞。"),
+          div(class = "home-qualifier",
+              "比較口徑：0010 為目前十檔名單及權重的本期回溯持有試算，非歷史各期實際選股績效；",
+              "未扣交易成本。完整 T+1、含成本回測請見「0010組合 → 季度再平衡回測」。")
       ),
       div(class = "section-box",
-          h2("累積淨值比較"),
-          p(class = "page-description", "本期同起點淨值（起始 = 1.00），顯示目前選股名單的回溯持有試算與 0050；非正式歷史回測曲線。"),
-          plotOutput("v7_home_curve", height = "350px")
-      ),
+          h2("0010 與 0050 累積報酬走勢"),
+          p(class = "page-description", "兩者以共同首日為 0%，比較同一期間累積漲跌；不是直接把 ETF 股價與組合價格相加。"),
+          plotOutput("v7_home_curve", height = "420px")),
       div(class = "section-box",
-          h2("本期持股與比較基準"),
+          h2("日對數報酬率｜0010 與 0050"),
+          p(class = "page-description", "左、右兩圖使用相同日期與 Y 軸範圍，方便比較每日波動幅度；本期 0010 為目前持股權重的回溯試算。"),
           fluidRow(
-            column(7, h3("0010｜本期選出十檔"), tableOutput("v4_home_table"),
-                   p(class = "page-description", "目前名單、分數及波動反比權重。正式回測需按各歷史時點重新選股。")),
-            column(5, h3("0050｜比較基準"),
-                   p("元大台灣50 ETF（0050）作為相同期間的市場基準。"),
-                   p("首頁不臆測 ETF 的實際持股權重；詳細成分與個股分析仍可從其他頁面查看。"),
-                   h4("比較期間"), textOutput("v7_home_period_second"),
-                   h4("最近資料日期"), textOutput("v7_home_date_second"))
-          )
+            column(6, h3("0010｜日對數報酬率"), plotOutput("v8_p10_daily_log", height = "290px")),
+            column(6, h3("0050｜日對數報酬率"), plotOutput("v8_0050_daily_log", height = "290px"))
+          )),
+      div(class = "section-box",
+          h2("0050 近期市場概況"),
+          fluidRow(
+            column(4, div(class = "info-card accent-blue", div(class = "info-card-title", "均線趨勢"), h3(class = "info-card-value", textOutput("market_0050_trend", inline = TRUE)))),
+            column(4, div(class = "info-card accent-purple", div(class = "info-card-title", "14 日 RSI"), h3(class = "info-card-value", textOutput("market_0050_rsi", inline = TRUE)))),
+            column(4, div(class = "info-card accent-amber", div(class = "info-card-title", "近期波動狀態"), h3(class = "info-card-value", textOutput("market_0050_vol_state", inline = TRUE))))
+          ),
+          fluidRow(
+            column(3, div(class = "info-card", div(class = "info-card-title", "0050 調整後價格"), h3(class = "info-card-value", textOutput("market_0050_price", inline = TRUE)))),
+            column(3, div(class = "info-card", div(class = "info-card-title", "0050 最新日對數報酬"), h3(class = "info-card-value", uiOutput("v8_market_log_return", inline = TRUE)))),
+            column(3, div(class = "info-card", div(class = "info-card-title", "年初至今報酬"), h3(class = "info-card-value", uiOutput("v8_market_ytd", inline = TRUE)))),
+            column(3, div(class = "info-card", div(class = "info-card-title", "50 檔漲跌家數"), h3(class = "info-card-value", textOutput("market_breadth", inline = TRUE))))
+          ),
+          tags$details(class = "method-details",
+                       tags$summary("變更市場觀察日期"),
+                       dateInput("market_observation_date", "市場觀察日期", value=data_max_date,
+                                 min=data_min_date, max=data_max_date, format="yyyy-mm-dd", language="zh-TW", weekstart=1)),
+          p(class = "home-small-note", "均線、RSI、波動狀態僅供描述市場，不是買賣訊號。")
       ),
       div(class = "section-box",
-          h2("本期比較摘要"),
-          textOutput("v7_home_result"),
-          p(class = "page-description", "結果僅為統計研究與歷史資料試算，不構成投資建議。")
+          h2("近 30 個交易日成分股漲跌幅"),
+          plotOutput("market_30d_return_ranking", height = "700px")
       ),
-      tags$details(class = "method-details home-legacy",
-                   tags$summary("展開原版首頁：其他行情圖表、完整資料與詳細說明"),
-      # ======================================================
-      # v4 新增：本期 0010 —— 貼在 0050 總覽 的內容之前
-      # ======================================================
-      
-      div(
-        class = "section-box",
-        h2("本期 0010"),
-        p(class = "page-description",
-          "從 50 檔成分股中，以動能 70% ＋ 風險穩定 30% 選出 10 檔，每季更新一次。"),
-
-        div(class = "time-info",
-            strong("本期區間："), textOutput("v6_period", inline = TRUE),
-            "。本期＝上一次季末評分日買進後，持有到最新交易日的結果；每季重新評分一次。"),
-        p(class = "page-description",
-          "這一頁回答三個問題：① 本期選了哪 10 檔？② 這段期間賺賠多少、跟 0050 比如何？③ 最痛的下跌有多深？詳細方法請見「研究方法」。"),
-        
-        fluidRow(
-          column(3, div(class = "info-card",
-                        div(class = "info-card-title", "本期 0010 報酬"),
-                        h3(class = "info-card-value", textOutput("v4_k_ret", inline = TRUE)))),
-          column(3, div(class = "info-card",
-                        div(class = "info-card-title", "本期 0050 報酬"),
-                        h3(class = "info-card-value", textOutput("v4_k_bench", inline = TRUE)))),
-          column(3, div(class = "info-card",
-                        div(class = "info-card-title", "超額報酬（0010 − 0050）"),
-                        h3(class = "info-card-value", textOutput("v4_k_excess", inline = TRUE)))),
-          column(3, div(class = "info-card",
-                        div(class = "info-card-title", "本期 0010 最大回撤"),
-                        h3(class = "info-card-value", textOutput("v4_k_mdd", inline = TRUE))))
-        ),
-        
-        h3("名單"),
-        p("本期持股名單已移至上方精簡表格。"),
-        tags$details(class = "method-details",
-          tags$summary("篩選門檻（哪些股票會被剔除）"),
-          tags$ul(
-            tags$li("有效資料：至少 280 個交易日（新上市或資料不足者剔除）。"),
-            tags$li("風險穩定分：低於 20 分者剔除（相對後段，主要門檻）。"),
-            tags$li("年化波動：超過 90% 剔除（極端值防呆）。"),
-            tags$li("最大回撤：低於 −85% 剔除（極端值防呆）。"),
-            tags$li("單日 CVaR 95%：超過 6% 剔除（尾端風險防呆）。"),
-            tags$li("同一產業：最多 3 檔，避免變成單一產業賭注。")
-          ),
-          p("被剔除的股票與原因，可在本頁最下方「查看 50 檔完整分數與篩選結果」查到。")
-        ),
-        
-        h3("本期回撤"),
-        plotOutput("v4_home_dd", height = "360px"),
-        div(class = "plot-explanation", textOutput("v4_home_dd_text", inline = TRUE)),
-        tags$details(class = "method-details",
-          tags$summary("水下時間是什麼？"),
-          p("水下時間＝投資組合處於「還沒回到先前高點」的時間比例。例如水下時間 60%，代表這段期間有六成的交易日，淨值仍低於當時的歷史高點。"),
-          p("它跟最大回撤一起看才完整：最大回撤講「跌多深」，水下時間講「痛多久」。跌 30% 但三個月就回來，與跌 20% 但兩年才回來，感受差很多。"),
-          p("最長連續水下＝連續沒有回到高點的最長天數，代表最煎熬的那一段。")
-        ),
-        
-        h3("10 檔權重與金額"),
-        tableOutput("v4_home_weight"),
-        p(class = "page-description", textOutput("v4_home_note", inline = TRUE))
+      div(class = "section-box",
+          h2("0010 本期持股與權重"),
+          tableOutput("v4_home_table"),
+          tags$details(class = "method-details",
+                       tags$summary("查看資金分配及選股門檻"),
+                       tableOutput("v4_home_weight"),
+                       p("選股以動能 70%＋風險穩定 30% 評分，並有風險與產業集中限制。")),
+          p(class = "home-small-note", "本頁的選股名單是目前評分結果，並非歷史各季度當時的名單。")
       ),
-      
-      div(
-        class = "section-box",
-        tags$details(
-          tags$summary("查看 50 檔完整分數與篩選結果"),
-          br(),
-          tableOutput("v4_all_table")
-        )
-      ),
-      
-      div(
-        class = "section-box",
-        
-        h2("0050 總覽"),
-        
-        p(
-          class = "page-description",
-          "以 0050 為核心，快速掌握資料狀態、價格走勢、日對數報酬、風險與成分股近期表現。"
-        ),
-        
-        
-        h3("資料狀態"),
-        
-        div(
-          class = "data-status",
-          
-          p(
-            strong("目前最新日期："),
-            textOutput(
-              "global_latest_date",
-              inline = TRUE
-            )
-          ),
-          
-          p(
-            strong("最早日期："),
-            textOutput(
-              "global_earliest_date",
-              inline = TRUE
-            )
-          ),
-          
-          p(
-            strong("股票數量："),
-            textOutput(
-              "global_stock_count",
-              inline = TRUE
-            )
-          ),
-          
-          p(
-            strong("資料筆數："),
-            textOutput(
-              "global_observation_count",
-              inline = TRUE
-            )
-          ),
-          
-          p(
-            strong("檔案更新時間："),
-            textOutput(
-              "global_file_modified",
-              inline = TRUE
-            )
-          )
-        ),
-        
-        h3("市場觀察日期"),
-        
-        dateInput(
-          "market_observation_date",
-          "請選擇日期：",
-          value = data_max_date,
-          min = data_min_date,
-          max = data_max_date,
-          format = "yyyy-mm-dd",
-          language = "zh-TW",
-          weekstart = 1
-        ),
-        
-        h3("0050 與市場概況"),
-        
-        fluidRow(
-          
-          column(
-            3,
-            div(
-              class = "info-card",
-              div(
-                class = "info-card-title",
-                "0050 調整後價格"
-              ),
-              h3(
-                class = "info-card-value",
-                textOutput(
-                  "market_0050_price",
-                  inline = TRUE
-                )
-              )
-            )
-          ),
-          
-          column(
-            3,
-            div(
-              class = "info-card",
-              div(
-                class = "info-card-title",
-                "最近一日日對數報酬率"
-              ),
-              h3(
-                class = "info-card-value",
-                textOutput(
-                  "market_0050_daily_return",
-                  inline = TRUE
-                )
-              )
-            )
-          ),
-          
-          column(
-            3,
-            div(
-              class = "info-card",
-              div(
-                class = "info-card-title",
-                "年初至今報酬"
-              ),
-              h3(
-                class = "info-card-value",
-                textOutput(
-                  "market_ytd_return",
-                  inline = TRUE
-                )
-              )
-            )
-          ),
-          
-          column(
-            3,
-            div(
-              class = "info-card",
-              div(
-                class = "info-card-title",
-                "50 檔漲跌家數"
-              ),
-              h3(
-                class = "info-card-value",
-                textOutput(
-                  "market_breadth",
-                  inline = TRUE
-                )
-              )
-            )
-          )
-        ),
-        
-        h3("0050 統計研究摘要"),
-        
-        fluidRow(
-          column(
-            3,
-            div(
-              class = "info-card accent-blue",
-              div(class = "info-card-title", "0050 成長分數（Growth Score）"),
-              h3(class = "info-card-value", textOutput("market_0050_growth_score", inline = TRUE))
-            )
-          ),
-          column(
-            3,
-            div(
-              class = "info-card accent-amber",
-              div(class = "info-card-title", "0050 風險控制分數（Risk Score）"),
-              h3(class = "info-card-value", textOutput("market_0050_risk_score", inline = TRUE))
-            )
-          ),
-          column(
-            3,
-            div(
-              class = "info-card accent-purple",
-              div(class = "info-card-title", "0050 穩定性分數（Stability Score）"),
-              h3(class = "info-card-value", textOutput("market_0050_stability_score", inline = TRUE))
-            )
-          ),
-          column(
-            3,
-            div(
-              class = "info-card accent-red",
-              div(class = "info-card-title", "0050 最大回撤（Maximum Drawdown）"),
-              h3(class = "info-card-value", textOutput("market_0050_max_drawdown", inline = TRUE))
-            )
-          )
-        ),
-        
-        h3("0050 近期市場狀態"),
-        p(class = "page-description",
-          "以下三項只用來描述 0050 目前的技術狀態，不是買賣訊號：均線趨勢看價格在 20 日與 60 日均線之上的排列；RSI 看近 14 日漲跌動能是否過熱或過冷；近期波動狀態比較近 21 日與近 1 年的波動，看現在是否特別震盪。"),
-        
-        fluidRow(
-          column(4, div(class = "info-card accent-blue", div(class = "info-card-title", "均線趨勢"), h3(class = "info-card-value", textOutput("market_0050_trend", inline = TRUE)))),
-          column(4, div(class = "info-card accent-purple", div(class = "info-card-title", "14 日相對強弱指標（RSI）"), h3(class = "info-card-value", textOutput("market_0050_rsi", inline = TRUE)))),
-          column(4, div(class = "info-card accent-amber", div(class = "info-card-title", "近期波動狀態"), h3(class = "info-card-value", textOutput("market_0050_vol_state", inline = TRUE))))
-        ),
-        
-        
-        hr(),
-        
-        h3("0050 調整後收盤價"),
-        
-        checkboxInput(
-          "market_price_color_by_change",
-          "啟用漲跌著色",
-          value = FALSE
-        ),
-        
-        dateRangeInput(
-          "market_chart_date_range",
-          "圖表時間範圍：",
-          start = data_max_date - 365,
-          end = data_max_date,
-          min = data_min_date,
-          max = data_max_date,
-          format = "yyyy-mm-dd",
-          separator = " 至 "
-        ),
-        
-        plotOutput(
-          "market_0050_price_chart",
-          height = "550px"
-        ),
-        
-        
-        hr(),
-        
-        h3("0050 近一年日對數報酬率"),
-        
-        checkboxInput(
-          "market_return_color_by_change",
-          "啟用漲跌幅著色",
-          value = FALSE
-        ),
-        
-        plotOutput(
-          "market_0050_daily_return_timeseries",
-          height = "500px"
-        ),
-        
-        
-        hr(),
-        
-        h3("近 30 個交易日成分股漲跌幅"),
-        
-        plotOutput(
-          "market_30d_return_ranking",
-          height = "700px"
-        ),
-        
-        
-      )
+      div(class = "section-box home-data-foot",
+          h3("資料資訊"),
+          p("交易資料更新至：", textOutput("global_latest_date", inline=TRUE),
+            "｜股票數：", textOutput("global_stock_count", inline=TRUE),
+            "｜資料筆數：", textOutput("global_observation_count", inline=TRUE)),
+          p(class = "home-small-note", "統計研究與歷史資料試算，非投資建議。")
       )
     ),
-    
-    
+
     # ========================================================
     # 3. 成長／動能排名
     # ========================================================
@@ -3080,39 +2790,100 @@ server <- function(input, output, session) {
     list(p10 = metric(z$p10), etf = metric(z$etf))
   })
 
-  # 數值顯示：報酬／風險差額採百分點 pp，Sharpe 為純數值。
+  # v8 數字：僅報酬類以漲紅跌綠；波動、回撤、Sharpe 等維持中性色。
+  v8_color_value <- function(x, label, use_color = TRUE) {
+    cls <- if (!use_color || !is.finite(x)) "v8-flat" else
+      if (x > 0) "v8-up" else if (x < 0) "v8-down" else "v8-flat"
+    shiny::span(class=cls, label)
+  }
   for (k in c("ret", "ann", "mdd", "vol", "sharpe")) {
     local({
       key <- k
-      format_metric <- function(v, difference = FALSE) {
+      format_metric <- function(v, difference=FALSE) {
         if (length(v) != 1 || !is.finite(v)) return("—")
         if (key == "sharpe") return(sprintf("%+.2f", v))
         if (difference) return(sprintf("%+.2f pp", v * 100))
         sprintf("%+.2f%%", v * 100)
       }
-      output[[paste0("v7_10_", key)]] <- shiny::renderText({
-        format_metric(v7_home_stats()$p10[[key]])
+      output[[paste0("v7_10_", key)]] <- shiny::renderUI({
+        v <- v7_home_stats()$p10[[key]]
+        v8_color_value(v, format_metric(v), key %in% c("ret", "ann"))
       })
-      output[[paste0("v7_50_", key)]] <- shiny::renderText({
-        format_metric(v7_home_stats()$etf[[key]])
+      output[[paste0("v7_50_", key)]] <- shiny::renderUI({
+        v <- v7_home_stats()$etf[[key]]
+        v8_color_value(v, format_metric(v), key %in% c("ret", "ann"))
       })
-      output[[paste0("v7_diff_", key)]] <- shiny::renderText({
-        a <- v7_home_stats()
-        format_metric(a$p10[[key]] - a$etf[[key]], difference = TRUE)
+      output[[paste0("v7_diff_", key)]] <- shiny::renderUI({
+        x <- v7_home_stats()
+        v <- x$p10[[key]] - x$etf[[key]]
+        v8_color_value(v, format_metric(v, difference=TRUE), key %in% c("ret", "ann"))
       })
     })
   }
 
   output$v7_home_curve <- shiny::renderPlot({
     z <- v7_home_pair()
-    d <- rbind(data.frame(date=z$date, value=z$p10, label="0010（當期名單回溯試算）"),
-               data.frame(date=z$date, value=z$etf, label="0050"))
-    ggplot2::ggplot(d, ggplot2::aes(x=date, y=value, colour=label)) +
-      ggplot2::geom_line(linewidth=1.05) +
-      ggplot2::scale_colour_manual(values=c("0010（當期名單回溯試算）"="#4b82ba", "0050"="#d07a65")) +
-      ggplot2::labs(x=NULL, y="淨值（共同起點 = 1）", colour=NULL) +
-      ggplot2::theme_minimal() +
-      ggplot2::theme(legend.position="bottom")
+    d <- rbind(data.frame(date=z$date, pct=(z$p10-1)*100, label="0010"),
+               data.frame(date=z$date, pct=(z$etf-1)*100, label="0050"))
+    ggplot2::ggplot(d, ggplot2::aes(x=date, y=pct, colour=label)) +
+      ggplot2::geom_hline(yintercept=0, linetype="dashed", colour="gray75") +
+      ggplot2::geom_line(linewidth=1.2, na.rm=TRUE) +
+      ggplot2::scale_colour_manual(values=c("0010"="#397db8", "0050"="#d75c57")) +
+      ggplot2::scale_y_continuous(labels=function(x) sprintf("%+.1f%%",x)) +
+      ggplot2::labs(x=NULL, y="累積報酬率", colour=NULL) +
+      ggplot2::theme_minimal(base_size=13) +
+      ggplot2::theme(legend.position="bottom", panel.grid.minor=ggplot2::element_blank())
+  })
+
+  # 兩張日對數報酬圖使用同日期及共同縱軸尺度。
+  v8_daily <- shiny::reactive({
+    z <- v7_home_pair()
+    daily <- data.frame(date=z$date[-1],
+                        p10=100*diff(log(z$p10)),
+                        etf=100*diff(log(z$etf)))
+    daily[is.finite(daily$p10) & is.finite(daily$etf), , drop=FALSE]
+  })
+  v8_daily_limits <- shiny::reactive({
+    z <- v8_daily()
+    vmax <- max(abs(c(z$p10,z$etf)), na.rm=TRUE)
+    if (!is.finite(vmax) || vmax <= 0) vmax <- 1
+    c(-vmax*1.12, vmax*1.12)
+  })
+  v8_daily_plot <- function(z, col, title) {
+    d <- data.frame(date=z$date, pct=z[[col]])
+    ggplot2::ggplot(d, ggplot2::aes(x=date,y=pct)) +
+      ggplot2::geom_hline(yintercept=0, colour="gray65") +
+      ggplot2::geom_col(ggplot2::aes(fill=pct>=0), width=.85, show.legend=FALSE) +
+      ggplot2::scale_fill_manual(values=c("TRUE"="#d94b4b", "FALSE"="#238a58")) +
+      ggplot2::scale_y_continuous(limits=v8_daily_limits(),labels=function(x) paste0(round(x,1),"%")) +
+      ggplot2::labs(x=NULL,y="日對數報酬率") +
+      ggplot2::theme_minimal(base_size=11) +
+      ggplot2::theme(panel.grid.minor=ggplot2::element_blank())
+  }
+  output$v8_p10_daily_log <- shiny::renderPlot({
+    z <- v8_daily(); shiny::req(nrow(z)>0)
+    v8_daily_plot(z,"p10", "0010")
+  })
+  output$v8_0050_daily_log <- shiny::renderPlot({
+    z <- v8_daily(); shiny::req(nrow(z)>0)
+    v8_daily_plot(z,"etf", "0050")
+  })
+
+  output$v8_market_log_return <- shiny::renderUI({
+    d <- selected_market_date()
+    z <- data() %>% dplyr::filter(symbol=="0050", date<=d, is.finite(log_return)) %>%
+      dplyr::arrange(dplyr::desc(date)) %>% dplyr::slice_head(n=1)
+    shiny::req(nrow(z)>0)
+    v <- z$log_return[1]
+    v8_color_value(v,sprintf("%+.2f%%",100*v))
+  })
+  output$v8_market_ytd <- shiny::renderUI({
+    d <- selected_market_date()
+    z <- data() %>% dplyr::filter(symbol=="0050", date<=d,
+       format(date,"%Y")==format(d,"%Y"), is.finite(adjusted)) %>% dplyr::arrange(date)
+    shiny::req(nrow(z)>=2)
+    v <- tail(z$adjusted,1)/head(z$adjusted,1)-1
+    v8_color_value(v,sprintf("%+.2f%%",100*v))
   })
 
   output$v7_home_result <- shiny::renderText({
