@@ -1735,35 +1735,40 @@ ui <- fluidPage(
         .rank-lab .rank-lab-actions .btn { margin-right:6px; margin-bottom:8px; }
         .rank-lab .rank-lab-formula { padding:12px 14px; border-radius:10px; background:#f2f6fa; margin:12px 0; }
         .rank-lab .rank-lab-section { margin-top:25px; }
-        /* v11 第二頁：動能分／風險穩定分左右並排，不影響其他分頁 */
-        .rank-compare .rank-compare-lead { color:#5a7085; line-height:1.7; margin:0 0 13px; }
-        .rank-compare .rank-compare-date { margin:0 0 18px; }
-        .rank-compare .rank-compare-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:stretch; gap:16px; }
-        .rank-compare .rank-compare-card { min-width:0; display:flex; flex-direction:column; border:1px solid #dce7f1; border-radius:13px; padding:18px 16px; background:#fff; }
-        .rank-compare .rank-compare-card.momentum { border-top:4px solid #648fb9; background:#f9fcff; }
-        .rank-compare .rank-compare-card.risk { border-top:4px solid #749a89; background:#fbfdfc; }
-        .rank-compare .rank-compare-card h3 { margin:0 0 8px; font-size:21px; font-weight:800; color:#314e6b; }
-        .rank-compare .rank-compare-description { margin:0 0 10px; min-height:39px; color:#5b7084; font-size:13px; line-height:1.6; }
-        .rank-compare .rank-compare-section { color:#49647e; font-size:14px; font-weight:800; margin:11px 0 7px; }
-        .rank-compare .rank-compare-table { min-width:0; overflow-x:auto; }
-        .rank-compare .rank-compare-table .table { font-size:13px; margin-bottom:8px; }
-        .rank-compare .rank-compare-table .table th,
-        .rank-compare .rank-compare-table .table td { padding:6px 7px; white-space:nowrap; }
-        .rank-compare .rank-compare-weight { padding:12px; background:#f1f5f9; border-radius:9px; margin:8px 0 14px; font-size:12px; color:#576c80; line-height:1.7; }
-        .rank-compare .rank-compare-weight strong { color:#3e5e7e; }
-        .rank-compare .rank-compare-card .rank-compare-expand { margin-top:auto; }
-        .rank-compare details.rank-compare-expand { border:1px solid #cad9e7; background:#fff; border-radius:9px; padding:0; }
-        .rank-compare details.rank-compare-expand > summary { cursor:pointer; list-style:none; text-align:center; padding:11px 9px; color:#38658f; font-weight:750; border-radius:9px; }
+        /* v12 排名第二頁：雙 Top10 長條圖＋可展開細項（只作用於此頁） */
+        .rank-compare .rank-compare-lead { color:#465c72; font-size:16px; font-weight:600; line-height:1.55; margin:0 0 13px; }
+        .rank-compare .rank-compare-date { margin:0 0 15px; }
+        .rank-compare .rank-compare-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; align-items:stretch; }
+        .rank-compare .rank-compare-card { min-width:0; border:1px solid #dce7f1; border-radius:14px; padding:17px 16px; background:#fff; display:flex; flex-direction:column; }
+        .rank-compare .rank-compare-card.momentum { border-top:4px solid #5289c0; background:#f9fcff; }
+        .rank-compare .rank-compare-card.risk { border-top:4px solid #d39651; background:#fffdf9; }
+        .rank-compare .rank-compare-card h3 { font-size:22px; font-weight:800; color:#30495e; margin:0 0 6px; }
+        .rank-compare .rank-compare-description { color:#597083; font-size:13px; margin:0 0 4px; line-height:1.5; }
+        .rank-compare .rank-compare-chart { flex:1; min-width:0; padding:4px 0 2px; }
+        .rank-compare .rank-compare-chart .shiny-plot-output { max-width:100%; }
+        .rank-compare .rank-compare-hint { font-size:12px; color:#71869a; margin:2px 0 15px; line-height:1.5; }
+        .rank-compare details.rank-compare-expand { border:1px solid #cddce9; background:#fff; border-radius:10px; padding:0; margin-top:auto; }
+        .rank-compare details.rank-compare-expand > summary { cursor:pointer; list-style:none; text-align:center; padding:11px 9px; color:#3b648b; font-size:14px; font-weight:750; border-radius:10px; }
         .rank-compare details.rank-compare-expand > summary::-webkit-details-marker { display:none; }
         .rank-compare details.rank-compare-expand > summary:after { content:' ▾'; }
         .rank-compare details.rank-compare-expand[open] > summary:after { content:' ▴'; }
-        .rank-compare details.rank-compare-expand[open] > summary { border-bottom:1px solid #dce7f1; border-radius:9px 9px 0 0; }
-        .rank-compare .rank-compare-expanded { padding:11px 12px 13px; overflow-x:auto; }
+        .rank-compare details.rank-compare-expand[open] > summary { border-bottom:1px solid #dce7f1; border-radius:10px 10px 0 0; }
+        .rank-compare .rank-compare-expanded { padding:13px 12px; min-width:0; overflow-x:auto; }
         .rank-compare .rank-compare-expanded .table { font-size:12px; }
-        .rank-compare .rank-compare-expanded .table th,
-        .rank-compare .rank-compare-expanded .table td { white-space:nowrap; }
-        .rank-compare .rank-compare-note { font-size:12px; line-height:1.65; margin:11px 0 0; color:#718294; }
-        @media(max-width:980px) { .rank-compare .rank-compare-grid { grid-template-columns:1fr; } .rank-compare .rank-compare-description { min-height:0; } }
+        .rank-compare .rank-compare-expanded .table th, .rank-compare .rank-compare-expanded .table td { white-space:nowrap; }
+        .rank-compare .rank-compare-weight { background:#f1f5f9; border-radius:9px; padding:11px 13px; font-size:13px; color:#465e77; margin:0 0 14px; line-height:1.7; }
+        .rank-compare .rank-compare-section { font-size:14px; font-weight:800; color:#415e78; margin:9px 0 9px; }
+        .rank-compare .rank-compare-flow { margin:17px 0 0; padding:16px; border:1px solid #dfebf4; border-radius:12px; background:#f9fbfd; }
+        .rank-compare .rank-compare-flow h3 { font-size:16px; font-weight:800; margin:0 0 12px; }
+        .rank-compare .rank-compare-steps { display:flex; gap:9px; align-items:center; }
+        .rank-compare .rank-compare-step { flex:1; min-width:0; text-align:center; background:#fff; border:1px solid #e0e8f0; border-radius:9px; padding:11px 5px; }
+        .rank-compare .rank-compare-step strong { display:block; color:#385a79; font-size:14px; }
+        .rank-compare .rank-compare-step small { display:block; color:#738599; margin-top:4px; font-size:12px; }
+        .rank-compare .rank-compare-arrow { flex:none; color:#7f97aa; font-size:20px; font-weight:700; }
+        .rank-compare .rank-compare-next { text-align:right; margin-top:13px; }
+        .rank-compare .rank-compare-note { color:#7a8996; font-size:12px; line-height:1.55; margin:12px 0 0; }
+        @media(max-width:980px) { .rank-compare .rank-compare-grid { grid-template-columns:1fr; } }
+        @media(max-width:570px) { .rank-compare .rank-compare-flow { padding:11px; } .rank-compare .rank-compare-steps { gap:4px; } .rank-compare .rank-compare-step { padding:8px 3px; } .rank-compare .rank-compare-step strong { font-size:12px; } .rank-compare .rank-compare-step small { font-size:10px; } .rank-compare .rank-compare-arrow { font-size:14px; } }
         .home-small-note { color:#7b8794; font-size:12px; margin:13px 0 0; }
         .home-legacy { margin-top:4px; }
         @media(max-width:900px) { .home-compare-grid { grid-template-columns:1fr; } .home-center { order:3; } .home-heading { flex-wrap:wrap; } .home-date { white-space:normal; } }
@@ -1920,64 +1925,72 @@ ui <- fluidPage(
         id = "rank_subtabs",
         type = "pills",
 
-        # v11：合併原動能分與風險分排名，只調整第二頁展示方式。
+        # v12：直接呈現兩張 Top10 長條圖，公式與全名單各自展開。
         tabPanel(
           "雙排名對照",
           div(
             class = "section-box rank-compare",
-            h2("成分股排名比較"),
+            h2("成分股排名與評分分析"),
             p(class = "rank-compare-lead",
-              "動能排名看過去相對報酬強弱；風險穩定排名看波動、回撤與尾端風險等特性。兩側各自排序，名次相同不代表是同一檔股票。"),
+              "從動能與風險兩個角度選股，再透過歷史回測檢驗排名的價值。"),
             div(class = "time-info rank-compare-date", strong("評分日："),
                 textOutput("v6_rank_date", inline = TRUE),
-                "｜分數為成分股間的相對評價，不代表未來漲幅。"),
+                "｜同一評分日各自排序，分數不是預測漲幅。"),
             div(
               class = "rank-compare-grid",
               div(
                 class = "rank-compare-card momentum",
                 h3("動能分排名"),
-                p(class = "rank-compare-description", "核心問題：哪些股票過去的報酬相對強勢？"),
-                div(class = "rank-compare-section", "動能 Top 10"),
-                div(class = "rank-compare-table", tableOutput("rank_compare_mom_top")),
-                div(class = "rank-compare-weight",
-                    strong("評分組成"), tags$br(),
-                    "近 6 個月報酬百分位：55%", tags$br(),
-                    "12−1 個月報酬百分位：45%"),
+                p(class = "rank-compare-description", "尋找具有報酬延續潛力的候選股"),
+                div(class = "rank-compare-chart", plotOutput("rank_compare_mom_chart_v8", height = "490px")),
+                p(class = "rank-compare-hint", "依動能分由高至低排列；分數越高，代表過去的相對動能越強。"),
                 tags$details(
                   class = "rank-compare-expand",
-                  tags$summary("展開動能排名與完整明細"),
+                  tags$summary("查看動能評分細節與完整排名"),
                   div(class = "rank-compare-expanded",
-                      div(class = "rank-compare-section", "動能分前十名圖"),
-                      plotOutput("v6_mom_chart", height = "390px"),
-                      div(class = "plot-explanation", textOutput("v6_mom_result", inline = TRUE)),
+                      div(class = "rank-compare-section", "評分組成"),
+                      div(class = "rank-compare-weight",
+                          "近 6 個月報酬百分位：55%", tags$br(),
+                          "12−1 個月動能百分位：45%"),
                       div(class = "rank-compare-section", "完整成分股動能排名（不含產業欄）"),
                       tableOutput("rank_compare_mom_detail"))
                 )
               ),
               div(
                 class = "rank-compare-card risk",
-                h3("風險／穩定分排名"),
-                p(class = "rank-compare-description", "核心問題：哪些股票的歷史風險相對可控？"),
-                div(class = "rank-compare-section", "風險穩定 Top 10"),
-                div(class = "rank-compare-table", tableOutput("rank_compare_risk_top")),
-                div(class = "rank-compare-weight",
-                    strong("評分組成"), tags$br(),
-                    "年化波動：30%｜最大回撤：25%", tags$br(),
-                    "CVaR：20%｜Sharpe：15%｜GARCH：10%"),
+                h3("風險穩定分排名"),
+                p(class = "rank-compare-description", "評估股票的歷史風險是否相對可控"),
+                div(class = "rank-compare-chart", plotOutput("rank_compare_risk_chart_v8", height = "490px")),
+                p(class = "rank-compare-hint", "依穩定分由高至低排列；分數越高，代表綜合風險評價較有利。"),
                 tags$details(
                   class = "rank-compare-expand",
-                  tags$summary("展開風險排名與完整明細"),
+                  tags$summary("查看風險評分細節與完整排名"),
                   div(class = "rank-compare-expanded",
-                      div(class = "rank-compare-section", "風險穩定分前十名圖"),
-                      plotOutput("v6_risk_chart", height = "390px"),
-                      div(class = "plot-explanation", textOutput("v6_risk_result", inline = TRUE)),
+                      div(class = "rank-compare-section", "評分組成"),
+                      div(class = "rank-compare-weight",
+                          "年化波動：30%｜最大回撤：25%", tags$br(),
+                          "CVaR：20%｜Sharpe：15%｜GARCH：10%"),
                       div(class = "rank-compare-section", "完整成分股風險指標拆解"),
-                      tableOutput("v4_risk_decomp"))
+                      tableOutput("v4_risk_decomp"),
+                      p(class = "rank-compare-note",
+                        "GARCH 尚未估計時沿用既有的中性 50 分設定；模型及計分方法未調整。"))
                 )
               )
             ),
+            div(
+              class = "rank-compare-flow",
+              h3("這些排名會用在哪裡？"),
+              div(class = "rank-compare-steps",
+                  div(class = "rank-compare-step", strong("動能＋風險"), tags$small("形成選股分數")),
+                  span(class = "rank-compare-arrow", "→"),
+                  div(class = "rank-compare-step", strong("組成 0010"), tags$small("評分＋風險門檻")),
+                  span(class = "rank-compare-arrow", "→"),
+                  div(class = "rank-compare-step", strong("歷史驗證"), tags$small("檢查排名是否有用"))),
+              div(class = "rank-compare-next",
+                  actionButton("rank_compare_go_experiment", "查看權重實驗與歷史驗證", class = "btn-default"))
+            ),
             p(class = "rank-compare-note",
-              "備註：GARCH 尚未完成估計時，沿用目前中性 50 分與缺值顯示方式；此處僅整理排名，不更動估計與選股模型。")
+              "兩張榜單獨立排名，左右相同名次不一定是同一檔股票。排名是研究依據，不代表未來報酬保證。")
           )
         ),
 
@@ -2827,6 +2840,47 @@ server <- function(input, output, session) {
       check.names = FALSE, stringsAsFactors = FALSE
     )
   }, striped = TRUE, bordered = TRUE, hover = TRUE)
+
+  # v12：兩側長條圖直接顯示 Top 10。沿用 v4_tbl() 現有分數，完全不改計算。
+  rank_compare_bar_v8 <- function(t, score_key, bar_color, axis_name) {
+    x <- t[is.finite(t[[score_key]]), , drop = FALSE]
+    x <- utils::head(x[order(-x[[score_key]], x$symbol), , drop = FALSE], 10)
+    shiny::validate(shiny::need(nrow(x) > 0, "目前沒有可用的評分資料。"))
+    names <- paste0(x$name, "（", x$symbol, "）")
+    df <- data.frame(stock = factor(names, levels = rev(names)), score = x[[score_key]])
+    ggplot2::ggplot(df, ggplot2::aes(x = stock, y = score)) +
+      ggplot2::geom_col(fill = bar_color, width = 0.7) +
+      ggplot2::geom_text(ggplot2::aes(label = sprintf("%.1f", score)),
+                         hjust = -0.12, size = 3.5, fontface = "bold", color = "#405369") +
+      ggplot2::coord_flip(clip = "off") +
+      ggplot2::scale_y_continuous(limits = c(0, 112), breaks = c(0, 25, 50, 75, 100),
+                                  expand = ggplot2::expansion(mult = c(0, 0))) +
+      ggplot2::labs(x = NULL, y = axis_name) +
+      ggplot2::theme_minimal(base_size = 12) +
+      ggplot2::theme(plot.title = ggplot2::element_blank(),
+                     panel.grid.major.y = ggplot2::element_blank(),
+                     panel.grid.minor = ggplot2::element_blank(),
+                     axis.text.y = ggplot2::element_text(size = 10.2, color = "#344f66"),
+                     axis.text.x = ggplot2::element_text(size = 10, color = "#73869a"),
+                     axis.title.x = ggplot2::element_text(size = 10, color = "#62778b"),
+                     plot.margin = ggplot2::margin(8, 23, 8, 7))
+  }
+
+  output$rank_compare_mom_chart_v8 <- shiny::renderPlot({
+    t <- v4_tbl()
+    shiny::req(!is.null(t), nrow(t) > 0)
+    rank_compare_bar_v8(t, "mom_score", "#5289c0", "動能分（0～100）")
+  }, res = 110)
+
+  output$rank_compare_risk_chart_v8 <- shiny::renderPlot({
+    t <- v4_tbl()
+    shiny::req(!is.null(t), nrow(t) > 0)
+    rank_compare_bar_v8(t, "risk_score", "#d39651", "風險穩定分（0～100）")
+  }, res = 110)
+
+  shiny::observeEvent(input$rank_compare_go_experiment, {
+    shiny::updateTabsetPanel(session, "rank_subtabs", selected = "權重比較實驗")
+  })
 
   # 原始 v6_mom_table 在 v5_server.R；改成新的顯示表，避免動到共用模組。
   output$rank_compare_mom_detail <- shiny::renderTable({
