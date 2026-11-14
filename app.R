@@ -1794,6 +1794,26 @@ ui <- fluidPage(
         .g10-v10-subtle { color:#72849a; font-size:13px; line-height:1.6; }
         @media(max-width:1160px) { .g10-v10-main { grid-template-columns:1fr; } }
         @media(max-width:750px) { .g10-v10-flow { grid-template-columns:1fr; } .g10-v10-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } .g10-v10-metric .shiny-text-output { font-size:21px; } }
+        /* v11：0010 本期持股配置直接顯示於第一屏，長條由實際持股權重產生 */
+        .g10-v11-head { margin:4px 0 13px; }
+        .g10-v11-head h3 { color:#31516d; font-size:25px; font-weight:800; margin:0 0 7px; }
+        .g10-v11-head p { color:#677b8d; font-size:14px; margin:0; line-height:1.5; }
+        .g10-v11-layout { display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,1.25fr); gap:14px; align-items:start; margin:12px 0 9px; }
+        .g10-v11-pane { border:1px solid #dbe7f0; border-radius:14px; padding:16px; background:#fff; min-width:0; }
+        .g10-v11-pane h4 { margin:0 0 13px; color:#35536e; font-size:17px; font-weight:800; }
+        .g10-v11-row { display:grid; grid-template-columns:minmax(118px,1.2fr) minmax(60px,2fr) 55px; align-items:center; gap:8px; margin:9px 0; min-height:24px; }
+        .g10-v11-name { color:#365773; font-size:12px; line-height:1.35; overflow-wrap:anywhere; }
+        .g10-v11-track { height:15px; width:100%; border-radius:5px; background:#eef3f8; overflow:hidden; }
+        .g10-v11-fill { height:100%; border-radius:5px; background:#4a83bb; min-width:2px; }
+        .g10-v11-value { font-size:13px; font-weight:800; text-align:right; color:#315b7d; white-space:nowrap; }
+        .g10-v11-pane .table { font-size:12px; margin-bottom:5px; }
+        .g10-v11-pane .table td,.g10-v11-pane .table th { white-space:nowrap; }
+        .g10-v11-pane .table-responsive { overflow-x:auto; }
+        .g10-v11-subnote { color:#7b8c9e; font-size:12px; margin:10px 0 0; line-height:1.6; }
+        .g10-v11-minor { color:#778b9d; font-size:12px; margin:9px 0 13px; }
+        .g10-v11-metrics-title { color:#466480; font-size:17px; font-weight:750; margin:19px 0 10px; }
+        @media(max-width:1180px) { .g10-v11-layout { grid-template-columns:1fr; } }
+        @media(max-width:570px) { .g10-v11-head h3 { font-size:21px; } .g10-v11-pane { padding:12px; } .g10-v11-row { grid-template-columns:minmax(91px,1.1fr) minmax(48px,1.6fr) 47px; gap:5px; } .g10-v11-name,.g10-v11-value { font-size:11px; } }
         .home-small-note { color:#7b8794; font-size:12px; margin:13px 0 0; }
         .home-legacy { margin-top:4px; }
         @media(max-width:900px) { .home-compare-grid { grid-template-columns:1fr; } .home-center { order:3; } .home-heading { flex-wrap:wrap; } .home-date { white-space:normal; } }
@@ -2096,6 +2116,7 @@ ui <- fluidPage(
         tabsetPanel(
           id = "g10_tabs",
           type = "pills",
+          selected = "0010 組合",
           
           # --------------------------------------------------
           # 1. 0010 組合（本期）：先看結果，再按需要展開統計細項
@@ -2103,15 +2124,22 @@ ui <- fluidPage(
           tabPanel(
             "0010 組合",
             br(),
-            div(class = "g10-v10-flow",
-              div(class = "g10-v10-flow-step",
-                strong("01｜統計評分"), tags$small("動能 70% ＋ 風險穩定 30%")),
-              div(class = "g10-v10-flow-step",
-                strong("02｜選股與配置"), tags$small("通過風險門檻、產業限制後選取最多 10 檔")),
-              div(class = "g10-v10-flow-step",
-                strong("03｜歷史檢驗"), tags$small("用季度回測比較 0010 與 0050 的結果"))
+            div(class = "g10-v11-head",
+              h3("本期 0010｜十檔股票配置"),
+              p("先看選了哪些股票、各占多少資金；再看統計分數與進階分析。")),
+            div(class = "g10-v11-layout",
+              div(class = "g10-v11-pane",
+                h4("十檔持股權重｜長條圖"),
+                uiOutput("g10_v11_weight_bars"),
+                p(class = "g10-v11-subnote", "長條越長，代表該檔股票在本期 0010 中配置的資金比例越高。")),
+              div(class = "g10-v11-pane",
+                h4("選股結果與統計分數"),
+                div(class = "table-responsive", tableOutput("g10_v10_simple_table")),
+                p(class = "g10-v11-subnote", "動能分、風險分都是相對分數；它們不是預測漲幅。"))
             ),
-            h3(class = "g10-v10-title", "本期組合概況"),
+            p(class = "g10-v11-minor", "這裡顯示本期配置；歷史各季的選股與報酬請切換到「季度再平衡回測」。"),
+
+            h3(class = "g10-v11-metrics-title", "本期統計摘要"),
             div(class = "g10-v10-metrics",
               div(class = "g10-v10-metric",
                 span(class = "g10-v10-label", "本期入選股票"),
@@ -2126,11 +2154,8 @@ ui <- fluidPage(
                 span(class = "g10-v10-label", "最大單檔權重"),
                 textOutput("g10_v10_maxw"))
             ),
-            p(class = "g10-v10-caption",
-              "分數為成分股之間的相對評價，不是預測報酬率；加權分數以本期資金配置比例計算。"),
-
             tags$details(class = "g10-v10-expand",
-              tags$summary("調整本期資金配置與模擬金額（進階）"),
+              tags$summary("調整本期資金配置與模擬金額"),
               div(class = "g10-v10-expand-body",
                 fluidRow(
                   column(4, selectInput("g10_scheme", "持股權重方式：",
@@ -2142,23 +2167,17 @@ ui <- fluidPage(
                     value = 1000000, min = 100000, step = 100000))
                 ),
                 p(class = "g10-v10-subtle",
-                  "以上設定只調整本期配置、金額和成本試算，不會同步改變另一子頁的季度歷史回測。")
+                  "以上參數只影響本期配置與成本試算；不會直接改變另一子頁的季度歷史回測結果。")
               )
             ),
-
-            h3(class = "g10-v10-title", "選出了哪些股票？資金怎麼分配？"),
-            div(class = "g10-v10-main",
-              div(class = "g10-v10-panel",
-                h4("十檔配置比例"),
-                plotOutput("g10_v10_weight_plot", height = "375px")),
-              div(class = "g10-v10-panel",
-                h4("本期持股與統計評分"),
-                div(class = "table-responsive",
-                  tableOutput("g10_v10_simple_table"))
-              )
+            div(class = "g10-v10-flow",
+              div(class = "g10-v10-flow-step",
+                strong("01｜評分"), tags$small("動能 70% ＋ 風險 30%")),
+              div(class = "g10-v10-flow-step",
+                strong("02｜選股"), tags$small("風險門檻與產業限制")),
+              div(class = "g10-v10-flow-step",
+                strong("03｜驗證"), tags$small("季度回測與 0050 比較"))
             ),
-            p(class = "g10-v10-caption",
-              "本期名單依現有選股規則產生；動能與風險的分數越高，代表在該項評分上相對較有利。"),
             tags$details(class = "g10-v10-expand",
               tags$summary("查看完整評分、產業與模擬金額"),
               div(class = "g10-v10-expand-body",
@@ -11314,6 +11333,36 @@ server <- function(input, output, session) {
       check.names = FALSE, stringsAsFactors = FALSE
     )
   }, striped = TRUE, bordered = TRUE, hover = TRUE)
+
+  # v11：用真實選股與資金權重產生可直接辨識的持股長條（只改呈現）
+  output$g10_v11_weight_bars <- shiny::renderUI({
+    d <- tryCatch(g10_v10_display(), error = function(e) NULL)
+    if (is.null(d) || !nrow(d)) {
+      return(shiny::div(class = "g10-v11-subnote",
+        "目前無法取得持股資料。請確認已載入股票資料並完成 0010 選股評分。"))
+    }
+    d <- d[is.finite(d$weight) & d$weight >= 0, , drop = FALSE]
+    if (!nrow(d)) {
+      return(shiny::div(class = "g10-v11-subnote", "尚無有效的持股配置權重。"))
+    }
+    d <- d[order(-d$weight, d$symbol), , drop = FALSE]
+    cap <- suppressWarnings(as.numeric(input$g10_cap))
+    if (!length(cap) || !is.finite(cap)) cap <- 0.20
+    upper <- max(cap, d$weight, 0.10, na.rm = TRUE)
+    rows <- lapply(seq_len(nrow(d)), function(i) {
+      nm <- as.character(d$name[i])
+      if (is.na(nm) || !nzchar(trimws(nm))) nm <- as.character(d$symbol[i])
+      label <- paste0(nm, "（", d$symbol[i], "）")
+      pct <- sprintf("%.1f%%", 100 * d$weight[i])
+      bar_width <- max(0, min(100, 100 * d$weight[i] / upper))
+      shiny::div(class = "g10-v11-row",
+        shiny::span(class = "g10-v11-name", label),
+        shiny::div(class = "g10-v11-track",
+          shiny::div(class = "g10-v11-fill", style = sprintf("width:%.2f%%;", bar_width))),
+        shiny::strong(class = "g10-v11-value", pct))
+    })
+    do.call(shiny::tagList, rows)
+  })
 
   output$g10_v10_weight_plot <- shiny::renderPlot({
     d <- g10_v10_display()
