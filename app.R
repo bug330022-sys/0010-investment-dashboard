@@ -2511,26 +2511,26 @@ ui <- fluidPage(
                   column(3, div(class = "g16-horizon",
                     span("預測範圍"),
                     strong("未來 63 個交易日"),
-                    small("約一季；非價格漲跌預測")))
+                    tags$small("約一季；非價格漲跌預測")))
                 )
               ),
               div(class = "g16-kpis",
                 div(class = "g16-kpi",
                   span("未來一季預測年化波動"),
                   strong(textOutput("g10_kpi_fvol", inline = TRUE)),
-                  small("GARCH 模型預測")),
+                  tags$small("GARCH 模型預測")),
                 div(class = "g16-kpi",
                   span("近一年歷史年化波動"),
                   strong(textOutput("g10_kpi_rvol", inline = TRUE)),
-                  small("作為比較基準")),
+                  tags$small("作為比較基準")),
                 div(class = "g16-kpi",
                   span("預測／歷史比值"),
                   strong(textOutput("g10_kpi_ratio", inline = TRUE)),
-                  small("大於 1 表示預測波動較高")),
+                  tags$small("大於 1 表示預測波動較高")),
                 div(class = "g16-kpi g16-kpi-state",
                   span("波動狀態"),
                   strong(textOutput("g10_kpi_regime", inline = TRUE)),
-                  small("依現有 0.90／1.10 門檻判定"))
+                  tags$small("依現有 0.90／1.10 門檻判定"))
               ),
               div(class = "g16-insight",
                 div(class = "g16-insight-head", "這次的預測要怎麼看？"),
