@@ -1,4 +1,4 @@
-# v27｜T+1 歷史滾動樣本外 AR(1) 點預測與 90% 經驗預測區間。
+# v28｜整合市場分析 T+1 預測／驗證，增加全體方向訊號和歷史樣本外驗證。
 # 在 v26 上增量擴充；尚未接每日持久化預測／自動檢查。
 # 0010 Investment Research v3.6：Growth 主排名＋防守資訊分離＋白話研究說明＋模型比較驗證
 # Connect Cloud auto-publish test
@@ -2136,6 +2136,25 @@ ui <- fluidPage(
         .home-compare-grid .home-side h2 {font-size:34px;}
         @media(max-width:700px){.home-compare-grid .home-stat > strong{font-size:24px !important;}.home-compare-grid .home-center .home-stat > strong{font-size:19px !important;}}
 
+        /* v28 T+1 模組：一頁分預測／驗證；保留原單檔圖表樣式 */
+        .v28-panel>.v27-controls{margin-top:16px;}
+        .v28-run-actions{display:flex;gap:7px;flex-direction:column;padding-top:22px;}
+        .v28-run-actions .btn{white-space:normal;font-size:12px;padding:7px 9px;}
+        .v28-advanced{margin-top:4px;padding:9px 0;font-size:12px;color:#536c7d;}
+        .v28-advanced summary{cursor:pointer;font-weight:600;}
+        .v28-advanced .form-group{max-width:350px;margin-top:10px;}
+        .v28-primary-tabs{margin-top:18px;}
+        .v28-primary-tabs>.tabbable>.nav-pills{border-bottom:2px solid #d5e3eb;padding-bottom:8px;}
+        .v28-primary-tabs>.tabbable>.nav-pills>li>a{font-size:15px;font-weight:650;padding:10px 24px;}
+        .v28-primary-tabs .tab-content .nav-pills{background:#f3f7fa;border-radius:9px;padding:6px;margin-top:12px;}
+        .v28-part{padding:12px 2px 0;}
+        .v28-signals{border:1px solid #e1e9ef;background:#f8fafb;border-radius:9px;padding:11px;margin-bottom:12px;}
+        .v28-signals h4{font-size:15px;margin:5px 0 11px;}
+        .v28-up h4{color:#397d6d;}.v28-down h4{color:#a36c5c;}
+        .v28-signals table{font-size:11px;width:100%;}
+        .v28-signals th,.v28-signals td{padding:6px 5px!important;overflow-wrap:anywhere;}
+        .v28-panel .table{font-size:12px;}
+        @media(max-width:800px){.v28-run-actions{padding-top:0;flex-direction:row;}.v28-primary-tabs>.tabbable>.nav-pills>li>a{padding:8px 14px;}}
         /* v27: T+1 預測/驗證介面，不影響既有網站頁面 */
         .v27-panel {margin-top:14px;}
         .v27-panel h2{font-size:21px;letter-spacing:.1px;}
@@ -2579,7 +2598,7 @@ tabPanel(
 tabPanel("模型驗證",
       div(class="section-box v25-main-lead",
         h2("0010｜研究驗證"),
-        p("先檢查整套 0010 策略有沒有勝過 0050，再確認選股評分有沒有用；GARCH 波動預測的準確度則屬於第三層證據。"),
+        p("先檢查整套 0010 策略與選股評分是否有效，再確認 GARCH 波動預測的樣本外誤差；T+1 預測與驗證已整合到『市場分析 → T+1』。"),
         p(class="v25-method-hint","季度勝率、選股排名命中率、GARCH 模型領先比例是不同指標，不能視為同一種準確率。")),
       tabsetPanel(id="v25_validation_tabs",type="pills",
 tabPanel(
@@ -2664,40 +2683,6 @@ tabPanel(
   )
 ),
 
-      # v27：T+1 歷史樣本外精度；與市場分析頁共用同一次滾動測試結果。
-      tabPanel("T+1 預測驗證",
-        div(class="section-box v27-panel",
-          h2("T+1 樣本外驗證｜隔日預測到底準不準？"),
-          p(class="page-description",
-            "以每日真正尚未用來估計模型的下一交易日資料，比較預測與實際報酬，並檢查 90% 預測區間的涵蓋率。"),
-          fluidRow(
-            column(5, selectInput("v27_v_stock", "驗證股票",
-              choices = setNames(stock_info$symbol[stock_info$symbol %in% dashboard_symbols],
-                paste0(stock_info$name[stock_info$symbol %in% dashboard_symbols],
-                       "（",stock_info$symbol[stock_info$symbol %in% dashboard_symbols],"）")),
-              selected = "2330")),
-            column(4, selectInput("v27_v_test", "樣本外期間",
-              choices = c("近 63 個交易日"=63,"近 126 個交易日"=126,
-                          "近 252 個交易日"=252), selected=126)),
-            column(3, div(class="v27-button-wrap",
-              actionButton("v27_run_valid", "執行 T+1 樣本外驗證", class="btn-primary")))
-          ),
-          uiOutput("v27_validation_status"),
-          uiOutput("v27_validation_cards"),
-          h3("每日預測誤差（實際報酬－預測報酬）"),
-          plotOutput("v27_error_plot",height="300px"),
-          p(class="v27-hint", "正值代表實際報酬高於預測，負值代表低於預測；用絕對誤差評估平均偏離，並非把殘差越大視為越好。"),
-          h4("驗證結果怎麼解讀？"),
-          p(class="v27-hint", "MAE／RMSE：越低越好，單位為每日報酬的百分點；方向準確率：僅計入預測與實際均非零的交易日；區間涵蓋率：與名目 90% 比較，還必須同時看平均區間寬度。"),
-          p(class="v27-hint", "另用「預測隔日報酬為 0%」作為簡單基準；如果 AR(1) 的 MAE 沒有比它小，就不能說這個模型的點預測比不預測更有用。"),
-          tags$details(class="method-details",
-            tags$summary("展開全部逐日預測、實際值與預測區間"),
-            div(class="v27-overflow", tableOutput("v27_validation_table"))),
-          downloadButton("v27_csv", "下載 T+1 歷史樣本外 CSV"),
-          div(class="v27-foot",
-            "本版只做歷史逐日向前測試，尚未保存實際發布前的每日預測。區間使用訓練殘差的經驗分位數，涵蓋率需用樣本外實際觀測評估，不能視為已保證 90%。")
-        )
-      ),
 tabPanel(
       "波動預測誤差",
       div(
@@ -2795,7 +2780,7 @@ tabPanel(
 tabPanel("市場分析",
       div(class="section-box v25-main-lead",
         h2("市場分析與股票資訊"),
-        p("查看股票資訊、T+1 隔日預測、產業比較與 GARCH 未來波動；各模型預測不同問題，不能把波動當作漲跌方向。")),
+        p("查看股票資訊、T+1 隔日預測與驗證、產業比較及 GARCH 波動；T+1 預測報酬，GARCH 預測波動，兩者不要混淆。")),
       tabsetPanel(id="v25_market_tabs",type="pills",
 tabPanel(
       
@@ -3021,42 +3006,117 @@ h3("日對數報酬分布"),
       )
     ),
 
-      # v27：市場分析內新增獨立 T+1 子頁，不破壞原股票資訊多檔比較。
-      tabPanel("T+1 隔日預測",
-        div(class="section-box v27-panel",
-          h2("個股 T+1｜隔日預測與實際價格"),
+      # v28｜T+1：在同一個市場分析子頁提供「預測／驗證」兩個入口。
+      tabPanel("T+1 預測與驗證",
+        div(class="section-box v27-panel v28-panel",
+          h2("T+1｜隔日預測與歷史驗證"),
           p(class="page-description",
-            "用過去 252 個交易日的日報酬估計下一交易日報酬，並換算成調整後價格。先以歷史樣本外測試觀察預測表現。"),
+            "使用當時已知的資料，每次預測下一交易日；先看預測訊號，再用歷史樣本外資料核對準確度。"),
           div(class="v27-controls",
             fluidRow(
-              column(5, selectInput("v27_m_stock", "選擇股票",
-                choices = setNames(stock_info$symbol[stock_info$symbol %in% dashboard_symbols],
+              column(5,selectInput("v27_m_stock","單檔預測股票",
+                choices=setNames(stock_info$symbol[stock_info$symbol %in% dashboard_symbols],
                   paste0(stock_info$name[stock_info$symbol %in% dashboard_symbols],
-                         "（", stock_info$symbol[stock_info$symbol %in% dashboard_symbols], "）")),
-                selected = "2330")),
-              column(4, selectInput("v27_m_test", "歷史樣本外測試範圍",
-                choices = c("近 63 個交易日" = 63, "近 126 個交易日" = 126,
-                            "近 252 個交易日" = 252), selected = 126)),
-              column(3, div(class="v27-button-wrap",
-                actionButton("v27_run_market", "執行 T+1 歷史預測", class="btn-primary")))
-            )
+                         "（",stock_info$symbol[stock_info$symbol %in% dashboard_symbols],"）")),
+                selected="2330")),
+              column(4,selectInput("v28_train","每次建模使用的歷史日報酬",
+                choices=c("近 1 年（252 日）"=252,"近 2 年（504 日）"=504,
+                          "近 3 年（756 日）"=756),selected=252)),
+              column(3,div(class="v28-run-actions",
+                actionButton("v27_run_market","執行單檔預測",class="btn-primary"),
+                actionButton("v28_run_all","執行全體分析",class="btn-default")))
+            ),
+            tags$details(class="v28-advanced",
+              tags$summary("進階設定｜樣本外測試期間"),
+              selectInput("v27_m_test","歷史樣本外驗證天數",
+                choices=c("近 63 個交易日"=63,"近 126 個交易日"=126,
+                          "近 252 個交易日"=252),selected=126),
+              p(class="v27-hint","這個期間決定拿多少個『已發生的交易日』來驗證，與上面的建模資料長度不同；圖表仍預設只畫最近 10 日。"))
           ),
-          p(class="v27-hint", "每個測試日均只使用前 252 個日報酬建立 AR(1) 模型；90% 預測區間由當期訓練殘差的第 5／95 百分位建立。執行後切換測試設定，需再按一次按鈕。"),
-          uiOutput("v27_market_status"),
-          uiOutput("v27_next_summary"),
-          div(class="v27-chart-controls",
-            h3("最近預測與實際價格"),
-            radioButtons("v27_show_days", "畫面顯示範圍",
-              choices = c("近 5 日" = 5, "近 10 日" = 10),
-              selected = 10, inline = TRUE)),
-          plotOutput("v27_price_plot", height="390px"),
-          p(class="v27-hint", "藍線＝當天事先做出的隔日預測；橘線＝實際調整後價格；淺藍色＝該次 90% 經驗預測區間。最右側「下一交易日」尚未有實際值。"),
-          p(class="v27-hint", "實際點落在區間內，代表該次區間涵蓋成功；不代表漲跌方向一定猜對。90% 是名目涵蓋水準，並非每天必中。"),
-          tags$details(class="method-details",
-            tags$summary("展開最近預測的逐日誤差"),
-            tableOutput("v27_recent_table")),
-          div(class="v27-foot",
-            "這是歷史滾動樣本外研究原型。最新 T+1 預測尚未永久保存，不能視為已在真實交易前鎖定的預測紀錄；每日留存與自動驗證預計在後續版本處理。")
+          p(class="v27-hint","模型：AR(1) 隔日報酬；區間：訓練殘差第 5／95 百分位，名目 90%。改動設定後，請按對應按鈕重新估計；沒有使用最新資料之前，畫面會標示舊設定。"),
+          div(class="v28-primary-tabs",
+            tabsetPanel(id="v28_main_tabs",type="pills",
+              tabPanel("預測",
+                tabsetPanel(id="v28_prediction_tabs",type="pills",
+                  tabPanel("全體偏多／偏空訊號",
+                    div(class="v28-part",
+                      h3("0050 成分股｜隔日方向訊號"),
+                      p(class="v27-hint","使用最新共同資料日期，依模型『隔日預測報酬率』排序：偏多前 5 檔、偏空前 5 檔。不是上漲機率，也不是買賣建議。"),
+                      uiOutput("v28_all_status"),
+                      uiOutput("v28_snapshot_kpis"),
+                      fluidRow(
+                        column(6,div(class="v28-signals v28-up",
+                          h4("偏多關注｜最多 5 檔"),
+                          tableOutput("v28_positive_table"))),
+                        column(6,div(class="v28-signals v28-down",
+                          h4("偏空觀察｜最多 5 檔"),
+                          tableOutput("v28_negative_table")))
+                      ),
+                      p(class="v27-hint","表中的 90% 預測報酬區間若跨過 0%，代表方向仍有很大的不確定性；即使排名第一，也不能視為具有高信心的上漲機率。"),
+                      tags$details(class="method-details",
+                        tags$summary("查看全部股票的隔日預測報酬與區間"),
+                        div(class="v27-overflow",tableOutput("v28_full_snapshot")),
+                        downloadButton("v28_snapshot_csv","下載全體預測 CSV"))
+                    )
+                  ),
+                  tabPanel("單檔預測",
+                    div(class="v28-part",
+                      h3("單檔 T+1｜預測與實際價格"),
+                      uiOutput("v27_market_status"),
+                      uiOutput("v27_next_summary"),
+                      div(class="v27-chart-controls",
+                        h3("最近的逐日預測"),
+                        radioButtons("v27_show_days","畫面顯示範圍",
+                          choices=c("近 5 日"=5,"近 10 日"=10),selected=10,inline=TRUE)),
+                      plotOutput("v27_price_plot",height="390px"),
+                      p(class="v27-hint","藍線＝事前預測的調整後價格；橘線＝實際調整後價格；陰影＝逐日 90% 經驗預測區間。下一交易日只有預測、尚無實際值。"),
+                      tags$details(class="method-details",
+                        tags$summary("查看最近的預測誤差"),
+                        tableOutput("v27_recent_table")),
+                      div(class="v27-foot","歷史曲線是用過去資料逐日模擬的樣本外預測；目前最新一期尚未以每日不可覆寫紀錄保存，不能把它當成已公開預告並經實際追蹤的預測。")
+                    )
+                  )
+                )
+              ),
+              tabPanel("驗證",
+                tabsetPanel(id="v28_validation_tabs",type="pills",
+                  tabPanel("全體訊號驗證",
+                    div(class="v28-part",
+                      h3("偏多／偏空 Top 5｜歷史樣本外驗證"),
+                      p(class="v27-hint","每天只依前一交易日已知資料排序，隔日核對實際漲跌。採當日有效股票中的前 5 個正訊號與後 5 個負訊號，不強求每天都有滿額訊號。"),
+                      uiOutput("v28_all_status_validation"),
+                      uiOutput("v28_validation_kpis"),
+                      h4("歷史訊號命中率與後續實際報酬"),
+                      tableOutput("v28_signal_summary"),
+                      p(class="v27-hint","偏多命中＝隔日實際上漲；偏空命中＝隔日實際下跌。『全體股票同期方向比例』作為簡單基準，檢查挑選 Top 5 是否有額外價值。平均隔日報酬是觀察性數據，不含交易成本，不能當作可交易的投資淨績效。"),
+                      h4("全體股票｜預測誤差摘要"),
+                      tableOutput("v28_all_error_summary"),
+                      p(class="v27-hint","MAE、RMSE 單位是隔日報酬百分點；90% 涵蓋率是對歷史測試實際值的比對，不是保證命中。平均數為有效股票等權平均。"),
+                      tags$details(class="method-details",
+                        tags$summary("查看每天的 Top 5 訊號驗證明細"),
+                        div(class="v27-overflow",tableOutput("v28_daily_signal_table")),
+                        downloadButton("v28_signal_csv","下載歷史訊號明細 CSV")),
+                      div(class="v27-foot","目前僅驗證『前日收盤後訊號 → 次日收盤結果』的方向與報酬描述。若要研究真實交易獲利，必須使用可成交的 T+1 價格、計入交易成本及換手；本版不虛構扣成本淨績效。使用現行 0050 成分股回推歷史，亦存在存活者偏誤。")
+                    )
+                  ),
+                  tabPanel("單檔誤差驗證",
+                    div(class="v28-part",
+                      h3("單檔 T+1｜樣本外準確度"),
+                      uiOutput("v27_validation_status"),
+                      uiOutput("v27_validation_cards"),
+                      h4("每日預測誤差（實際－預測）"),
+                      plotOutput("v27_error_plot",height="290px"),
+                      p(class="v27-hint","正值表示實際隔日報酬高於預測，負值則低於預測。MAE／RMSE 越低越好；方向準確率、涵蓋率需與簡單基準和區間寬度一起判讀。"),
+                      tags$details(class="method-details",
+                        tags$summary("查看完整逐日預測、區間與誤差"),
+                        div(class="v27-overflow",tableOutput("v27_validation_table"))),
+                      downloadButton("v27_csv","下載單檔樣本外 CSV")
+                    )
+                  )
+                )
+              )
+            )
+          )
         )
       ),
 tabPanel(
@@ -3664,6 +3724,120 @@ v27_rolling_oos <- function(stock_table, symbol, test_days = 126L, window = 252L
        test = test, future = future, metrics = metrics)
 }
 
+
+# ------------------------------------------------------------
+# v28｜全體 T+1 訊號與歷史評估。只使用 v27_one_step / v27_rolling_oos 的
+# 各期樣本外結果，不從事後漲跌倒推選股；不將 AR(1) 的點預測冒稱機率。
+# ------------------------------------------------------------
+v28_universe <- function(stock_table, symbols) {
+  d <- as.data.frame(stock_table)
+  d <- d[as.character(d$symbol) %in% c("0050",as.character(symbols)) &
+         !is.na(d$date) & is.finite(d$adjusted) & d$adjusted > 0,
+         c("symbol","date","adjusted"),drop=FALSE]
+  d$date <- as.Date(d$date)
+  d <- d[order(d$date),,drop=FALSE]
+  d <- d[!duplicated(d[,c("symbol","date")],fromLast=TRUE),,drop=FALSE]
+  ref <- d[d$symbol=="0050",,drop=FALSE]
+  common_date <- if(nrow(ref)) max(ref$date) else max(d$date)
+  d <- d[d$date<=common_date,,drop=FALSE]
+  lastdates <- tapply(d$date,d$symbol,max)
+  avail <- setdiff(as.character(symbols),"0050")
+  last_of_avail <- lastdates[avail]
+  eligible <- !is.na(last_of_avail)
+  eligible[eligible] <- as.Date(last_of_avail[eligible],origin="1970-01-01")==common_date
+  avail <- avail[which(eligible)]
+  list(data=d,date=common_date,symbols=avail)
+}
+v28_forecast_snapshot <- function(stock_table,symbols,window=252L) {
+  u <- v28_universe(stock_table,symbols)
+  if (!length(u$symbols)) stop("共同資料日沒有可用的成分股")
+  rows <- lapply(u$symbols,function(sym) {
+    d <- u$data[u$data$symbol==sym,,drop=FALSE]
+    px <- as.numeric(d$adjusted)
+    if(length(px)<window+2L) return(NULL)
+    fc <- tryCatch(v27_one_step(px,length(px),window),error=function(e) NULL)
+    if(is.null(fc) || any(!is.finite(fc))) return(NULL)
+    p0 <- tail(px,1L)
+    data.frame(symbol=sym,date=u$date,pred_return=as.numeric(fc[["pred_ret"]]),
+               low_return=100*(as.numeric(fc[["lower"]])/p0-1),
+               high_return=100*(as.numeric(fc[["upper"]])/p0-1),
+               pred_price=as.numeric(fc[["pred"]]),
+               price_lower=as.numeric(fc[["lower"]]),
+               price_upper=as.numeric(fc[["upper"]]),
+               crosses_zero=(fc[["lower"]]<=p0 && fc[["upper"]]>=p0),
+               stringsAsFactors=FALSE)
+  })
+  x <- do.call(rbind,Filter(Negate(is.null),rows))
+  if(is.null(x)||!nrow(x)) stop("沒有符合所選建模期間的有效股票")
+  x <- x[order(-x$pred_return,x$symbol),,drop=FALSE]
+  rownames(x)<-NULL
+  list(date=u$date,window=window,available=length(u$symbols),result=x)
+}
+v28_all_oos <- function(stock_table,symbols,test_days=126L,window=252L,progress=NULL) {
+  u<-v28_universe(stock_table,symbols)
+  rows<-vector("list",length(u$symbols))
+  ok_syms<-character()
+  for(j in seq_along(u$symbols)) {
+    sym<-u$symbols[j]
+    # 每檔的歷史樣本外結果各自重新估計，驗證日的實際價不參與估計。
+    z<-tryCatch(v27_rolling_oos(u$data,sym,test_days=test_days,window=window),
+                error=function(e)NULL)
+    if(!is.null(z)) {
+      z$test$symbol<-sym
+      rows[[j]]<-z$test
+      ok_syms<-c(ok_syms,sym)
+    }
+    if(is.function(progress)) progress(j,length(u$symbols))
+  }
+  all<-do.call(rbind,Filter(Negate(is.null),rows))
+  if(is.null(all)||!nrow(all)) stop("沒有成分股通過訓練／樣本外測試資料檢查")
+  rownames(all)<-NULL
+  # 只留下「0050 上一交易日 → 本交易日」的真實相鄰交易日預測。
+  # 停牌、缺報價時的跨日報酬不能當作 T+1 命中率。
+  benchmark_dates <- sort(unique(u$data$date[u$data$symbol=="0050"]))
+  if(length(benchmark_dates)>1L) {
+    from_date <- stats::setNames(as.character(utils::head(benchmark_dates,-1L)),
+                                 as.character(utils::tail(benchmark_dates,-1L)))
+    expected_prev <- unname(from_date[as.character(all$date)])
+    valid_adjacent <- !is.na(expected_prev) & as.character(all$origin_date)==expected_prev
+    all <- all[which(valid_adjacent),,drop=FALSE]
+    if(!nrow(all)) stop("沒有符合相鄰交易日條件的歷史測試結果")
+  }
+  # 同個測試日依當時預測報酬排序；正／負訊號各最多五檔。
+  splitday<-split(all,all$date)
+  day_rows<-lapply(splitday,function(x) {
+    x<-x[is.finite(x$pred_return)&is.finite(x$actual_return),,drop=FALSE]
+    positive<-x[x$pred_return>0,,drop=FALSE]
+    negative<-x[x$pred_return<0,,drop=FALSE]
+    positive<-utils::head(positive[order(-positive$pred_return,positive$symbol),,drop=FALSE],5L)
+    negative<-utils::head(negative[order(negative$pred_return,negative$symbol),,drop=FALSE],5L)
+    ss<-list(positive=positive,negative=negative)
+    do.call(rbind,lapply(names(ss),function(side) {
+      z<-ss[[side]]
+      if(!nrow(z)) return(NULL)
+      data.frame(date=z$date,symbol=z$symbol,side=side,
+        forecast_pct=z$pred_return,actual_pct=z$actual_return,
+        hit=if(side=="positive")z$actual_return>0 else z$actual_return<0,
+        error_pp=z$error_pp,covered=z$covered,stringsAsFactors=FALSE)
+    }))
+  })
+  signals<-do.call(rbind,Filter(Negate(is.null),day_rows))
+  if(is.null(signals)) signals<-data.frame(date=as.Date(character()),symbol=character(),
+    side=character(),forecast_pct=numeric(),actual_pct=numeric(),hit=logical(),
+    error_pp=numeric(),covered=logical())
+  rownames(signals)<-NULL
+  # 股票等權平均的 MAE / RMSE / 區間涵蓋率，避免長資料股權重較高。
+  bystock<-split(all,all$symbol)
+  per_stock<-do.call(rbind,lapply(names(bystock),function(sym){
+    x<-bystock[[sym]]
+    data.frame(symbol=sym,n=nrow(x),mae=mean(abs(x$error_pp)),
+      rmse=sqrt(mean(x$error_pp^2)),baseline=mean(abs(x$actual_return)),
+      coverage=mean(x$covered),avg_width=mean(x$width_pp),stringsAsFactors=FALSE)
+  }))
+  list(date=u$date,window=window,test_days=test_days,
+    eligible=length(u$symbols),all=all,signals=signals,per_stock=per_stock)
+}
+
 server <- function(input, output, session) {
   
   # v5 新功能（T+1 回測、GARCH 診斷、樣本外評估）
@@ -3672,53 +3846,173 @@ server <- function(input, output, session) {
 
   # v27：兩頁共用同一批 T+1 樣本外測試結果；只按按鈕時重新估計。
   v27_result <- shiny::reactiveVal(NULL)
-  v27_execute <- function(sym, n_test) {
+  v27_execute <- function(sym, n_test, window) {
     sym <- as.character(sym)
-    n_test <- as.integer(n_test)
+    n_test <- as.integer(n_test); window <- as.integer(window)
     if (length(sym)!=1L || is.na(sym) || !nzchar(sym) ||
-        length(n_test)!=1L || is.na(n_test) || !n_test %in% c(63L,126L,252L)) {
+        length(n_test)!=1L || is.na(n_test) || !n_test %in% c(63L,126L,252L) ||
+        length(window)!=1L || is.na(window) || !window %in% c(252L,504L,756L)) {
       v27_result(list(error="請選擇有效的股票及樣本外測試期間"))
       return(invisible(NULL))
     }
     shiny::withProgress(message="計算 T+1 歷史滾動預測…", value=0.1, {
       obj <- tryCatch(v27_rolling_oos(as.data.frame(data()),sym,
-                                     test_days=n_test,window=252L),
+                                     test_days=n_test,window=window),
                       error=function(e) list(error=conditionMessage(e)))
       shiny::incProgress(0.9)
       v27_result(obj)
     })
-    if (is.null(obj$error)) {
-      # 換頁後保留剛完成的選股與測試期間，不會自動重算。
-      shiny::updateSelectInput(session,"v27_m_stock",selected=sym)
-      shiny::updateSelectInput(session,"v27_v_stock",selected=sym)
-      shiny::updateSelectInput(session,"v27_m_test",selected=as.character(n_test))
-      shiny::updateSelectInput(session,"v27_v_test",selected=as.character(n_test))
-    }
+
     invisible(NULL)
   }
   shiny::observeEvent(input$v27_run_market, {
-    v27_execute(input$v27_m_stock,input$v27_m_test)
+    v27_execute(input$v27_m_stock,input$v27_m_test,input$v28_train)
   })
-  shiny::observeEvent(input$v27_run_valid, {
-    v27_execute(input$v27_v_stock,input$v27_v_test)
+
+  # v28｜全體預測訊號與全體樣本外驗證，按下按鈕後才計算。
+  v28_all_result <- shiny::reactiveVal(NULL)
+  shiny::observeEvent(input$v28_run_all,{
+    train<-as.integer(input$v28_train); days<-as.integer(input$v27_m_test)
+    if(!train %in% c(252L,504L,756L)||!days %in% c(63L,126L,252L)) {
+      v28_all_result(list(error="請選擇有效的建模期間與歷史測試期間"));return(invisible(NULL))
+    }
+    d<-as.data.frame(data())
+    v28_all_result(NULL)
+    shiny::withProgress(message="估計全體 T+1 與歷史樣本外訊號…",value=0,{
+      z<-tryCatch({
+        snap<-v28_forecast_snapshot(d,stock_info$symbol,window=train)
+        shiny::incProgress(.12,detail="已完成全體隔日預測")
+        history<-v28_all_oos(d,stock_info$symbol,test_days=days,window=train,
+          progress=function(j,n) {
+            if(n>0) shiny::setProgress(.12+.88*j/n,
+              detail=paste0("驗證第 ",j," / ",n," 檔成分股"))
+          })
+        list(snapshot=snap,history=history)
+      },error=function(e)list(error=conditionMessage(e)))
+      v28_all_result(z)
+    })
+    if(is.null(z$error)) {
+      shiny::updateTabsetPanel(session,"v28_main_tabs",selected="預測")
+      shiny::updateTabsetPanel(session,"v28_prediction_tabs",selected="全體偏多／偏空訊號")
+    }
   })
+  v28_valid_all<-shiny::reactive({
+    z<-v28_all_result();shiny::req(!is.null(z),is.null(z$error));z
+  })
+  v28_all_status_ui<-function(){
+    z<-v28_all_result()
+    if(is.null(z)) return(tags$p(class="v27-status","尚未執行全體分析；按「執行全體分析」後產生偏多／偏空 Top 5 與歷史驗證。"))
+    if(!is.null(z$error)) return(tags$p(class="v27-error",z$error))
+    msg<-paste0("全體預測基準日：",format(z$snapshot$date),
+      "｜有效預測 ",nrow(z$snapshot$result)," 檔；歷史驗證 ",nrow(z$history$per_stock),
+      " 檔、最近 ",z$history$test_days," 日｜建模 ",z$history$window," 日")
+    if(as.integer(input$v28_train)!=z$history$window ||
+       as.integer(input$v27_m_test)!=z$history$test_days) msg<-paste0(msg,"。設定已改變，請重新執行全體分析。")
+    market<-as.data.frame(data()); market<-market[market$symbol=="0050" & !is.na(market$date),,drop=FALSE]
+    if(nrow(market)&&max(as.Date(market$date))>z$snapshot$date)
+      msg<-paste0(msg,"。資料已更新，請按按鈕重新估計。")
+    tags$p(class="v27-status",msg)
+  }
+  output$v28_all_status<-shiny::renderUI({v28_all_status_ui()})
+  output$v28_all_status_validation<-shiny::renderUI({v28_all_status_ui()})
+  output$v28_snapshot_kpis<-shiny::renderUI({
+    z<-v28_valid_all();x<-z$snapshot$result
+    cell<-function(k,v,note)div(class="v27-kpi",tags$small(k),tags$strong(v),tags$small(note))
+    div(class="v27-kpis",
+      cell("有效預測股票",paste0(nrow(x)," 檔"),paste0("同日更新；可選 ",z$snapshot$available," 檔")),
+      cell("預測偏多",paste0(sum(x$pred_return>0)," 檔"),"模型隔日預測報酬 > 0"),
+      cell("預測偏空",paste0(sum(x$pred_return<0)," 檔"),"模型隔日預測報酬 < 0"))
+  })
+  v28_show_signal_table<-function(side){
+    z<-v28_valid_all();x<-z$snapshot$result
+    x<-if(side=="positive")x[x$pred_return>0,,drop=FALSE] else x[x$pred_return<0,,drop=FALSE]
+    x<-x[order(if(side=="positive")-x$pred_return else x$pred_return),,drop=FALSE]
+    x<-utils::head(x,5L)
+    if(!nrow(x)) return(data.frame(說明="本次沒有符合該方向的股票",check.names=FALSE))
+    data.frame(股票=vapply(x$symbol,get_stock_label,character(1)),
+      `預測隔日報酬`=sprintf("%+.2f%%",x$pred_return),
+      `90% 區間`=sprintf("%+.1f%%～%+.1f%%",x$low_return,x$high_return),
+      `方向明確？`=ifelse(x$crosses_zero,"區間跨 0（不確定）","區間未跨 0"),
+      check.names=FALSE,stringsAsFactors=FALSE)
+  }
+  output$v28_positive_table<-shiny::renderTable(v28_show_signal_table("positive"),striped=TRUE,hover=TRUE)
+  output$v28_negative_table<-shiny::renderTable(v28_show_signal_table("negative"),striped=TRUE,hover=TRUE)
+  output$v28_full_snapshot<-shiny::renderTable({
+    x<-v28_valid_all()$snapshot$result
+    data.frame(股票=vapply(x$symbol,get_stock_label,character(1)),
+      `預測隔日報酬`=sprintf("%+.3f%%",x$pred_return),
+      `90% 區間`=sprintf("%+.2f%%～%+.2f%%",x$low_return,x$high_return),
+      區間跨零=ifelse(x$crosses_zero,"是","否"),check.names=FALSE)
+  },striped=TRUE,hover=TRUE)
+  output$v28_snapshot_csv<-shiny::downloadHandler(
+    filename=function()paste0("T1_signals_",v28_valid_all()$snapshot$date,".csv"),
+    content=function(file)utils::write.csv(v28_valid_all()$snapshot$result,file,row.names=FALSE,fileEncoding="UTF-8"))
+  output$v28_validation_kpis<-shiny::renderUI({
+    h<-v28_valid_all()$history;s<-h$signals
+    cell<-function(k,v,note)div(class="v27-kpi",tags$small(k),tags$strong(v),tags$small(note))
+    p<-s[s$side=="positive",,drop=FALSE];n<-s[s$side=="negative",,drop=FALSE]
+    div(class="v27-kpis",
+      cell("有效驗證股票",paste0(nrow(h$per_stock)," 檔"),paste0("樣本外最近 ",h$test_days," 日")),
+      cell("偏多 Top 5 命中率",if(nrow(p))sprintf("%.1f%%",100*mean(p$hit))else "無訊號",
+           paste0("歷史訊號 ",nrow(p)," 筆")),
+      cell("偏空 Top 5 命中率",if(nrow(n))sprintf("%.1f%%",100*mean(n$hit))else "無訊號",
+           paste0("歷史訊號 ",nrow(n)," 筆")))
+  })
+  output$v28_signal_summary<-shiny::renderTable({
+    h<-v28_valid_all()$history; s<-h$signals
+    byside<-lapply(c("positive","negative"),function(a){
+      x<-s[s$side==a,,drop=FALSE]
+      h_same <- h$all[h$all$date %in% x$date,,drop=FALSE]
+      base_ratio <- if(nrow(h_same)) mean(if(a=="positive") h_same$actual_return>0 else h_same$actual_return<0) else NA_real_
+      data.frame(訊號=if(a=="positive")"偏多前 5 檔" else "偏空前 5 檔",
+        驗證筆數=nrow(x),
+        命中率=if(nrow(x))sprintf("%.1f%%",100*mean(x$hit))else "—",
+        `全體股票同期方向比例`=if(is.finite(base_ratio))sprintf("%.1f%%",100*base_ratio)else "—",
+        `平均隔日實際報酬`=if(nrow(x))sprintf("%+.3f%%",mean(x$actual_pct))else "—",
+        check.names=FALSE,stringsAsFactors=FALSE)
+    });do.call(rbind,byside)
+  },striped=TRUE,hover=TRUE,bordered=TRUE)
+  output$v28_all_error_summary<-shiny::renderTable({
+    d<-v28_valid_all()$history$per_stock
+    data.frame(驗證股票數=nrow(d),
+      `平均 MAE（百分點）`=sprintf("%.3f",mean(d$mae)),
+      `零報酬基準 MAE`=sprintf("%.3f",mean(d$baseline)),
+      `平均 RMSE（百分點）`=sprintf("%.3f",mean(d$rmse)),
+      `90% 區間涵蓋率`=sprintf("%.1f%%",100*mean(d$coverage)),
+      `平均區間寬度（百分點）`=sprintf("%.2f",mean(d$avg_width)),check.names=FALSE)
+  },striped=TRUE,bordered=TRUE)
+  output$v28_daily_signal_table<-shiny::renderTable({
+    x<-v28_valid_all()$history$signals
+    x<-x[order(x$date,decreasing=TRUE),,drop=FALSE]
+    data.frame(日期=format(x$date),
+      股票=vapply(x$symbol,get_stock_label,character(1)),
+      方向=ifelse(x$side=="positive","偏多","偏空"),
+      `預測報酬`=sprintf("%+.2f%%",x$forecast_pct),
+      `實際報酬`=sprintf("%+.2f%%",x$actual_pct),
+      命中=ifelse(x$hit,"是","否"),check.names=FALSE)
+  },striped=TRUE,hover=TRUE)
+  output$v28_signal_csv<-shiny::downloadHandler(
+    filename=function()paste0("T1_historical_signals_",v28_valid_all()$history$test_days,"d.csv"),
+    content=function(file)utils::write.csv(v28_valid_all()$history$signals,file,row.names=FALSE,fileEncoding="UTF-8"))
+
   v27_valid_result <- shiny::reactive({
     z <- v27_result()
     shiny::req(!is.null(z),is.null(z$error))
     z
   })
-  v27_status_ui <- function(request_sym = NULL, request_days = NULL) {
+  v27_status_ui <- function(request_sym = NULL, request_days = NULL, request_window = NULL) {
     z <- v27_result()
     if (is.null(z)) return(tags$p(class="v27-status",
-      "尚未執行。可從「市場分析 → T+1 隔日預測」或本頁按鈕開始歷史樣本外測試。"))
+      "尚未執行單檔預測。請先選擇股票、建模期間，按「執行單檔預測」。"))
     if (!is.null(z$error)) return(tags$p(class="v27-error",z$error))
     label <- get_stock_label(z$symbol)
     msg <- paste0("已完成：",label,"｜歷史測試 ",z$metrics$n," 日（",
       format(z$first_test_date),"～",format(z$last_test_date),
-      "）｜訓練視窗：252 個交易日報酬")
+      "）｜每次使用歷史 ",z$window," 個交易日報酬估計")
     if (length(request_sym)==1L && length(request_days)==1L &&
         !is.na(request_sym) && !is.na(request_days) &&
-        (as.character(request_sym) != z$symbol || as.integer(request_days) != z$test_days))
+        (as.character(request_sym) != z$symbol || as.integer(request_days) != z$test_days ||
+         as.integer(request_window) != z$window))
       msg <- paste0(msg,"。選單已改變，畫面仍是上一次計算結果；請重新執行。")
     # 更新價日期若改變，提醒需要手動重估；不回頭變更舊結果。
     d <- as.data.frame(data())
@@ -3728,9 +4022,9 @@ server <- function(input, output, session) {
     tags$p(class="v27-status",msg)
   }
   output$v27_market_status <- shiny::renderUI({
-    v27_status_ui(input$v27_m_stock,input$v27_m_test)})
+    v27_status_ui(input$v27_m_stock,input$v27_m_test,input$v28_train)})
   output$v27_validation_status <- shiny::renderUI({
-    v27_status_ui(input$v27_v_stock,input$v27_v_test)})
+    v27_status_ui(input$v27_m_stock,input$v27_m_test,input$v28_train)})
   output$v27_next_summary <- shiny::renderUI({
     z <- v27_valid_result(); f <- z$future
     cards <- function(lbl, val, sub) div(class="v27-kpi",tags$small(lbl),tags$strong(val),tags$small(sub))
