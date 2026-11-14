@@ -1720,13 +1720,13 @@ ui <- fluidPage(
         .home-side-subtitle { text-align:center; color:#708092; font-size:12px; min-height:21px; margin:0 0 12px; }
         .home-stat { border-top:1px solid rgba(130,148,168,.20); padding:9px 0; display:flex; justify-content:space-between; align-items:center; gap:8px; }
         .home-stat > span { font-size:13px; color:#677789; }
-        .home-stat > strong { font-size:25px !important; color:#34465a; white-space:nowrap; line-height:1.25; }
+        .home-stat > strong { font-size:22px !important; color:#34465a; white-space:nowrap; line-height:1.25; }
         /* Shiny uiOutput() 會產生巢狀 span：顯示數字必須繼承 strong 的字級，而不是被標籤 span 的 13px 覆蓋。 */
         .home-compare-grid .home-stat > strong span { font-size:inherit !important; line-height:inherit; }
         .home-center h2 { font-size:34px; }
         .home-center .home-stat { display:block; text-align:center; }
         .home-center .home-stat > span { display:block; font-size:11px; margin-bottom:4px; }
-        .home-center .home-stat > strong { font-size:22px !important; }
+        .home-center .home-stat > strong { font-size:18px !important; }
         /* 小螢幕才適度縮字，桌面及平板寬度不再強制蓋掉數值字體。 */
         @media(max-width:700px) { .home-stat > strong { font-size:28px !important; } .home-center .home-stat > strong { font-size:24px !important; } }
         .home-small-note { color:#7b8794; font-size:12px; margin:13px 0 0; }
