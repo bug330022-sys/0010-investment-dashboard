@@ -1707,7 +1707,7 @@ ui <- fluidPage(
         @media (max-width:700px) { .home-intro .home-side { min-height:0; } }
         /* v7 首頁：左右對照，只影響總覽新元件 */
         .home-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
-        .home-heading h2 { margin:0; font-size:clamp(26px,2.5vw,40px); line-height:1.1; letter-spacing:1px; }
+        .home-heading h2 { margin:0; font-size:clamp(32px,2.8vw,40px); line-height:1.1; letter-spacing:1px; }
         .home-date { color:#60758a; font-size:13px; white-space:nowrap; padding-top:6px; }
         .home-qualifier { background:#f6f8fa; padding:12px 15px; border-radius:9px; font-size:13px; line-height:1.7; color:#556779; margin:16px 0 8px; }
         .home-window { font-size:13px; color:#60758a; margin-bottom:14px; }
@@ -1719,16 +1719,16 @@ ui <- fluidPage(
         .home-side h2 { font-size:34px; font-weight:800; text-align:center; margin:0 0 3px; }
         .home-side-subtitle { text-align:center; color:#708092; font-size:12px; min-height:21px; margin:0 0 12px; }
         .home-stat { border-top:1px solid rgba(130,148,168,.20); padding:9px 0; display:flex; justify-content:space-between; align-items:center; gap:8px; }
-        .home-stat span { font-size:13px; color:#677789; }
-        .home-stat strong { font-size:32px; color:#34465a; white-space:nowrap; line-height:1.25; }
+        .home-stat > span { font-size:13px; color:#677789; }
+        .home-stat > strong { font-size:32px !important; color:#34465a; white-space:nowrap; line-height:1.25; }
+        /* Shiny uiOutput() 會產生巢狀 span：顯示數字必須繼承 strong 的字級，而不是被標籤 span 的 13px 覆蓋。 */
+        .home-compare-grid .home-stat > strong span { font-size:inherit !important; line-height:inherit; }
         .home-center h2 { font-size:34px; }
         .home-center .home-stat { display:block; text-align:center; }
-        .home-center .home-stat span { display:block; font-size:11px; margin-bottom:4px; }
-        .home-center .home-stat strong { font-size:29px; }
-        @media(max-width:1100px) {
-  .home-stat strong { font-size:30px; }
-  .home-center .home-stat strong { font-size:26px; }
-}
+        .home-center .home-stat > span { display:block; font-size:11px; margin-bottom:4px; }
+        .home-center .home-stat > strong { font-size:26px !important; }
+        /* 小螢幕才適度縮字，桌面及平板寬度不再強制蓋掉數值字體。 */
+        @media(max-width:700px) { .home-stat > strong { font-size:28px !important; } .home-center .home-stat > strong { font-size:24px !important; } }
         .home-small-note { color:#7b8794; font-size:12px; margin:13px 0 0; }
         .home-legacy { margin-top:4px; }
         @media(max-width:900px) { .home-compare-grid { grid-template-columns:1fr; } .home-center { order:3; } .home-heading { flex-wrap:wrap; } .home-date { white-space:normal; } }
