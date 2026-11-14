@@ -2079,6 +2079,25 @@ ui <- fluidPage(
         .g18-panel .g18-detail-content { padding:16px 18px 21px; }
         /* v20：全體 GARCH 單色排名；季度回測樣式保持 v19。 */
         .g19-all-garch .g19-all-chart { overflow-y:auto; max-height:880px; border:1px solid #e0e9f0; border-radius:10px; padding:7px 6px; background:#fff; }
+        /* v21：全體 GARCH 才有的獨立選項與閱讀提示，不影響單檔或回測。 */
+        .g21-all-garch .g21-setup { background:#f6f9fc; border:1px solid #dce7ef; border-radius:12px; padding:17px 17px 13px; margin:14px 0 12px; }
+        .g21-all-garch .g21-run-row { display:flex; flex-wrap:wrap; align-items:flex-end; gap:14px; }
+        .g21-all-garch .g21-window-control { width:350px; max-width:100%; }
+        .g21-all-garch .g21-window-control .form-group { margin-bottom:9px; }
+        .g21-all-garch .g21-window-control label { font-weight:750; color:#365b78; font-size:13px; }
+        .g21-all-garch .g21-run-action { padding-bottom:9px; }
+        .g21-all-garch .g21-setup-cards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:7px; }
+        .g21-all-garch .g21-setup-card { background:#fff; border:1px solid #e0e8ef; border-radius:9px; padding:10px 12px; min-width:0; }
+        .g21-all-garch .g21-setup-card > span { display:block; color:#6e8293; font-size:12px; }
+        .g21-all-garch .g21-setup-card > strong { display:block; color:#375b79; font-size:20px; line-height:1.4; margin:4px 0; }
+        .g21-all-garch .g21-setup-card small { display:block; color:#8293a0; font-size:11px; line-height:1.55; }
+        .g21-all-garch .g21-status { padding:10px 13px; border-radius:9px; font-size:12px; line-height:1.6; margin:12px 0 9px; }
+        .g21-all-garch .g21-status-ready { background:#eef5f7; color:#476d7b; border:1px solid #d4e4ea; }
+        .g21-all-garch .g21-status-pending { background:#faf7ef; color:#806e4a; border:1px solid #e9dec4; }
+        .g21-all-garch .g21-status-empty { background:#f7f9fb; color:#748495; border:1px solid #e2e9ef; }
+        .g21-all-garch .g21-reading { display:flex; gap:10px; align-items:baseline; background:#f5f9fc; border-left:3px solid #9cb9cf; padding:11px 13px; border-radius:6px; color:#536e82; font-size:13px; line-height:1.6; margin:12px 0; }
+        .g21-all-garch .g21-reading strong { color:#3b617d; white-space:nowrap; }
+        @media(max-width:650px) { .g21-all-garch .g21-setup-cards { grid-template-columns:1fr; } .g21-all-garch .g21-reading { display:block; } .g21-all-garch .g21-reading strong { display:block; margin-bottom:4px; } }
         .g20-all-garch .g18-stat-grid { grid-template-columns:repeat(2,minmax(0,1fr)); max-width:740px; }
         .g18-panel .g19-bt-stat-grid { grid-template-columns:repeat(5,minmax(0,1fr)); }
         .g19-all-garch .g18-stat-value { font-size:19px; }
@@ -2634,20 +2653,42 @@ ui <- fluidPage(
           ),
 
           # --------------------------------------------------
-          # 3. v20 全體 GARCH：單色預測波動排名，細節於下方展開
+          # 3. v21 全體 GARCH：獨立估計期間、明確顯示設定／實際結果，延續單色排名
           # --------------------------------------------------
           tabPanel(
             "GARCH 診斷：全體",
-            div(class = "g18-panel g19-all-garch g20-all-garch",
-              h3("0050 成分股｜未來波動預測"),
-              p(class = "g18-intro", "哪些股票未來的價格波動可能比較劇烈？利用 GARCH 模型比較未來 63 個交易日的預測年化波動。"),
-              actionButton("g10_run_all", "執行全體 GARCH 估計", class = "btn-primary"),
-              p(class = "g18-hint", "首次使用需執行估計；切換頁籤不會重算。估計期間沿用單檔 GARCH 的設定。"),
+            div(class = "g18-panel g19-all-garch g20-all-garch g21-all-garch",
+              h3("0050 成分股｜未來一季波動預測"),
+              p(class = "g18-intro", "用過去的股價資料估計 GARCH，觀察未來一季哪些成分股的價格起伏可能較大。這裡比較的是風險，不是預測股價漲跌。"),
+              div(class = "g21-setup",
+                div(class = "g21-run-row",
+                  div(class = "g21-window-control",
+                    selectInput("g21_all_window", "歷史估計期間",
+                      choices = c("近 2 年（500 個交易日）" = 500,
+                                  "近 4 年（1,000 個交易日）" = 1000,
+                                  "近 6 年（1,500 個交易日）" = 1500),
+                      selected = 1000, width = "100%")),
+                  div(class = "g21-run-action",
+                    actionButton("g10_run_all", "執行全體 GARCH 估計", class = "btn-primary"))
+                ),
+                div(class = "g21-setup-cards",
+                  div(class = "g21-setup-card",
+                    span("準備使用的歷史資料"),
+                    strong(textOutput("g21_window_label", inline = TRUE)),
+                    tags$small("最多取所選交易日數的報酬；資料不足者使用可取得期間")),
+                  div(class = "g21-setup-card",
+                    span("預測未來"), strong("63 個交易日"),
+                    tags$small("約一季；波動以年化 % 表示，不是預測一年"))
+                )
+              ),
+              uiOutput("g21_all_status"),
               uiOutput("g18_g_summary"),
               h4("全體股票｜預測年化波動排名"),
-              p(class = "g18-hint", "每檔只顯示一根藍色長條，依未來 63 日預測年化波動由高至低排列；數值越高，代表模型預期價格起伏幅度越大，並非股價漲跌方向。"),
+              div(class = "g21-reading",
+                tags$strong("這張圖怎麼看？"),
+                span("長條越長，代表模型預測未來一季的價格波動可能越劇烈；不是未來報酬排名，也不代表一定下跌。")),
               uiOutput("g18_g_chart_box"),
-              p(class = "g18-hint", "圖表顯示所有有效預測股票；近一年歷史波動、波動比值與模型參數仍可在下方展開查看。個股波動不等於 0010 整體組合波動。"),
+              p(class = "g18-hint", "圖表列出全部有效預測股票；歷史波動、比值及 GARCH 模型參數保留在下方展開區。個股波動不等於 0010 整體組合波動。"),
               tags$details(class = "g18-detail",
                 tags$summary(
                   span(class = "g18-detail-icon", "01"),
@@ -11528,20 +11569,57 @@ server <- function(input, output, session) {
   # ----------------------------------------------------------
   
   g10_store <- shiny::reactiveVal(NULL)
-  
+  # 全體 GARCH 與單檔各自選擇估計視窗；結果附帶「上次實際使用」的設定。
+  g21_all_run_meta <- shiny::reactiveVal(NULL)
+  g21_window_name <- function(n) {
+    switch(as.character(n), `500` = "近 2 年", `1000` = "近 4 年",
+           `1500` = "近 6 年", paste0(n, " 個交易日"))
+  }
+
+  output$g21_window_label <- shiny::renderText({
+    n <- suppressWarnings(as.integer(input$g21_all_window))
+    if (length(n) != 1L || !is.finite(n)) return("近 4 年")
+    g21_window_name(n)
+  })
+
+  output$g21_all_status <- shiny::renderUI({
+    meta <- g21_all_run_meta()
+    g <- g10_store()
+    if (is.null(meta)) {
+      return(tags$div(class = "g21-status g21-status-empty",
+        "尚未估計：請選擇歷史資料期間，再按「執行全體 GARCH 估計」。"))
+    }
+    chosen <- suppressWarnings(as.integer(input$g21_all_window))
+    was <- g21_window_name(meta$window)
+    if (length(chosen) != 1L || !is.finite(chosen) || chosen != meta$window) {
+      return(tags$div(class = "g21-status g21-status-pending",
+        paste0("你已更改估計期間，但圖表仍是使用「", was,
+               "」資料的上一次結果；請重新按估計以套用新設定。")))
+    }
+    tags$div(class = "g21-status g21-status-ready",
+      paste0("目前圖表使用：", was, "（最多 ", format(meta$window, big.mark = ","),
+             " 筆日報酬）估計，預測未來 63 個交易日。",
+             if (is.null(g)) "本次未取得有效估計結果。" else ""))
+  })
+
   shiny::observeEvent(input$g10_run_all, {
+    chosen_window <- suppressWarnings(as.integer(input$g21_all_window))
+    if (length(chosen_window) != 1L || !(chosen_window %in% c(500L, 1000L, 1500L))) {
+      chosen_window <- 1000L
+    }
     d <- as.data.frame(data())
     syms <- stock_info$symbol
     withProgress(message = "估計 GARCH(1,1)…", value = 0, {
       tbl <- p10_garch_table(
         d, syms,
-        window = as.integer(input$g10_window),
+        window = chosen_window,
         horizon = 63,
         progress = function(k, n, s) {
           setProgress(k / n, detail = paste0("第 ", k, " / ", n, " 檔：", s))
         }
       )
     })
+    g21_all_run_meta(list(window = chosen_window))
     g10_store(tbl)
   })
   
