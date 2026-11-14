@@ -1942,6 +1942,23 @@ ui <- fluidPage(
         .g10-v13 .g10-v14-track-table .table { min-width:1100px; }
         .g10-v13 .g10-v14-track-table .table tbody tr:last-child { background:#eaf3f9 !important; color:#345a78; font-weight:800; border-top:2px solid #9fbfd5; }
         @media(max-width:760px) { .g10-v13 .g10-v14-summary-grid { grid-template-columns:1fr; } }
+        /* v22：全體優先的樣本外模型比較；只影響模型驗證頁 */
+        .v15-validation .v22-block { border:1px solid #dbe6ee; border-radius:14px; padding:19px 20px; background:#fff; margin:13px 0 23px; }
+        .v15-validation .v22-top { border-top:4px solid #7e9fb8; background:linear-gradient(120deg,#f7fafc,#fff 62%); }
+        .v15-validation .v22-title { font-size:19px; font-weight:800; color:#355b76; margin:2px 0 7px; }
+        .v15-validation .v22-desc { font-size:13px; color:#6a7c8e; line-height:1.7; margin:0 0 14px; }
+        .v15-validation .v22-controls { display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin:12px 0 16px; }
+        .v15-validation .v22-controls .btn { border-radius:9px; padding:10px 17px; }
+        .v15-validation .v22-note { font-size:12px; color:#72869a; line-height:1.65; }
+        .v15-validation .v22-kpis { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:12px 0 18px; }
+        .v15-validation .v22-kpi { border:1px solid #dee9f0; border-radius:11px; background:#f7fafc; padding:14px 16px; }
+        .v15-validation .v22-kpi-label { font-size:12px; color:#728398; margin-bottom:8px; }
+        .v15-validation .v22-kpi-num { font-size:22px; font-weight:800; color:#375f7d; line-height:1.2; }
+        .v15-validation .v22-kpi-desc { font-size:11px; color:#8797a5; margin-top:6px; }
+        .v15-validation .v22-all-note { background:#edf4f8; border-left:4px solid #88a9c1; border-radius:7px; padding:12px 14px; color:#42617a; font-size:13px; line-height:1.7; margin:12px 0; }
+        .v15-validation .v22-table-scroll { max-width:100%; overflow-x:auto; }
+        .v15-validation .v22-divider { border-top:1px solid #e3e9ee; margin:17px 0; }
+        @media(max-width:850px) { .v15-validation .v22-kpis { grid-template-columns:1fr; } .v15-validation .v22-block { padding:14px; } }
         /* v15：模型驗證易讀版，樣式僅作用於 .v15-validation */
         .v15-validation .v15-lead { color:#526d84; font-size:15px; line-height:1.65; margin:7px 0 18px; }
         .v15-validation .v15-selector { border:1px solid #dfe9f2; border-radius:12px; padding:13px 16px 2px; background:#f7fafc; margin:0 0 18px; }
@@ -2761,41 +2778,66 @@ ui <- fluidPage(
       "模型驗證",
       div(
         class = "section-box v15-validation",
-        h2("模型驗證｜GARCH 預測得好嗎？"),
+        h2("模型驗證｜哪種方法預測波動比較準？"),
         p(class = "v15-lead",
-          "先比較三種方法在未參與估計資料上的預測誤差；統計檢定與完整報表可以再展開查看。"),
+          "使用相同的樣本外比較規則，檢查 GARCH、EWMA 和 21 日滾動法的預測誤差。先看全體，再選個股深入分析。"),
 
-        div(class = "v15-selector",
-          fluidRow(
-            column(7, selectInput("v5_g_stock", "選擇要驗證的股票：",
-                                  choices = stats::setNames(stock_info$symbol,
-                                    paste0(stock_info$name, " (", stock_info$symbol, ")")),
-                                  selected = "2330")),
-            column(5, div(class = "v15-window-note",
-                          strong("測試方式"),
-                          span("前 80% 估計；後 20% 比較預測")))
-          )
-        ),
-
-        div(class = "v15-overview",
-          div(class = "v15-result-card v15-result-primary",
-              div(class = "v15-result-kicker", "01｜預測比較"),
-              uiOutput("v15_forecast_summary"),
-              p(class = "v15-card-foot", "比較 GARCH、EWMA、21 日滾動波動；誤差越低越好。")),
-          div(class = "v15-result-card v15-result-secondary",
-              div(class = "v15-result-kicker", "02｜模型診斷"),
-              uiOutput("v15_diag_summary"),
-              p(class = "v15-card-foot", "檢查殘差是否仍留有明顯結構，細節可於下方展開。"))
-        ),
-
-        div(class = "v15-evidence",
-          h3("樣本外預測結果"),
-          p(class = "v15-plain-note",
-            "看三種方法的 RMSE、MAE、QLIKE；數字較小表示在此期間的誤差較低。"),
-          tableOutput("v5_goos_tab"),
-          plotOutput("v5_goos_plot", height = "340px"),
+        div(class = "v22-block v22-top",
+          h3(class = "v22-title", "01｜全體模型比較"),
+          p(class = "v22-desc",
+            "比較目前 0050 成分股在樣本外期間的預測表現，觀察哪種方法在更多股票上誤差較小。"),
+          div(class = "v22-controls",
+            actionButton("v22_run_all_oos", "執行全體樣本外比較", class = "btn-primary"),
+            span(class = "v22-note", "按下後才執行；切換單檔股票不會重跑全體。")),
+          uiOutput("v22_all_status"),
+          uiOutput("v22_all_kpis"),
+          plotOutput("v22_all_qlike_plot", height = "270px"),
+          h4("三種方法的整體誤差"),
+          div(class = "v22-table-scroll", tableOutput("v22_all_summary_table")),
+          p(class = "v22-note", "平均 QLIKE 以每檔有效股票等權平均，越低代表此測試的誤差較小（可能為負值）；領先股票數看各檔 QLIKE 最小的方法。"),
+          uiOutput("v22_all_conclusion"),
+          tags$details(class = "v15-detail",
+            tags$summary(
+              span(class = "v15-detail-icon", "附表"),
+              span(class = "v15-detail-copy",
+                   tags$strong("逐檔預測誤差與領先方法"),
+                   tags$small("各股 GARCH、EWMA、21 日滾動法的 QLIKE、有效測試天數及狀態")),
+              span(class = "v15-detail-action", "展開詳細資料")),
+            div(class = "v15-detail-body",
+              div(class = "v22-table-scroll", tableOutput("v22_all_stock_table")),
+              downloadButton("v22_all_download", "下載全體比較 CSV"))
+          ),
           p(class = "v15-footnote",
-            "比較使用原有的樣本外測試設定。圖上顯示的是實際 |日報酬| 與預測波動；單次誤差比較不代表統計上顯著優於其他方法，也不直接代表交易績效。")
+            "使用各檔股票自己的前 80% 歷史資料估計、後 20% 樣本外測試；資料不足、估計未收斂或指標無效者不納入平均。此結果不等於未來 63 日預測的事後驗證，也不代表已證實統計顯著。")
+        ),
+
+        div(class = "v22-block",
+          h3(class = "v22-title", "02｜單檔模型比較"),
+          p(class = "v22-desc", "想知道為何某檔股票的表現不同？選擇股票後，查看三種方法的完整誤差與波動曲線。"),
+          div(class = "v15-selector",
+            fluidRow(
+              column(7, selectInput("v5_g_stock", "選擇要驗證的股票：",
+                                    choices = stats::setNames(stock_info$symbol,
+                                      paste0(stock_info$name, " (", stock_info$symbol, ")")),
+                                    selected = "2330")),
+              column(5, div(class = "v15-window-note",
+                            strong("測試方式"),
+                            span("前 80% 估計；後 20% 比較預測")))
+            )
+          ),
+          div(class = "v15-overview",
+            div(class = "v15-result-card v15-result-primary",
+                div(class = "v15-result-kicker", "樣本外預測比較"),
+                uiOutput("v15_forecast_summary")),
+            div(class = "v15-result-card v15-result-secondary",
+                div(class = "v15-result-kicker", "GARCH 殘差診斷"),
+                uiOutput("v15_diag_summary"))
+          ),
+          h4("單檔誤差比較"),
+          tableOutput("v5_goos_tab"),
+          plotOutput("v22_single_all_plot", height = "320px"),
+          p(class = "v15-footnote",
+            "折線為實際 |日報酬| 與三種方法的預測波動；單次誤差較小不代表統計上顯著，也不表示股票報酬一定較高。")
         ),
 
         h3(class = "v15-more-title", "完整統計資料"),
@@ -3380,6 +3422,173 @@ server <- function(input, output, session) {
   
   # v5 新功能（T+1 回測、GARCH 診斷、樣本外評估）
   source("v5_server.R", local = TRUE)
+
+  # v22：全體樣本外誤差比較。沿用 v5_garch_oos()；按鈕觸發，結果在同一工作階段快取。
+  v22_all_oos <- shiny::eventReactive(input$v22_run_all_oos, {
+    d <- as.data.frame(data())
+    d <- d[d$symbol %in% stock_info$symbol &
+             is.finite(d$adjusted) & d$adjusted > 0 & !is.na(d$date), , drop = FALSE]
+    d <- d[order(d$symbol, d$date), , drop = FALSE]
+    by_stock <- split(d$adjusted, as.character(d$symbol))
+    syms <- unique(as.character(stock_info$symbol))
+    rows <- vector("list", length(syms))
+    shiny::withProgress(message = "全體 GARCH 樣本外驗證中…", value = 0, {
+      for (k in seq_along(syms)) {
+        symbol <- syms[k]
+        shiny::setProgress(k / length(syms),
+                           detail = paste0("第 ", k, " / ", length(syms), " 檔：", symbol))
+        px <- by_stock[[symbol]]
+        obj <- if (is.null(px) || length(px) < 601L) NULL else
+          tryCatch(v5_garch_oos(px), error = function(e) NULL)
+        q <- if (!is.null(obj) && !is.null(obj$table)) obj$table else NULL
+        complete <- !is.null(q) && nrow(q) == 3L &&
+          all(c("模型", "QLIKE", "RMSE", "MAE") %in% names(q)) &&
+          all(is.finite(q$QLIKE)) && all(is.finite(q$RMSE)) &&
+          all(is.finite(q$MAE)) && isTRUE(obj$fit$converged)
+        if (complete) {
+          model_order <- c("GARCH(1,1)", "EWMA(0.94)", "21 日滾動")
+          vals <- q$QLIKE[match(model_order, q$模型)]
+          complete <- all(is.finite(vals))
+        }
+        if (complete) {
+          best <- if (sum(abs(vals - min(vals)) < 1e-8) > 1L) "並列" else
+            model_order[which.min(vals)]
+          rows[[k]] <- data.frame(
+            股票代號 = symbol, 股票 = get_stock_name_one(symbol),
+            狀態 = "有效", 樣本外天數 = obj$n_test,
+            GARCH = vals[1], EWMA = vals[2], ROLL21 = vals[3],
+            最佳方法 = best, stringsAsFactors = FALSE
+          )
+        } else {
+          status <- if (is.null(px) || length(px) < 601L) "資料不足" else
+            if (!is.null(obj) && !is.null(obj$fit) &&
+                !isTRUE(obj$fit$converged)) "估計未收斂" else "估計／指標無效"
+          rows[[k]] <- data.frame(
+            股票代號 = symbol, 股票 = get_stock_name_one(symbol),
+            狀態 = status, 樣本外天數 = NA_integer_,
+            GARCH = NA_real_, EWMA = NA_real_, ROLL21 = NA_real_,
+            最佳方法 = "—", stringsAsFactors = FALSE
+          )
+        }
+      }
+    })
+    all_stocks <- do.call(rbind, rows)
+    valid <- all_stocks[all_stocks$狀態 == "有效", , drop = FALSE]
+    mods <- c("GARCH(1,1)", "EWMA(0.94)", "21 日滾動")
+    keys <- c("GARCH", "EWMA", "ROLL21")
+    means <- if (nrow(valid)) vapply(keys, function(z) mean(valid[[z]]), numeric(1)) else rep(NA_real_, 3)
+    wins <- vapply(mods, function(z) sum(valid$最佳方法 == z), integer(1))
+    avg <- data.frame(模型 = mods, 平均QLIKE = unname(means), 領先股票數 = unname(wins),
+                      stringsAsFactors = FALSE)
+    list(stocks = all_stocks, valid = valid, avg = avg, total = length(syms))
+  }, ignoreInit = TRUE)
+
+  output$v22_all_status <- shiny::renderUI({
+    z <- v22_all_oos()
+    if (is.null(z)) return(tags$div(class = "v22-all-note",
+      "尚未執行全體樣本外比較。點擊上方按鈕後，才會對各檔股票進行估計與測試。"))
+    if (!nrow(z$valid)) return(tags$div(class = "v22-all-note",
+      "本次沒有可用的完整比較結果。請檢查個股資料長度與模型收斂狀態。"))
+    tags$p(class = "v22-note", paste0("本次有效比較 ", nrow(z$valid),
+      " / ", z$total, " 檔；其餘 ", z$total-nrow(z$valid),
+      " 檔因資料不足、估計未收斂或指標無效未列入平均。"))
+  })
+
+  output$v22_all_kpis <- shiny::renderUI({
+    z <- v22_all_oos()
+    if (is.null(z) || !nrow(z$valid)) return(NULL)
+    n <- nrow(z$valid)
+    gw <- sum(z$valid$最佳方法 == "GARCH(1,1)")
+    leader <- z$avg$模型[which.min(z$avg$平均QLIKE)]
+    card <- function(label, val, desc) tags$div(class = "v22-kpi",
+      tags$div(class = "v22-kpi-label", label),
+      tags$div(class = "v22-kpi-num", val),
+      tags$div(class = "v22-kpi-desc", desc))
+    tags$div(class = "v22-kpis",
+      card("有效比較股票", paste0(n, " / ", z$total, " 檔"), "逐檔 80% / 20% 樣本外測試"),
+      card("GARCH 領先比例", sprintf("%.1f%%", 100*gw/n), paste0(gw, " 檔的 QLIKE 最低")),
+      card("全體平均 QLIKE 最低", leader, "只代表本次樣本外誤差較低"))
+  })
+
+  output$v22_all_qlike_plot <- shiny::renderPlot({
+    z <- v22_all_oos()
+    shiny::req(!is.null(z), nrow(z$valid) > 0L)
+    t <- z$avg
+    t$模型 <- factor(t$模型, levels = rev(t$模型[order(t$平均QLIKE)]))
+    ggplot2::ggplot(t, ggplot2::aes(x = 平均QLIKE, y = 模型)) +
+      ggplot2::geom_point(size = 5, color = "#6389a8") +
+      ggplot2::geom_text(ggplot2::aes(label = sprintf("%.3f", 平均QLIKE)),
+                         hjust = -0.22, size = 4, color = "#425d73") +
+      ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = c(0.22, 0.32))) +
+      ggplot2::labs(title = "全體有效股票：平均 QLIKE 比較", x = "平均 QLIKE（越低越好）", y = NULL) +
+      ggplot2::theme_minimal(base_size = 12) +
+      ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5),
+                     panel.grid.major.y = ggplot2::element_blank())
+  })
+
+  output$v22_all_summary_table <- shiny::renderTable({
+    z <- v22_all_oos()
+    shiny::req(!is.null(z), nrow(z$valid) > 0L)
+    t <- z$avg[order(z$avg$平均QLIKE), , drop = FALSE]
+    data.frame(方法 = t$模型, 平均QLIKE = sprintf("%.4f", t$平均QLIKE),
+               領先股票數 = t$領先股票數,
+               領先比例 = sprintf("%.1f%%", 100*t$領先股票數/nrow(z$valid)),
+               check.names = FALSE)
+  }, striped = TRUE, bordered = TRUE, hover = TRUE)
+
+  output$v22_all_conclusion <- shiny::renderUI({
+    z <- v22_all_oos()
+    if (is.null(z) || !nrow(z$valid)) return(NULL)
+    t <- z$avg
+    best <- t$模型[which.min(t$平均QLIKE)]
+    n <- nrow(z$valid)
+    tags$div(class = "v22-all-note",
+      tags$strong("本次結果怎麼看？"),
+      tags$div(paste0("依全部有效股票的平均 QLIKE，", best,
+        " 的樣本外誤差最低。GARCH 在 ", sum(z$valid$最佳方法 == "GARCH(1,1)"),
+        " / ", n, " 檔股票上領先。這是誤差比較，並非統計顯著性或投資報酬的保證。")))
+  })
+
+  output$v22_all_stock_table <- shiny::renderTable({
+    z <- v22_all_oos()
+    shiny::req(!is.null(z))
+    t <- z$stocks
+    data.frame(股票 = paste0(t$股票, "（", t$股票代號, "）"),
+      狀態 = t$狀態, 樣本外日數 = ifelse(is.na(t$樣本外天數), "—", t$樣本外天數),
+      GARCH = ifelse(is.finite(t$GARCH), sprintf("%.4f", t$GARCH), "—"),
+      EWMA = ifelse(is.finite(t$EWMA), sprintf("%.4f", t$EWMA), "—"),
+      `21日滾動` = ifelse(is.finite(t$ROLL21), sprintf("%.4f", t$ROLL21), "—"),
+      QLIKE最低 = t$最佳方法, check.names = FALSE)
+  }, striped = TRUE, bordered = TRUE, hover = TRUE)
+
+  output$v22_all_download <- shiny::downloadHandler(
+    filename = function() paste0("0010_oos_compare_", Sys.Date(), ".csv"),
+    content = function(file) {
+      z <- v22_all_oos()
+      shiny::req(!is.null(z))
+      utils::write.csv(z$stocks, file = file, row.names = FALSE, fileEncoding = "UTF-8")
+    }
+  )
+
+  # 同一張單檔圖呈現全部三種受比較模型，沿用 v5_goos() 的現有輸出。
+  output$v22_single_all_plot <- shiny::renderPlot({
+    z <- v5_goos()
+    shiny::req(!is.null(z), !is.null(z$series), nrow(z$series) > 0L)
+    s <- z$series
+    d <- rbind(
+      data.frame(日數 = seq_len(nrow(s)), 值 = s$obs, 模型 = "實際 |日報酬|"),
+      data.frame(日數 = seq_len(nrow(s)), 值 = s$garch, 模型 = "GARCH 預測"),
+      data.frame(日數 = seq_len(nrow(s)), 值 = s$ewma, 模型 = "EWMA 預測"),
+      data.frame(日數 = seq_len(nrow(s)), 值 = s$roll, 模型 = "21 日滾動")
+    )
+    ggplot2::ggplot(d, ggplot2::aes(x = 日數, y = 值, colour = 模型)) +
+      ggplot2::geom_line(linewidth = 0.65, alpha = 0.88) +
+      ggplot2::labs(title = "樣本外預測與實際日報酬幅度", x = "樣本外第 N 個交易日",
+                    y = "日波動／|報酬|（%）", colour = NULL) +
+      ggplot2::theme_minimal() +
+      ggplot2::theme(legend.position = "bottom",
+                     plot.title = ggplot2::element_text(hjust = 0.5, face = "bold"))
+  })
 
   # v15：模型驗證頁的白話摘要；讀取現有診斷與樣本外計算結果，不改模型。
   output$v15_forecast_summary <- shiny::renderUI({
