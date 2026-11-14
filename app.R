@@ -1,3 +1,4 @@
+# v25｜五大主頁面 + 本期選股/驗證分流 + 歷史選股後實際報酬相對排名。T+1 預測尚未實作。
 # 0010 Investment Research v3.6：Growth 主排名＋防守資訊分離＋白話研究說明＋模型比較驗證
 # Connect Cloud auto-publish test
 # ============================================================
@@ -2127,6 +2128,29 @@ ui <- fluidPage(
         @media(max-width:1120px) { .g18-panel .g19-bt-stat-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
         @media(max-width:950px) { .g18-panel .g18-stat-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
         @media(max-width:550px) { .g18-panel .g18-stat-grid { grid-template-columns:1fr; } .g20-all-garch .g18-stat-grid { grid-template-columns:1fr; } .g18-panel .g19-bt-stat-grid { grid-template-columns:1fr; } .g18-panel .g18-stat-value { font-size:18px; } .g18-panel .g18-detail-copy small { font-size:11px; } }
+
+        /* v25｜首頁績效保持小於 0010 / 0050 標題，避免三欄互相擠壓 */
+        .home-compare-grid .home-stat > strong {font-size:25px !important; min-width:0; overflow-wrap:anywhere;}
+        .home-compare-grid .home-center .home-stat > strong {font-size:20px !important;}
+        .home-compare-grid .home-side h2 {font-size:34px;}
+        @media(max-width:700px){.home-compare-grid .home-stat > strong{font-size:24px !important;}.home-compare-grid .home-center .home-stat > strong{font-size:19px !important;}}
+        .v25-hero-actions{display:flex;gap:11px;flex-wrap:wrap;margin-top:16px;}
+        .v25-hero-actions .btn{border-radius:9px;padding:9px 16px;font-weight:700;}
+        .v25-main-lead{padding-top:19px;padding-bottom:14px;margin-bottom:13px;}
+        .v25-main-lead h2{font-size:23px;margin:0 0 8px;color:#315875;}
+        .v25-main-lead p{margin:0;color:#667b8d;line-height:1.75;font-size:13px;}
+        .v25-main-lead .v25-method-hint{margin-top:8px;}
+        .v25-method-hint{font-size:12px;color:#667f91;line-height:1.7;padding:8px 11px;background:#f5f8fb;border-left:3px solid #aac1d1;border-radius:5px;margin:10px 0;}
+        .v25-valid-rank h3{font-size:18px;color:#3b6280;margin:19px 0 10px;}
+        .v25-rank-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin:14px 0;}
+        .v25-rank-card{padding:13px 16px;border:1px solid #dce6ed;background:#f7fafc;border-radius:10px;}
+        .v25-rank-card small{display:block;color:#6b8293;font-size:12px;line-height:1.45;}
+        .v25-rank-card strong{display:block;font-size:21px;color:#375c78;margin:6px 0;}
+        .v25-rank-warning{font-size:12px;color:#846c56;line-height:1.7;background:#faf7f1;padding:11px 13px;border-radius:7px;margin-top:14px;}
+        .v25-validate-extra{margin:18px 0 22px;}
+        .v25-validate-extra > div{margin-top:12px;}
+        .v25-home-expand{margin:10px 0 20px;}
+        @media(max-width:750px){.v25-rank-grid{grid-template-columns:1fr;}}
         .home-small-note { color:#7b8794; font-size:12px; margin:13px 0 0; }
         .home-legacy { margin-top:4px; }
         @media(max-width:900px) { .home-compare-grid { grid-template-columns:1fr; } .home-center { order:3; } .home-heading { flex-wrap:wrap; } .home-date { white-space:normal; } }
@@ -2143,12 +2167,16 @@ ui <- fluidPage(
     div(class = "dashboard-title", "0010 Investment Research"),
     div(
       class = "dashboard-subtitle",
-      "以日對數報酬為統計基礎，從成長／動能、風險、穩定性、不確定性與歷史驗證分析 0050 及其成分股。"
+      "想看本期選股與資金配置，直接進入 0010；想確認歷史表現、選股能力與波動預測誤差，請進入模型驗證。"
     ),
     span(
       class = "hero-badge",
       "統計研究｜非投資建議｜資料更新至：",
       textOutput("header_latest_date", inline = TRUE)
+    ),
+    div(class="v25-hero-actions",
+      actionButton("v25_go_portfolio", "查看 0010 組合", class="btn-primary"),
+      actionButton("v25_go_verify", "查看模型驗證")
     )
   ),
   
@@ -2158,15 +2186,9 @@ ui <- fluidPage(
   # ==========================================================
   
   tabsetPanel(
-    
     id = "main_tabs",
-    
-    
-    # ========================================================
-    # 1. 總覽
-    # ========================================================
-    
-    tabPanel(
+    type = "tabs",
+tabPanel(
       "總覽",
       div(class = "section-box home-intro",
           div(class = "home-heading",
@@ -2177,7 +2199,7 @@ ui <- fluidPage(
           div(class = "home-compare-grid",
               div(class = "home-side home-side-0010",
                   h2("0010"), p("自訂十檔投資組合", class = "home-side-subtitle"),
-                  div(class = "home-stat", span("本期累積報酬"), strong(uiOutput("v7_10_ret", inline = TRUE))),
+                  div(class = "home-stat", span("持股回溯報酬"), strong(uiOutput("v7_10_ret", inline = TRUE))),
                   div(class = "home-stat", span("年化報酬"), strong(uiOutput("v7_10_ann", inline = TRUE))),
                   div(class = "home-stat", span("最大回撤"), strong(uiOutput("v7_10_mdd", inline = TRUE))),
                   div(class = "home-stat", span("年化波動"), strong(uiOutput("v7_10_vol", inline = TRUE))),
@@ -2191,7 +2213,7 @@ ui <- fluidPage(
                   div(class = "home-stat", span("Sharpe 差"), strong(uiOutput("v7_diff_sharpe", inline = TRUE)))),
               div(class = "home-side home-side-0050",
                   h2("0050"), p("元大台灣50 ETF", class = "home-side-subtitle"),
-                  div(class = "home-stat", span("本期累積報酬"), strong(uiOutput("v7_50_ret", inline = TRUE))),
+                  div(class = "home-stat", span("持股回溯報酬"), strong(uiOutput("v7_50_ret", inline = TRUE))),
                   div(class = "home-stat", span("年化報酬"), strong(uiOutput("v7_50_ann", inline = TRUE))),
                   div(class = "home-stat", span("最大回撤"), strong(uiOutput("v7_50_mdd", inline = TRUE))),
                   div(class = "home-stat", span("年化波動"), strong(uiOutput("v7_50_vol", inline = TRUE))),
@@ -2200,7 +2222,7 @@ ui <- fluidPage(
           p(class = "home-small-note", "漲跌數字：漲紅、跌綠。差額以百分點（pp）表示；風險指標不以正負代表好壞。"),
           div(class = "home-qualifier",
               "比較口徑：0010 為目前十檔名單及權重的本期回溯持有試算，非歷史各期實際選股績效；",
-              "未扣交易成本。完整 T+1、含成本回測請見「0010組合 → 季度再平衡回測」。")
+              "未扣交易成本。完整 T+1、含成本的季度策略回測請見「模型驗證 → 季度策略回測」。")
       ),
       div(class = "section-box",
           h2("0010 與 0050 累積報酬走勢"),
@@ -2210,7 +2232,8 @@ ui <- fluidPage(
                          min=data_min_date, max=data_max_date, format="yyyy-mm-dd", separator=" 至 ", language="zh-TW"),
           textOutput("v9_curve_actual_range"),
           plotOutput("v7_home_curve", height = "420px")),
-      div(class = "section-box",
+      tags$details(class = "method-details v25-home-expand", tags$summary("展開每日報酬波動對照"),
+div(class = "section-box",
           h2("日對數報酬率｜0010 與 0050"),
           p(class = "page-description", "兩圖使用同一組日期與共同縱軸尺度，可獨立於上方的累積報酬圖調整期間。0010 為目前持股與權重的回溯試算。"),
           dateRangeInput("v9_daily_range", "日對數報酬圖｜選擇起訖日期：",
@@ -2220,7 +2243,7 @@ ui <- fluidPage(
           fluidRow(
             column(6, h3("0010｜日對數報酬率"), plotOutput("v8_p10_daily_log", height = "290px")),
             column(6, h3("0050｜日對數報酬率"), plotOutput("v8_0050_daily_log", height = "290px"))
-          )),
+          ))),
       div(class = "section-box",
           h2("0050 近期市場概況"),
           fluidRow(
@@ -2240,10 +2263,11 @@ ui <- fluidPage(
                                  min=data_min_date, max=data_max_date, format="yyyy-mm-dd", language="zh-TW", weekstart=1)),
           p(class = "home-small-note", "均線、RSI、波動狀態僅供描述市場，不是買賣訊號。")
       ),
-      div(class = "section-box",
+      tags$details(class = "method-details v25-home-expand", tags$summary("展開成分股近 30 日漲跌排名"),
+div(class = "section-box",
           h2("近 30 個交易日成分股漲跌幅"),
           plotOutput("market_30d_return_ranking", height = "700px")
-      ),
+      )),
       div(class = "section-box",
           h2("0010 本期持股與權重"),
           tableOutput("v4_home_table"),
@@ -2273,169 +2297,13 @@ ui <- fluidPage(
       )
     ),
 
-    # ========================================================
-    # 3. 成長／動能排名
-    # ========================================================
-    
-    tabPanel(
-      "排名與分數",
-      tabsetPanel(
-        id = "rank_subtabs",
-        type = "pills",
-
-        # v12：直接呈現兩張 Top10 長條圖，公式與全名單各自展開。
-        tabPanel(
-          "雙排名對照",
-          div(
-            class = "section-box rank-compare",
-            h2("成分股排名與評分分析"),
-            p(class = "rank-compare-lead",
-              "從動能與風險兩個角度選股，再透過歷史回測檢驗排名的價值。"),
-            div(class = "time-info rank-compare-date", strong("評分日："),
-                textOutput("v6_rank_date", inline = TRUE),
-                "｜同一評分日各自排序，分數不是預測漲幅。"),
-            div(
-              class = "rank-compare-grid",
-              div(
-                class = "rank-compare-card momentum",
-                h3("動能分排名"),
-                p(class = "rank-compare-description", "尋找具有報酬延續潛力的候選股"),
-                div(class = "rank-compare-chart", plotOutput("rank_compare_mom_chart_v8", height = "490px")),
-                p(class = "rank-compare-hint", "依動能分由高至低排列；分數越高，代表過去的相對動能越強。"),
-                tags$details(
-                  class = "rank-compare-expand",
-                  tags$summary("查看動能評分細節與完整排名"),
-                  div(class = "rank-compare-expanded",
-                      div(class = "rank-compare-section", "評分組成"),
-                      div(class = "rank-compare-weight",
-                          "近 6 個月報酬百分位：55%", tags$br(),
-                          "12−1 個月動能百分位：45%"),
-                      div(class = "rank-compare-section", "完整成分股動能排名（不含產業欄）"),
-                      tableOutput("rank_compare_mom_detail"))
-                )
-              ),
-              div(
-                class = "rank-compare-card risk",
-                h3("風險穩定分排名"),
-                p(class = "rank-compare-description", "評估股票的歷史風險是否相對可控"),
-                div(class = "rank-compare-chart", plotOutput("rank_compare_risk_chart_v8", height = "490px")),
-                p(class = "rank-compare-hint", "依穩定分由高至低排列；分數越高，代表綜合風險評價較有利。"),
-                tags$details(
-                  class = "rank-compare-expand",
-                  tags$summary("查看風險評分細節與完整排名"),
-                  div(class = "rank-compare-expanded",
-                      div(class = "rank-compare-section", "評分組成"),
-                      div(class = "rank-compare-weight",
-                          "年化波動：30%｜最大回撤：25%", tags$br(),
-                          "CVaR：20%｜Sharpe：15%｜GARCH：10%"),
-                      div(class = "rank-compare-section", "完整成分股風險指標拆解"),
-                      tableOutput("v4_risk_decomp"),
-                      p(class = "rank-compare-note",
-                        "GARCH 尚未估計時沿用既有的中性 50 分設定；模型及計分方法未調整。"))
-                )
-              )
-            ),
-            div(
-              class = "rank-compare-flow",
-              h3("這些排名會用在哪裡？"),
-              div(class = "rank-compare-steps",
-                  div(class = "rank-compare-step", strong("動能＋風險"), tags$small("形成選股分數")),
-                  span(class = "rank-compare-arrow", "→"),
-                  div(class = "rank-compare-step", strong("組成 0010"), tags$small("評分＋風險門檻")),
-                  span(class = "rank-compare-arrow", "→"),
-                  div(class = "rank-compare-step", strong("歷史驗證"), tags$small("檢查排名是否有用")))
-            ),
-            p(class = "rank-compare-note",
-              "兩張榜單獨立排名，左右相同名次不一定是同一檔股票。排名是研究依據，不代表未來報酬保證。")
-          )
-        ),
-
-        # v10：權重敏感度實驗，與正式 0010 持倉完全獨立。
-        tabPanel(
-          "權重比較實驗",
-          div(
-            class = "section-box rank-lab",
-            h2("選股權重比較實驗"),
-            p(class = "page-description",
-              "如果只看動能、只看風險，或兩者各占一部分，選股結果會有什麼差別？這裡調整的是研究用排名，不影響正式 0010 組合。"),
-            div(class = "time-info", strong("目前評分日："), textOutput("rank_lab_date", inline = TRUE),
-                "｜與前兩個排名使用同一批當期分數。"),
-            fluidRow(
-              column(8,
-                     sliderInput("rank_lab_mom_weight", "動能權重（剩餘為風險權重）",
-                                 min = 0, max = 100, value = 70, step = 5, post = "%")),
-              column(4,
-                     p("目前比例", class = "rank-lab-hint"),
-                     div(class = "rank-lab-ratio", textOutput("rank_lab_mix_text", inline = TRUE)))
-            ),
-            div(class = "rank-lab-actions",
-                actionButton("rank_lab_all_mom", "純動能 100／0"),
-                actionButton("rank_lab_all_risk", "純風險 0／100"),
-                actionButton("rank_lab_half", "各半 50／50"),
-                actionButton("rank_lab_default", "現行 70／30")),
-            div(class = "rank-lab-formula", strong("合成評分："),
-                textOutput("rank_lab_formula", inline = TRUE)),
-            p(class = "rank-lab-hint",
-              "沿用既有動能分、風險穩定分、風險門檻及產業上限（每產業最多 3 檔）。僅更換兩種分數的合成比例；GARCH 計分機制維持現況。"),
-            h3("這組權重會選出哪些股票？", class = "rank-lab-section"),
-            plotOutput("rank_lab_top10_plot", height = "390px"),
-            tableOutput("rank_lab_selected_table"),
-            tags$details(class = "method-details",
-                         tags$summary("展開完整排名與篩選理由"),
-                         tableOutput("rank_lab_full_table")),
-            h3("排名的歷史有效性比較", class = "rank-lab-section"),
-            p(class = "page-description",
-              "比較純動能、純風險、各半、現行 70／30，以及目前自訂比例：每季依當時資料評分，下一交易日開始觀察未來 63 個交易日。"),
-            actionButton("rank_lab_run_history", "執行歷史比較", class = "btn-primary"),
-            div(style = "margin-top:12px;", textOutput("rank_lab_history_status")),
-            tableOutput("rank_lab_history_table"),
-            div(class = "plot-explanation",
-                "這是『排名訊號』的比較：Top 10 後續報酬與 Bottom 10 後續報酬都採等權平均，未扣交易成本；不是正式 0010 組合的 T+1 含成本回測。",
-                tags$br(),
-                "IC 為當期分數與未來 63 日報酬的 Spearman 相關；Top10 − Bottom10 依當期評分排序，不使用未來報酬挑選 Bottom10。",
-                tags$br(),
-                "歷史分數在缺少各期 GARCH 預測時沿用既有中性 50 分設定；樣本依目前的 0050 成分股清單回溯，存在成分股存活者偏誤。")
-          )
-        )
-      )
-    ),
-    
-    
-    # ========================================================
-    # 11. 研究方法與資料說明
-    # ========================================================
-    # ========================================================
-    # 9. GARCH 預測與 0010 組合（新增頁籤）
-    #    插入位置：放在「研究方法與說明」tabPanel 之前
-    # ========================================================
-    
-    tabPanel(
-      "0010組合",
-      div(
-        class = "section-box",
-        h2("0010 組合研究"),
-        p(class = "g10-v10-lead",
-          "以統計評分建立十檔股票組合，從選股結果、波動模型到季度回測，逐步檢驗方法的表現。"),
-        tags$details(class = "method-details",
-          tags$summary("研究方法與名詞說明"),
-          tags$ul(
-            tags$li("動能 70%＋風險穩定 30% 為現行綜合評分比例，並搭配風險門檻與產業分散限制。"),
-            tags$li("權重是股票占組合資金的比例；預設以波動度反比配置，單檔上限 20%。"),
-            tags$li("換手率代表持股配置需要調整的程度；滑價則是理想成交價與實際成交價的差距。"),
-            tags$li("歷史季度回測使用當期資訊進行選股，和本期手動調整資金配置是不同的試算。"),
-            tags$li("GARCH 是風險評分的一項輸入；歷史回測的波動估計採 EWMA，不等於全期 GARCH 回測。")
-          )
-        ),
-        tabsetPanel(
-          id = "g10_tabs",
-          type = "pills",
-          selected = "0010 組合",
-          
-          # --------------------------------------------------
-          # 1. 0010 組合（本期）：先看結果，再按需要展開統計細項
-          # --------------------------------------------------
-          tabPanel(
-            "0010 組合",
+tabPanel("0010 組合",
+      div(class="section-box v25-main-lead",
+        h2("0010｜本期選股與資金配置"),
+        p("只想知道目前選了哪 10 檔、怎麼配置，就看這裡。選股的歷史準確性請到『模型驗證』查看。")),
+      tabsetPanel(id="v25_portfolio_tabs",type="pills",
+tabPanel(
+            "本期持股與配置",
             br(),
             div(class = "g10-v12 g10-v13",
               div(class = "g10-v13-head",
@@ -2538,7 +2406,7 @@ ui <- fluidPage(
                 tags$summary(
                   span(class = "g10-v13-exp-icon", "⌁"),
                   span(class = "g10-v13-exp-copy",
-                    strong("持有追蹤與風險控制"),
+                    strong("上季持有追蹤與風險控制"),
                     tags$small("查看持股變化、報酬、波動倍數，以及停損／停利參考價")),
                   span(class = "g10-v13-exp-action",
                     span(class = "when-closed", "展開查看 ▾"),
@@ -2546,7 +2414,7 @@ ui <- fluidPage(
                 ),
                 div(class = "g10-v10-expand-body",
                   p(class = "g10-v10-subtle",
-                    "以最近一次已結束季度的選股名單為基準，使用季末收盤價進行持有模擬；上方的配置方式與單檔上限會同步套用。"),
+                    "「上季持有追蹤」使用最近一次已結束季度的選股名單（不一定與本期相同），從季末價格模擬持有到最新資料日；上方的配置方式與單檔上限會同步套用。"),
                   uiOutput("g10_v14_track_period"),
                   div(class = "g10-v14-summary-grid",
                     div(class = "g10-v14-summary-card",
@@ -2578,160 +2446,115 @@ ui <- fluidPage(
                 "本期評分與配置顯示如何選股；是否有效，仍需在季度回測中用歷史資料驗證。")
             )
           ),
-
-          # --------------------------------------------------
-          # 2. 單檔 GARCH：v16 只修改呈現方式，沿用全部既有輸出
-          # --------------------------------------------------
-          tabPanel(
-            "GARCH 診斷：單檔",
-            div(class = "g16-single",
-              div(class = "g16-head",
-                span(class = "g16-eyebrow", "GARCH(1,1) · 單檔分析"),
-                h3("這檔股票，未來一季的波動可能怎麼變？"),
-                p("先比較預測與歷史波動，再查看走勢；統計參數與檢定結果可於下方展開。")
-              ),
-              div(class = "g16-controls",
-                fluidRow(
-                  column(5, selectInput("g10_stock", "選擇股票",
-                    choices = setNames(stock_info$symbol,
-                      paste0(stock_info$name, " (", stock_info$symbol, ")")),
-                    selected = "2330")),
-                  column(4, selectInput("g10_window", "估計資料期間",
-                    choices = c("近 2 年" = 500, "近 4 年" = 1000, "近 6 年" = 1500),
-                    selected = 1000)),
-                  column(3, div(class = "g16-horizon",
-                    span("預測範圍"),
-                    strong("未來 63 個交易日"),
-                    tags$small("約一季；非價格漲跌預測")))
+tabPanel(
+          "選股評分",
+          div(
+            class = "section-box rank-compare",
+            h2("成分股排名與評分分析"),
+            p(class = "rank-compare-lead",
+              "從動能與風險兩個角度選股，再透過歷史回測檢驗排名的價值。"),
+            div(class = "time-info rank-compare-date", strong("評分日："),
+                textOutput("v6_rank_date", inline = TRUE),
+                "｜同一評分日各自排序，分數不是預測漲幅。"),
+            div(
+              class = "rank-compare-grid",
+              div(
+                class = "rank-compare-card momentum",
+                h3("動能分排名"),
+                p(class = "rank-compare-description", "尋找具有報酬延續潛力的候選股"),
+                div(class = "rank-compare-chart", plotOutput("rank_compare_mom_chart_v8", height = "490px")),
+                p(class = "rank-compare-hint", "依動能分由高至低排列；分數越高，代表過去的相對動能越強。"),
+                tags$details(
+                  class = "rank-compare-expand",
+                  tags$summary("查看動能評分細節與完整排名"),
+                  div(class = "rank-compare-expanded",
+                      div(class = "rank-compare-section", "評分組成"),
+                      div(class = "rank-compare-weight",
+                          "近 6 個月報酬百分位：55%", tags$br(),
+                          "12−1 個月動能百分位：45%"),
+                      div(class = "rank-compare-section", "完整成分股動能排名（不含產業欄）"),
+                      tableOutput("rank_compare_mom_detail"))
                 )
               ),
-              div(class = "g16-kpis",
-                div(class = "g16-kpi",
-                  span("未來一季預測年化波動"),
-                  strong(textOutput("g10_kpi_fvol", inline = TRUE)),
-                  tags$small("GARCH 模型預測")),
-                div(class = "g16-kpi",
-                  span("近一年歷史年化波動"),
-                  strong(textOutput("g10_kpi_rvol", inline = TRUE)),
-                  tags$small("作為比較基準")),
-                div(class = "g16-kpi",
-                  span("預測／歷史比值"),
-                  strong(textOutput("g10_kpi_ratio", inline = TRUE)),
-                  tags$small("大於 1 表示預測波動較高")),
-                div(class = "g16-kpi g16-kpi-state",
-                  span("波動狀態"),
-                  strong(textOutput("g10_kpi_regime", inline = TRUE)),
-                  tags$small("依現有 0.90／1.10 門檻判定"))
-              ),
-              div(class = "g16-insight",
-                div(class = "g16-insight-head", "這次的預測要怎麼看？"),
-                uiOutput("g16_one_summary")
-              ),
-              div(class = "g16-graph-grid",
-                div(class = "g16-graph-card",
-                  div(class = "g16-graph-tag", "01｜往後看"),
-                  h4("未來 63 日波動預測"),
-                  p("綠線為預測波動；紅色虛線為近一年歷史波動基準。"),
-                  plotOutput("g10_fan", height = "325px"),
-                  uiOutput("g17_forecast_readout")),
-                div(class = "g16-graph-card",
-                  div(class = "g16-graph-tag", "02｜往回看"),
-                  h4("模型與歷史波動對照"),
-                  p("藍線為 GARCH 配適波動，灰線為近 21 日的歷史波動估計。"),
-                  plotOutput("g10_vol_path", height = "325px"),
-                  uiOutput("g17_history_readout"))
-              ),
-              div(class = "g16-foot",
-                "波動代表價格起伏程度，不等於未來漲跌方向；本頁為模型估計，不代表投資建議。"
-              ),
-              h4(class = "g16-more-head", "完整統計資料"),
-              p(class = "g16-more-lead", "保留最大概似估計與診斷表。需要研究細節時，直接點開對應項目。"),
-              tags$details(class = "g16-details",
-                tags$summary(
-                  span(class = "g16-details-num", "01"),
-                  span(class = "g16-details-copy",
-                    tags$strong("查看模型參數｜ω、α、β 與波動持續性"),
-                    tags$small("最大概似估計值、標準誤、t 值與半衰期")),
-                  span(class = "g16-details-action", "展開")
-                ),
-                div(class = "g16-details-body",
-                  p("這一區說明模型如何描述波動的衝擊與延續；數值用來檢查估計結果，不是股票的預測報酬。"),
-                  div(class = "g16-table-scroll", tableOutput("g10_param_table"))
-                )
-              ),
-              tags$details(class = "g16-details",
-                tags$summary(
-                  span(class = "g16-details-num", "02"),
-                  span(class = "g16-details-copy",
-                    tags$strong("查看模型診斷｜殘差、收斂與風險值"),
-                    tags$small("Ljung-Box p 值、AIC／BIC、VaR／CVaR 等完整指標")),
-                  span(class = "g16-details-action", "展開")
-                ),
-                div(class = "g16-details-body",
-                  p("Ljung-Box 用來檢查標準化殘差是否仍有自相關；p 值大於 0.05 只代表沒有足夠證據拒絕無自相關假設，並非保證模型正確。"),
-                  div(class = "g16-table-scroll", tableOutput("g10_diag"))
+              div(
+                class = "rank-compare-card risk",
+                h3("風險穩定分排名"),
+                p(class = "rank-compare-description", "評估股票的歷史風險是否相對可控"),
+                div(class = "rank-compare-chart", plotOutput("rank_compare_risk_chart_v8", height = "490px")),
+                p(class = "rank-compare-hint", "依穩定分由高至低排列；分數越高，代表綜合風險評價較有利。"),
+                tags$details(
+                  class = "rank-compare-expand",
+                  tags$summary("查看風險評分細節與完整排名"),
+                  div(class = "rank-compare-expanded",
+                      div(class = "rank-compare-section", "評分組成"),
+                      div(class = "rank-compare-weight",
+                          "年化波動：30%｜最大回撤：25%", tags$br(),
+                          "CVaR：20%｜Sharpe：15%｜GARCH：10%"),
+                      div(class = "rank-compare-section", "完整成分股風險指標拆解"),
+                      tableOutput("v4_risk_decomp"),
+                      p(class = "rank-compare-note",
+                        "GARCH 尚未估計時沿用既有的中性 50 分設定；模型及計分方法未調整。"))
                 )
               )
-            )
-          ),
+            ),
+            div(
+              class = "rank-compare-flow",
+              h3("這些排名會用在哪裡？"),
+              div(class = "rank-compare-steps",
+                  div(class = "rank-compare-step", strong("動能＋風險"), tags$small("形成選股分數")),
+                  span(class = "rank-compare-arrow", "→"),
+                  div(class = "rank-compare-step", strong("組成 0010"), tags$small("評分＋風險門檻")),
+                  span(class = "rank-compare-arrow", "→"),
+                  div(class = "rank-compare-step", strong("歷史驗證"), tags$small("檢查排名是否有用")))
+            ),
+            p(class = "rank-compare-note",
+              "兩張榜單獨立排名，左右相同名次不一定是同一檔股票。排名是研究依據，不代表未來報酬保證。")
+          )
+        ),
+tabPanel(
+          "權重設定實驗",
+          div(
+            class = "section-box rank-lab",
+            h2("選股權重比較實驗"),
+            p(class = "page-description",
+              "調整研究用動能／風險權重，觀察本期會選出哪些股票；歷史有效性統一在「模型驗證」查看，不影響正式 0010。"),
+            div(class = "time-info", strong("目前評分日："), textOutput("rank_lab_date", inline = TRUE),
+                "｜與前兩個排名使用同一批當期分數。"),
+            fluidRow(
+              column(8,
+                     sliderInput("rank_lab_mom_weight", "動能權重（剩餘為風險權重）",
+                                 min = 0, max = 100, value = 70, step = 5, post = "%")),
+              column(4,
+                     p("目前比例", class = "rank-lab-hint"),
+                     div(class = "rank-lab-ratio", textOutput("rank_lab_mix_text", inline = TRUE)))
+            ),
+            div(class = "rank-lab-actions",
+                actionButton("rank_lab_all_mom", "純動能 100／0"),
+                actionButton("rank_lab_all_risk", "純風險 0／100"),
+                actionButton("rank_lab_half", "各半 50／50"),
+                actionButton("rank_lab_default", "現行 70／30")),
+            div(class = "rank-lab-formula", strong("合成評分："),
+                textOutput("rank_lab_formula", inline = TRUE)),
+            p(class = "rank-lab-hint",
+              "沿用既有動能分、風險穩定分、風險門檻及產業上限（每產業最多 3 檔）。僅更換兩種分數的合成比例；GARCH 計分機制維持現況。"),
+            h3("這組權重會選出哪些股票？", class = "rank-lab-section"),
+            plotOutput("rank_lab_top10_plot", height = "390px"),
+            tableOutput("rank_lab_selected_table"),
+            tags$details(class = "method-details",
+                         tags$summary("展開完整排名與篩選理由"),
+                         tableOutput("rank_lab_full_table"))
+          )
+        ))
+    ),
 
-          # --------------------------------------------------
-          # 3. v21 全體 GARCH：獨立估計期間、明確顯示設定／實際結果，延續單色排名
-          # --------------------------------------------------
-          tabPanel(
-            "GARCH 診斷：全體",
-            div(class = "g18-panel g19-all-garch g20-all-garch g21-all-garch",
-              h3("0050 成分股｜未來一季波動預測"),
-              p(class = "g18-intro", "用過去的股價資料估計 GARCH，觀察未來一季哪些成分股的價格起伏可能較大。這裡比較的是風險，不是預測股價漲跌。"),
-              div(class = "g21-setup",
-                div(class = "g21-run-row",
-                  div(class = "g21-window-control",
-                    selectInput("g21_all_window", "歷史估計期間",
-                      choices = c("近 2 年（500 個交易日）" = 500,
-                                  "近 4 年（1,000 個交易日）" = 1000,
-                                  "近 6 年（1,500 個交易日）" = 1500),
-                      selected = 1000, width = "100%")),
-                  div(class = "g21-run-action",
-                    actionButton("g10_run_all", "執行全體 GARCH 估計", class = "btn-primary"))
-                ),
-                div(class = "g21-setup-cards",
-                  div(class = "g21-setup-card",
-                    span("準備使用的歷史資料"),
-                    strong(textOutput("g21_window_label", inline = TRUE)),
-                    tags$small("最多取所選交易日數的報酬；資料不足者使用可取得期間")),
-                  div(class = "g21-setup-card",
-                    span("預測未來"), strong("63 個交易日"),
-                    tags$small("約一季；波動以年化 % 表示，不是預測一年"))
-                )
-              ),
-              uiOutput("g21_all_status"),
-              uiOutput("g18_g_summary"),
-              h4("全體股票｜預測年化波動排名"),
-              div(class = "g21-reading",
-                tags$strong("這張圖怎麼看？"),
-                span("長條越長，代表模型預測未來一季的價格波動可能越劇烈；不是未來報酬排名，也不代表一定下跌。")),
-              uiOutput("g18_g_chart_box"),
-              p(class = "g18-hint", "圖表列出全部有效預測股票；歷史波動、比值及 GARCH 模型參數保留在下方展開區。個股波動不等於 0010 整體組合波動。"),
-              tags$details(class = "g18-detail",
-                tags$summary(
-                  span(class = "g18-detail-icon", "01"),
-                  span(class = "g18-detail-copy", tags$strong("完整 GARCH 參數與個股數據"),
-                       tags$small("查看所有估計結果的 ω、α、β、持續性、半衰期、預測／歷史波動與比值")),
-                  span(class = "g18-detail-action", "展開 ▾")
-                ),
-                div(class = "g18-detail-content",
-                  p(class = "g18-hint", "完整表格保留原本的參數與比值資訊；缺少足夠資料的股票可能顯示空值，這與上方圖表的有效股票數不同。"),
-                  div(class = "g18-table-wrap", tableOutput("g10_all_table"))
-                )
-              )
-            )
-          ),
-
-          # --------------------------------------------------
-          # 4. v18 季度回測：評分年度篩選與季度績效比較
-          # --------------------------------------------------
-          tabPanel(
-            "季度再平衡回測",
+tabPanel("模型驗證",
+      div(class="section-box v25-main-lead",
+        h2("0010｜研究驗證"),
+        p("先檢查整套 0010 策略有沒有勝過 0050，再確認選股評分有沒有用；GARCH 波動預測的準確度則屬於第三層證據。"),
+        p(class="v25-method-hint","季度勝率、選股排名命中率、GARCH 模型領先比例是不同指標，不能視為同一種準確率。")),
+      tabsetPanel(id="v25_validation_tabs",type="pills",
+tabPanel(
+            "季度策略回測",
             div(class = "g18-panel",
               h3("0010 季度再平衡回測"),
               p(class = "g18-intro", "每季依當時資料選股、於次一交易日進場，觀察扣除成本後是否優於 0050。可按評分年度查看季度結果。"),
@@ -2760,7 +2583,9 @@ ui <- fluidPage(
                 ),
                 div(class = "g18-detail-content",
                   p(class = "g18-hint", "以下是原本的「全回測期間」指標與淨值，不隨年份選單改變；避免把局部年度與完整期間混淆。"),
-                  h4("排名有效性"), tableOutput("v5_bt_acc"),
+                  h4("原版排名指標（Spread 尚待修正）"),
+                  p(class="v25-rank-warning", "原版 Spread 的分組使用事後實際報酬，不能據此宣稱高分股票勝過低分股票。本版保留原回測結果不改公式；評估選股時請改看『選股有效性』的歷史實際名次與獨立排名比較。"),
+                  tableOutput("v5_bt_acc"),
                   div(class = "plot-explanation", textOutput("v5_bt_result", inline = TRUE)),
                   h4("全期間績效摘要"), tableOutput("v5_bt_stats"),
                   h4("全期間淨值走勢（已扣成本）"), plotOutput("v5_bt_curve", height = "420px"),
@@ -2770,21 +2595,50 @@ ui <- fluidPage(
                 )
               )
             )
-          )
-        )
-      )
-    ),
-    
-    
-    # ========================================================
-    # v15 模型驗證：先看預測比較，再看完整診斷
-    # 只重排 UI；原本 v5_goos / v5_gdiag / v4ts 等運算不修改。
-    # ========================================================
-    tabPanel(
-      "模型驗證",
+          ),
+tabPanel(
+  "選股有效性",
+  div(class="section-box v25-valid-rank",
+      h2("選股有效性｜選出來的股票，後來真的表現比較好嗎？"),
+      p(class="page-description", "比較歷史評分日選出的 0010 股票，與同一期其他可比較成分股的未來實際報酬名次。這不是拿已知漲幅回頭選股。"),
+      div(class="v25-method-hint", "先在『季度策略回測』按下執行；再回到這裡選擇歷史季度。評分只使用該評分日之前的資料，報酬從下一交易日的成交價算至該季出場日。"),
+      selectInput("v25_rank_quarter", "選擇要驗證的歷史評分季度", choices=c("請先執行季度策略回測"=""), width="100%"),
+      uiOutput("v25_rank_status"),
+      uiOutput("v25_rank_summary"),
+      h3("本季入選股票｜實際報酬相對排名"),
+      div(class="g18-table-wrap",tableOutput("v25_rank_selected")),
+      p(class="v25-method-hint", "『實際報酬排名』是按同一持有期間的調整後價格報酬由高到低排列；不含個別股票交易成本。選股評分排名與事後實際報酬名次是不同概念。"),
+      tags$details(class="method-details",
+        tags$summary("查看全部可比較成分股的未來報酬排名"),
+        div(class="g18-table-wrap",tableOutput("v25_rank_all")),
+        downloadButton("v25_rank_csv", "下載該季完整排名 CSV")),
+      p(class="v25-rank-warning", "研究限制：可比較範圍是目前 0050 成分股名單在該評分日具有效評分資料、且進出場日均有有效價格者，並非當年的歷史 0050 正式成分股名單；存在存活者偏誤。單季排名也不能直接代表長期選股能力。")
+  ),
+  tags$details(class="method-details v25-validate-extra",
+    tags$summary("展開歷史排名訊號與權重敏感度比較（Spearman IC）"),
+    div(class="section-box rank-lab",
+      h3("多期選股排名有效性"),
+      p(class="page-description","以歷史評分而非事後報酬定義高低分組；這是選股訊號測試，不等於含交易成本的 0010 策略回測。"),
+      h3("排名的歷史有效性比較", class = "rank-lab-section"),
+            p(class = "page-description",
+              "比較純動能、純風險、各半、現行 70／30，以及目前自訂比例：每季依當時資料評分，下一交易日開始觀察未來 63 個交易日。"),
+            actionButton("rank_lab_run_history", "執行歷史比較", class = "btn-primary"),
+            div(style = "margin-top:12px;", textOutput("rank_lab_history_status")),
+            tableOutput("rank_lab_history_table"),
+            div(class = "plot-explanation",
+                "這是『排名訊號』的比較：Top 10 後續報酬與 Bottom 10 後續報酬都採等權平均，未扣交易成本；不是正式 0010 組合的 T+1 含成本回測。",
+                tags$br(),
+                "IC 為當期分數與未來 63 日報酬的 Spearman 相關；Top10 − Bottom10 依當期評分排序，不使用未來報酬挑選 Bottom10。",
+                tags$br(),
+                "歷史分數在缺少各期 GARCH 預測時沿用既有中性 50 分設定；樣本依目前的 0050 成分股清單回溯，存在成分股存活者偏誤。")
+    )
+  )
+),
+tabPanel(
+      "波動預測誤差",
       div(
         class = "section-box v15-validation",
-        h2("模型驗證｜哪種方法預測波動比較準？"),
+        h2("波動預測誤差｜哪種方法比較準？"),
         p(class = "v15-lead",
           "使用相同的樣本外比較規則，檢查 GARCH、EWMA 和 21 日滾動法的預測誤差。先看全體，再選個股深入分析。"),
 
@@ -2869,101 +2723,24 @@ ui <- fluidPage(
             "另外三條是各方法預測的每日波動幅度。波動預測不必逐日貼合尖峰；整體準確度仍應看上方誤差表。"),
           p(class = "v15-footnote",
             "此處比較的是樣本外每日波動預測，不是股價漲跌方向，也不是未來 63 日預測的直接驗證。誤差較小不代表差異達統計顯著，更不代表投資報酬較高。")
-        ),
-
-        h3(class = "v15-more-title", "完整統計資料"),
-        p(class = "v15-plain-note", "研究細節都保留，需要查看時再展開，不影響上方的快速判讀。"),
-
-        tags$details(class = "v15-detail", 
-          tags$summary(
-            span(class = "v15-detail-icon", "01"),
-            span(class = "v15-detail-copy",
-                 tags$strong("GARCH 殘差診斷與全體收斂"),
-                 tags$small("標準化殘差、平方殘差、ARCH-LM、模型參數與收斂清單")),
-            span(class = "v15-detail-action", "展開詳細資料")),
-          div(class = "v15-detail-body",
-            h4("單檔殘差診斷"),
-            p(class = "v15-plain-note", "以下結果對應上方選擇的股票；p 值大於 0.05 只代表未發現顯著殘留結構，並非保證模型正確。"),
-            tableOutput("v5_gdiag_tab"),
-            p(class = "v23-howto", tags$strong("殘差檢定怎麼看？ "),
-              "Ljung-Box 檢查殘差自相關，ARCH-LM 檢查是否還留有波動叢聚。",
-              "p 值較小（例如不大於 0.05）表示模型可能未充分捕捉資料特徵；p 值較大不能證明模型一定準。"),
-            h4("全部成分股：GARCH 收斂狀況"),
-            p(class = "v15-plain-note", "此項需要手動執行，完成後才顯示全體結果。"),
-            fluidRow(
-              column(6, actionButton("v5_run_gall", "執行全體收斂檢查", class = "btn-primary")),
-              column(6, div(class = "v15-window-note", "估計視窗與「0010 組合」頁設定相同"))
-            ),
-            tableOutput("v5_gall_summary"),
-            div(class = "v15-table-scroll", tableOutput("v5_gall_tab"))
-          )
-        ),
-
-        tags$details(class = "v15-detail", 
-          tags$summary(
-            span(class = "v15-detail-icon", "02"),
-            span(class = "v15-detail-copy",
-                 tags$strong("時間序列檢定與動能持續性"),
-                 tags$small("ADF、ARIMA、Ljung-Box 與全體成分股動能持續性")),
-            span(class = "v15-detail-action", "展開詳細資料")),
-          div(class = "v15-detail-body",
-            fluidRow(
-              column(4, selectInput("v4ts_stock", "時間序列檢定標的：",
-                                    choices = stats::setNames(stock_info$symbol,
-                                      paste0(stock_info$name, " (", stock_info$symbol, ")")),
-                                    selected = "2330")),
-              column(4, div(class = "v15-window-note", strong("樣本："),
-                            textOutput("v4ts_n", inline = TRUE))),
-              column(4, actionButton("v4ts_run_persist", "計算動能持續性", class = "btn-primary"))
-            ),
-            p(class = "v15-plain-note", "時間序列檢定標的可獨立選擇，不會改動上方 GARCH 預測比較的股票。"),
-            p(class = "v23-howto", tags$strong("這裡的樣本 n 是什麼？ "),
-              "上方 n 是該股票可取得的有效價格交易日數；下方時間序列檢定最多採最近 1261 筆價格計算。",
-              "它和前面『有效比較股票數』不同。觀察日數多不等於模型必然有效，仍要看檢定條件與殘差結果。"),
-            h4("定態性與殘差檢查"),
-            tableOutput("v4ts_diag"),
-            h4("ARIMA 模型選擇（AIC 排序）"),
-            tableOutput("v4ts_grid"),
-            p(class = "v23-howto", tags$strong("這兩張表怎麼看？ "),
-              "ADF 用來檢查序列是否有單根；ARIMA 表中的 AIC 越低，表示在這批候選模型中相對較合適，",
-              "並非保證未來預測更準。"),
-            h4("動能持續性檢驗"),
-            tableOutput("v4ts_persist"),
-            p(class = "v23-howto", tags$strong("動能持續性怎麼看？ "),
-              "觀察過去表現能否延續到後續期間；beta 的正負代表方向，R 平方描述擬合程度。",
-              "這項分析與上方的波動預測誤差比較是不同研究問題。")
-          )
-        ),
-
-        div(class = "v15-scope-note",
-            strong("判讀原則："),
-            "預測誤差與殘差檢定回答的是不同問題。誤差較小不等於差異具有統計顯著性；檢定未發現異常也不代表預測一定準確。")
+        )
       )
+    ))
     ),
 
-    # ========================================================
-    # 5. 主成分與分群
-    # ========================================================
-    
-    tabPanel(
-      "其他",
-      tabsetPanel(
-        id = "appendix_tabs",
-        type = "pills",
-    
-    
-    # ========================================================
-    # 6. 個股分析
-    # ========================================================
-    
-    tabPanel(
+tabPanel("市場分析",
+      div(class="section-box v25-main-lead",
+        h2("市場分析與股票資訊"),
+        p("想深入查看個股、產業或未來一季的波動預測，再使用這裡；波動預測不是未來漲跌方向。")),
+      tabsetPanel(id="v25_market_tabs",type="pills",
+tabPanel(
       
-      "個股分析",
+      "股票資訊",
       
       div(
         class = "section-box",
         
-        h2("個股分析"),
+        h2("股票資訊"),
         
         p(
           class = "page-description",
@@ -3097,7 +2874,8 @@ ui <- fluidPage(
         
         hr(),
         
-        h3("日對數報酬分布"),
+        tags$details(class = "method-details", tags$summary("展開日報酬分布、箱型圖與逐日序列"),
+h3("日對數報酬分布"),
         
         uiOutput(
           "return_distribution_ui"
@@ -3123,8 +2901,9 @@ ui <- fluidPage(
         ),
         
         
+        hr()
+        ),
         hr(),
-        
         h3("期間績效"),
         
         tableOutput(
@@ -3177,13 +2956,7 @@ ui <- fluidPage(
         plotOutput("individual_rolling_correlation_chart", height = "420px"),
       )
     ),
-    
-    
-    # ========================================================
-    # 7. 產業比較
-    # ========================================================
-    
-    tabPanel(
+tabPanel(
       
       "產業比較",
       
@@ -3275,10 +3048,160 @@ ui <- fluidPage(
         
       )
       
-    ))),
+    ),
+        tabPanel("GARCH 波動預測",
+          tabsetPanel(id="v25_garch_tabs",type="pills",
+tabPanel(
+            "單檔預測",
+            div(class = "g16-single",
+              div(class = "g16-head",
+                span(class = "g16-eyebrow", "GARCH(1,1) · 單檔分析"),
+                h3("這檔股票，未來一季的波動可能怎麼變？"),
+                p("先比較預測與歷史波動，再查看走勢；統計參數與檢定結果可於下方展開。")
+              ),
+              div(class = "g16-controls",
+                fluidRow(
+                  column(5, selectInput("g10_stock", "選擇股票",
+                    choices = setNames(stock_info$symbol,
+                      paste0(stock_info$name, " (", stock_info$symbol, ")")),
+                    selected = "2330")),
+                  column(4, selectInput("g10_window", "估計資料期間",
+                    choices = c("近 2 年" = 500, "近 4 年" = 1000, "近 6 年" = 1500),
+                    selected = 1000)),
+                  column(3, div(class = "g16-horizon",
+                    span("預測範圍"),
+                    strong("未來 63 個交易日"),
+                    tags$small("約一季；非價格漲跌預測")))
+                )
+              ),
+              div(class = "g16-kpis",
+                div(class = "g16-kpi",
+                  span("未來一季預測年化波動"),
+                  strong(textOutput("g10_kpi_fvol", inline = TRUE)),
+                  tags$small("GARCH 模型預測")),
+                div(class = "g16-kpi",
+                  span("近一年歷史年化波動"),
+                  strong(textOutput("g10_kpi_rvol", inline = TRUE)),
+                  tags$small("作為比較基準")),
+                div(class = "g16-kpi",
+                  span("預測／歷史比值"),
+                  strong(textOutput("g10_kpi_ratio", inline = TRUE)),
+                  tags$small("大於 1 表示預測波動較高")),
+                div(class = "g16-kpi g16-kpi-state",
+                  span("波動狀態"),
+                  strong(textOutput("g10_kpi_regime", inline = TRUE)),
+                  tags$small("依現有 0.90／1.10 門檻判定"))
+              ),
+              div(class = "g16-insight",
+                div(class = "g16-insight-head", "這次的預測要怎麼看？"),
+                uiOutput("g16_one_summary")
+              ),
+              div(class = "g16-graph-grid",
+                div(class = "g16-graph-card",
+                  div(class = "g16-graph-tag", "01｜往後看"),
+                  h4("未來 63 日波動預測"),
+                  p("綠線為預測波動；紅色虛線為近一年歷史波動基準。"),
+                  plotOutput("g10_fan", height = "325px"),
+                  uiOutput("g17_forecast_readout")),
+                div(class = "g16-graph-card",
+                  div(class = "g16-graph-tag", "02｜往回看"),
+                  h4("模型與歷史波動對照"),
+                  p("藍線為 GARCH 配適波動，灰線為近 21 日的歷史波動估計。"),
+                  plotOutput("g10_vol_path", height = "325px"),
+                  uiOutput("g17_history_readout"))
+              ),
+              div(class = "g16-foot",
+                "波動代表價格起伏程度，不等於未來漲跌方向；本頁為模型估計，不代表投資建議。"
+              ),
+              h4(class = "g16-more-head", "完整統計資料"),
+              p(class = "g16-more-lead", "保留最大概似估計與診斷表。需要研究細節時，直接點開對應項目。"),
+              tags$details(class = "g16-details",
+                tags$summary(
+                  span(class = "g16-details-num", "01"),
+                  span(class = "g16-details-copy",
+                    tags$strong("查看模型參數｜ω、α、β 與波動持續性"),
+                    tags$small("最大概似估計值、標準誤、t 值與半衰期")),
+                  span(class = "g16-details-action", "展開")
+                ),
+                div(class = "g16-details-body",
+                  p("這一區說明模型如何描述波動的衝擊與延續；數值用來檢查估計結果，不是股票的預測報酬。"),
+                  div(class = "g16-table-scroll", tableOutput("g10_param_table"))
+                )
+              ),
+              tags$details(class = "g16-details",
+                tags$summary(
+                  span(class = "g16-details-num", "02"),
+                  span(class = "g16-details-copy",
+                    tags$strong("查看模型診斷｜殘差、收斂與風險值"),
+                    tags$small("Ljung-Box p 值、AIC／BIC、VaR／CVaR 等完整指標")),
+                  span(class = "g16-details-action", "展開")
+                ),
+                div(class = "g16-details-body",
+                  p("Ljung-Box 用來檢查標準化殘差是否仍有自相關；p 值大於 0.05 只代表沒有足夠證據拒絕無自相關假設，並非保證模型正確。"),
+                  div(class = "g16-table-scroll", tableOutput("g10_diag"))
+                )
+              )
+            )
+          ),
+tabPanel(
+            "全體波動排名",
+            div(class = "g18-panel g19-all-garch g20-all-garch g21-all-garch",
+              h3("0050 成分股｜未來一季波動預測"),
+              p(class = "g18-intro", "用過去的股價資料估計 GARCH，觀察未來一季哪些成分股的價格起伏可能較大。這裡比較的是風險，不是預測股價漲跌。"),
+              div(class = "g21-setup",
+                div(class = "g21-run-row",
+                  div(class = "g21-window-control",
+                    selectInput("g21_all_window", "歷史估計期間",
+                      choices = c("近 2 年（500 個交易日）" = 500,
+                                  "近 4 年（1,000 個交易日）" = 1000,
+                                  "近 6 年（1,500 個交易日）" = 1500),
+                      selected = 1000, width = "100%")),
+                  div(class = "g21-run-action",
+                    actionButton("g10_run_all", "執行全體 GARCH 估計", class = "btn-primary"))
+                ),
+                div(class = "g21-setup-cards",
+                  div(class = "g21-setup-card",
+                    span("準備使用的歷史資料"),
+                    strong(textOutput("g21_window_label", inline = TRUE)),
+                    tags$small("最多取所選交易日數的報酬；資料不足者使用可取得期間")),
+                  div(class = "g21-setup-card",
+                    span("預測未來"), strong("63 個交易日"),
+                    tags$small("約一季；波動以年化 % 表示，不是預測一年"))
+                )
+              ),
+              uiOutput("g21_all_status"),
+              uiOutput("g18_g_summary"),
+              h4("全體股票｜預測年化波動排名"),
+              div(class = "g21-reading",
+                tags$strong("這張圖怎麼看？"),
+                span("長條越長，代表模型預測未來一季的價格波動可能越劇烈；不是未來報酬排名，也不代表一定下跌。")),
+              uiOutput("g18_g_chart_box"),
+              p(class = "g18-hint", "圖表列出全部有效預測股票；歷史波動、比值及 GARCH 模型參數保留在下方展開區。個股波動不等於 0010 整體組合波動。"),
+              tags$details(class = "g18-detail",
+                tags$summary(
+                  span(class = "g18-detail-icon", "01"),
+                  span(class = "g18-detail-copy", tags$strong("完整 GARCH 參數與個股數據"),
+                       tags$small("查看所有估計結果的 ω、α、β、持續性、半衰期、預測／歷史波動與比值")),
+                  span(class = "g18-detail-action", "展開 ▾")
+                ),
+                div(class = "g18-detail-content",
+                  p(class = "g18-hint", "完整表格保留原本的參數與比值資訊；缺少足夠資料的股票可能顯示空值，這與上方圖表的有效股票數不同。"),
+                  div(class = "g18-table-wrap", tableOutput("g10_all_table"))
+                )
+              )
+            )
+          ))
+        )
+      )
+    ),
 
-    tabPanel(
-      "研究方法與說明",
+tabPanel("研究方法",
+      div(class="section-box v25-main-lead",
+        h2("研究方法與進階統計資料"),
+        p("公式、樣本設定、模型檢定與研究限制都保留，但不干擾一般使用者。")),
+      tabsetPanel(id="v25_research_tabs",type="pills",
+tabPanel(
+      "公式、資料與限制",
       div(
         class = "section-box",
         h2("研究方法、指標與資料說明"),
@@ -3442,6 +3365,79 @@ ui <- fluidPage(
         h3("研究限制"),
         div(class="warning-note", "0050 成分股會隨時間調整；若以目前成分股回溯過去，可能產生存活者偏誤（Survivorship Bias）。此外，所有統計結果都會受到研究期間、資料品質與市場狀態影響。")
       )
+    ),
+        tabPanel("進階統計診斷",
+          div(class="section-box v15-validation",
+h3(class = "v15-more-title", "完整統計資料"),
+        p(class = "v15-plain-note", "研究細節都保留，需要查看時再展開，不影響上方的快速判讀。"),
+
+        tags$details(class = "v15-detail", 
+          tags$summary(
+            span(class = "v15-detail-icon", "01"),
+            span(class = "v15-detail-copy",
+                 tags$strong("GARCH 殘差診斷與全體收斂"),
+                 tags$small("標準化殘差、平方殘差、ARCH-LM、模型參數與收斂清單")),
+            span(class = "v15-detail-action", "展開詳細資料")),
+          div(class = "v15-detail-body",
+            h4("單檔殘差診斷"),
+            p(class = "v15-plain-note", "以下結果對應上方選擇的股票；p 值大於 0.05 只代表未發現顯著殘留結構，並非保證模型正確。"),
+            tableOutput("v5_gdiag_tab"),
+            p(class = "v23-howto", tags$strong("殘差檢定怎麼看？ "),
+              "Ljung-Box 檢查殘差自相關，ARCH-LM 檢查是否還留有波動叢聚。",
+              "p 值較小（例如不大於 0.05）表示模型可能未充分捕捉資料特徵；p 值較大不能證明模型一定準。"),
+            h4("全部成分股：GARCH 收斂狀況"),
+            p(class = "v15-plain-note", "此項需要手動執行，完成後才顯示全體結果。"),
+            fluidRow(
+              column(6, actionButton("v5_run_gall", "執行全體收斂檢查", class = "btn-primary")),
+              column(6, div(class = "v15-window-note", "估計視窗與「市場分析 → GARCH 波動預測 → 單檔預測」相同"))
+            ),
+            tableOutput("v5_gall_summary"),
+            div(class = "v15-table-scroll", tableOutput("v5_gall_tab"))
+          )
+        ),
+
+        tags$details(class = "v15-detail", 
+          tags$summary(
+            span(class = "v15-detail-icon", "02"),
+            span(class = "v15-detail-copy",
+                 tags$strong("時間序列檢定與動能持續性"),
+                 tags$small("ADF、ARIMA、Ljung-Box 與全體成分股動能持續性")),
+            span(class = "v15-detail-action", "展開詳細資料")),
+          div(class = "v15-detail-body",
+            fluidRow(
+              column(4, selectInput("v4ts_stock", "時間序列檢定標的：",
+                                    choices = stats::setNames(stock_info$symbol,
+                                      paste0(stock_info$name, " (", stock_info$symbol, ")")),
+                                    selected = "2330")),
+              column(4, div(class = "v15-window-note", strong("樣本："),
+                            textOutput("v4ts_n", inline = TRUE))),
+              column(4, actionButton("v4ts_run_persist", "計算動能持續性", class = "btn-primary"))
+            ),
+            p(class = "v15-plain-note", "時間序列檢定標的可獨立選擇，不會改動上方 GARCH 預測比較的股票。"),
+            p(class = "v23-howto", tags$strong("這裡的樣本 n 是什麼？ "),
+              "上方 n 是該股票可取得的有效價格交易日數；下方時間序列檢定最多採最近 1261 筆價格計算。",
+              "它和前面『有效比較股票數』不同。觀察日數多不等於模型必然有效，仍要看檢定條件與殘差結果。"),
+            h4("定態性與殘差檢查"),
+            tableOutput("v4ts_diag"),
+            h4("ARIMA 模型選擇（AIC 排序）"),
+            tableOutput("v4ts_grid"),
+            p(class = "v23-howto", tags$strong("這兩張表怎麼看？ "),
+              "ADF 用來檢查序列是否有單根；ARIMA 表中的 AIC 越低，表示在這批候選模型中相對較合適，",
+              "並非保證未來預測更準。"),
+            h4("動能持續性檢驗"),
+            tableOutput("v4ts_persist"),
+            p(class = "v23-howto", tags$strong("動能持續性怎麼看？ "),
+              "觀察過去表現能否延續到後續期間；beta 的正負代表方向，R 平方描述擬合程度。",
+              "這項分析與上方的波動預測誤差比較是不同研究問題。")
+          )
+        ),
+
+        div(class = "v15-scope-note",
+            strong("判讀原則："),
+            "預測誤差與殘差檢定回答的是不同問題。誤差較小不等於差異具有統計顯著性；檢定未發現異常也不代表預測一定準確。")
+          )
+        )
+      )
     )
   ),
   
@@ -3465,6 +3461,134 @@ server <- function(input, output, session) {
   
   # v5 新功能（T+1 回測、GARCH 診斷、樣本外評估）
   source("v5_server.R", local = TRUE)
+
+  # v25：首頁雙入口，僅切換現有主頁，不更動任何計算。
+  observeEvent(input$v25_go_portfolio,
+    shiny::updateTabsetPanel(session, "main_tabs", selected = "0010 組合"))
+  observeEvent(input$v25_go_verify,
+    shiny::updateTabsetPanel(session, "main_tabs", selected = "模型驗證"))
+
+  # v25：季度回測執行後，依已完成且實際回測使用的評分日期提供季別選單。
+  observeEvent(v5_bt(), {
+    z <- v5_bt()
+    if (is.null(z) || !nrow(z$quarters)) return()
+    q <- z$quarters
+    q <- q[order(as.Date(q$評分日), decreasing = TRUE), , drop = FALSE]
+    choices <- stats::setNames(format(as.Date(q$評分日), "%Y-%m-%d"),
+      paste0(format(as.Date(q$評分日), "%Y-%m-%d"),
+        " 評分｜", format(as.Date(q$成交日), "%m/%d"), "－",
+        format(as.Date(q$出場日), "%Y/%m/%d")))
+    shiny::updateSelectInput(session, "v25_rank_quarter", choices = choices,
+      selected = unname(choices[1]))
+  })
+
+  # 不使用事後報酬選股：同 v5_backtest_v4()，先在歷史評分日執行 v4_score_table + v4_pick，
+  # 再用回測所紀錄的 T+1 成交日與出場日計算全體可比較股的未來報酬名次。
+  # 不改原季度回測結果（包括既有 IC、Spread），僅新增獨立相對排名報表。
+  v25_rank_result <- shiny::reactive({
+    z <- v5_bt()
+    key <- as.character(input$v25_rank_quarter)
+    shiny::req(!is.null(z), length(key)==1L, !is.na(key), nzchar(key))
+    q <- z$quarters[format(as.Date(z$quarters$評分日), "%Y-%m-%d") == key,
+                    , drop=FALSE]
+    if (!nrow(q)) return(NULL)
+    q <- q[1, , drop=FALSE]
+    rated <- as.Date(q$評分日[1]); buy_date <- as.Date(q$成交日[1]); exit_date <- as.Date(q$出場日[1])
+    d <- as.data.frame(data())
+    d$date <- as.Date(d$date)
+    d <- d[!is.na(d$date) & is.finite(d$adjusted) & d$adjusted > 0 &
+             d$symbol %in% stock_info$symbol, , drop=FALSE]
+    if (!nrow(d)) return(NULL)
+    sc <- v4_score_table(d[d$date <= rated, , drop=FALSE])
+    if (is.null(sc) || nrow(sc) < 3L) return(NULL)
+    chosen <- v4_pick(sc, n=10, max_industry=V4_SCREEN$max_industry)
+    if (is.null(chosen) || !nrow(chosen)) return(NULL)
+
+    # 同日同股票重複資料如存在，保留最後一筆；不內插缺少的進／出場價格。
+    px <- d[d$date %in% c(buy_date,exit_date),c("symbol","date","adjusted"),drop=FALSE]
+    px <- px[order(px$symbol,px$date),,drop=FALSE]
+    px <- px[!duplicated(px[,c("symbol","date")],fromLast=TRUE),,drop=FALSE]
+    b <- px[px$date==buy_date,,drop=FALSE]
+    e <- px[px$date==exit_date,,drop=FALSE]
+    syms <- as.character(sc$symbol)
+    bp <- b$adjusted[match(syms,b$symbol)]
+    ep <- e$adjusted[match(syms,e$symbol)]
+    r <- ep/bp - 1
+    ok <- is.finite(r) & is.finite(bp) & is.finite(ep) & bp>0 & ep>0
+    if (!any(ok)) return(NULL)
+    t <- sc[ok,,drop=FALSE]
+    t$future_return <- as.numeric(r[ok])
+    t$actual_rank <- rank(-t$future_return, ties.method="min",na.last="keep")
+    t$selected <- t$symbol %in% chosen$symbol
+    t <- t[order(t$actual_rank,-t$p10_smooth),,drop=FALSE]
+    rownames(t) <- NULL
+    selected <- t[t$selected,,drop=FALSE]
+    if (!nrow(selected)) return(NULL)
+    top_k <- min(10L,nrow(t))
+    list(all=t, selected=selected, n=nrow(t), top_k=top_k,
+      hit=sum(selected$actual_rank <= top_k),
+      mean_selected=mean(selected$future_return),
+      mean_universe=mean(t$future_return),
+      rated=rated,buy=buy_date,exit=exit_date)
+  })
+
+  output$v25_rank_status <- shiny::renderUI({
+    if (is.null(input$v5_run_bt) || input$v5_run_bt < 1L)
+      return(tags$p(class="v25-method-hint", "尚未執行季度回測。請先到『季度策略回測』按下執行，再選擇一季查看實際報酬排名。"))
+    if (!shiny::isTruthy(input$v25_rank_quarter))
+      return(tags$p(class="v25-method-hint", "回測完成後即可選擇歷史評分日。"))
+    z <- v25_rank_result()
+    if (is.null(z)) return(tags$p(class="v25-method-hint", "這一季沒有足夠的共同進出場價格可完成相對排名。"))
+    tags$p(class="v25-method-hint",paste0("評分：",format(z$rated),"｜T+1 進場：",format(z$buy),
+      "｜出場：",format(z$exit),"｜同期可比較：",z$n," 檔股票（未扣交易成本）"))
+  })
+  output$v25_rank_summary <- shiny::renderUI({
+    z <- v25_rank_result();shiny::req(!is.null(z))
+    cell <- function(label,value,desc) div(class="v25-rank-card",tags$small(label),
+       tags$strong(value),tags$small(desc))
+    div(class="v25-rank-grid",
+      cell("入選股票的未來前 10 名命中",sprintf("%d／%d 檔",z$hit,nrow(z$selected)),
+           paste0("全體 ",z$n," 檔，隨機命中比例約 ",sprintf("%.1f%%",100*z$top_k/z$n))),
+      cell("入選股票等權平均報酬",sprintf("%+.2f%%",100*z$mean_selected),
+           "單檔報酬等權平均；不等於扣成本組合績效"),
+      cell("相對全體等權平均差距",sprintf("%+.2f 百分點",100*(z$mean_selected-z$mean_universe)),
+           paste0("同期全體等權平均 ",sprintf("%+.2f%%",100*z$mean_universe)))
+    )
+  })
+  output$v25_rank_selected <- shiny::renderTable({
+    z <- v25_rank_result();shiny::req(!is.null(z))
+    t <- z$selected[order(z$selected$rank),,drop=FALSE]
+    data.frame(選股時評分名次 = t$rank,
+      股票 = paste0(t$name,"（",t$symbol,"）"),
+      選股分數 = sprintf("%.1f",t$p10_smooth),
+      未來實際報酬 = sprintf("%+.2f%%",100*t$future_return),
+      實際報酬排名 = paste0(t$actual_rank,"／",z$n),
+      check.names=FALSE,stringsAsFactors=FALSE)
+  },striped=TRUE,bordered=TRUE,hover=TRUE)
+  output$v25_rank_all <- shiny::renderTable({
+    z <- v25_rank_result();shiny::req(!is.null(z))
+    t <- z$all
+    data.frame(實際報酬名次=t$actual_rank,
+      股票=paste0(t$name,"（",t$symbol,"）"),
+      `0010入選`=ifelse(t$selected,"✓","—"),
+      選股時分數名次=t$rank,
+      分數=sprintf("%.1f",t$p10_smooth),
+      未來實際報酬=sprintf("%+.2f%%",100*t$future_return),
+      check.names=FALSE,stringsAsFactors=FALSE)
+  },striped=TRUE,bordered=TRUE,hover=TRUE)
+  output$v25_rank_csv <- shiny::downloadHandler(
+    filename=function(){paste0("0010_future_return_rank_",input$v25_rank_quarter,".csv")},
+    content=function(file){
+      z <- v25_rank_result();shiny::req(!is.null(z))
+      t <- z$all
+      result <- data.frame(評分日=format(z$rated),成交日=format(z$buy),出場日=format(z$exit),
+        symbol=t$symbol,name=t$name,selected=t$selected,
+        score_rank=t$rank,score=t$p10_smooth,
+        realized_return=t$future_return,realized_rank=t$actual_rank,
+        stringsAsFactors=FALSE)
+      utils::write.csv(result,file,row.names=FALSE,fileEncoding="UTF-8")
+    })
+
 
   # v22：全體樣本外誤差比較。沿用 v5_garch_oos()；按鈕觸發，結果在同一工作階段快取。
   v22_all_oos <- shiny::eventReactive(input$v22_run_all_oos, {
