@@ -1980,6 +1980,62 @@ ui <- fluidPage(
         .v15-validation .v15-scope-note { font-size:12px; color:#6c7e8d; background:#f8fafb; border-left:4px solid #a7bdcd; border-radius:8px; padding:12px 15px; line-height:1.7; margin-top:18px; }
         @media(max-width:880px) { .v15-validation .v15-overview { grid-template-columns:1fr; } }
         @media(max-width:560px) { .v15-validation details.v15-detail > summary { gap:9px; padding:13px 11px; } .v15-validation .v15-detail-action { font-size:11px; padding:6px; } .v15-validation .v15-detail-body { padding:13px; } .v15-validation .v15-evidence { padding:13px; } }
+        /* v16：單檔 GARCH 易讀版；僅作用於單檔頁 .g16-single */
+        .g16-single { --g16-ink:#34556f; --g16-mute:#728698; --g16-line:#dae6ee; }
+        .g16-single .g16-head { border:1px solid #dbe7ef; border-left:5px solid #7f9fbb; background:linear-gradient(100deg,#f1f7fb,#f9fbfc 72%,#fbf8f4); border-radius:13px; padding:17px 20px; margin:12px 0 16px; }
+        .g16-single .g16-eyebrow { font-size:11px; color:#668ba9; font-weight:800; letter-spacing:.8px; }
+        .g16-single .g16-head h3 { margin:6px 0; font-size:23px; font-weight:800; color:#315773; }
+        .g16-single .g16-head p { margin:0; font-size:13px; line-height:1.6; color:#6e8192; }
+        .g16-single .g16-controls { background:#fbfcfd; border:1px solid #e1eaf1; border-radius:12px; padding:14px 16px 3px; margin-bottom:15px; }
+        .g16-single .g16-controls label { color:#476780; font-size:13px; font-weight:750; }
+        .g16-single .g16-horizon { padding-top:4px; }
+        .g16-single .g16-horizon span,.g16-single .g16-horizon strong,.g16-single .g16-horizon small { display:block; }
+        .g16-single .g16-horizon span { color:#74899b; font-size:12px; }
+        .g16-single .g16-horizon strong { color:#355f7c; font-size:16px; margin:4px 0; }
+        .g16-single .g16-horizon small { color:#8598a6; font-size:11px; }
+        .g16-single .g16-kpis { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:11px; margin-bottom:14px; }
+        .g16-single .g16-kpi { background:#f5f9fc; border:1px solid #dce7f0; border-radius:12px; padding:14px; min-width:0; }
+        .g16-single .g16-kpi:nth-child(2) { background:#f8fafb; }
+        .g16-single .g16-kpi:nth-child(3) { background:#f8f9f7; }
+        .g16-single .g16-kpi-state { background:#fbf8f4; border-color:#ebe1d5; }
+        .g16-single .g16-kpi > span { display:block; color:#708698; font-size:12px; font-weight:700; }
+        .g16-single .g16-kpi > strong { display:block; margin:8px 0 6px; color:#355b79; font-size:24px; line-height:1.25; font-weight:800; overflow-wrap:anywhere; }
+        .g16-single .g16-kpi-state > strong { font-size:18px; }
+        .g16-single .g16-kpi > strong > .shiny-text-output { font-size:inherit !important; color:inherit; font-weight:inherit; display:inline; }
+        .g16-single .g16-kpi small { display:block; color:#8b9aa6; font-size:11px; line-height:1.5; }
+        .g16-single .g16-insight { border:1px solid #dce8f0; border-left:4px solid #759fbf; background:#f7fafc; padding:15px 18px; border-radius:11px; margin:0 0 19px; }
+        .g16-single .g16-insight-head { color:#385d7c; font-size:14px; font-weight:800; margin-bottom:5px; }
+        .g16-single .g16-insight-main { color:#365e7e; font-weight:800; font-size:17px; line-height:1.5; margin:4px 0; }
+        .g16-single .g16-insight-sub { color:#687e90; font-size:13px; line-height:1.65; margin:3px 0; }
+        .g16-single .g16-graph-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:15px; align-items:start; }
+        .g16-single .g16-graph-card { border:1px solid #dfe9f1; border-radius:12px; background:white; padding:15px 16px 8px; min-width:0; }
+        .g16-single .g16-graph-tag { color:#7193ad; font-size:11px; font-weight:800; }
+        .g16-single .g16-graph-card h4 { color:#385b78; font-size:17px; font-weight:800; margin:5px 0 7px; }
+        .g16-single .g16-graph-card p { color:#7f91a1; font-size:12px; line-height:1.6; min-height:38px; margin:0 0 5px; }
+        .g16-single .g16-graph-card .shiny-plot-output { max-width:100%; }
+        .g16-single .g16-foot { background:#fbfaf8; border-left:3px solid #c9b397; border-radius:7px; padding:11px 13px; color:#7a837f; font-size:12px; line-height:1.6; margin:12px 0 22px; }
+        .g16-single .g16-more-head { color:#375a77; font-size:19px; font-weight:800; margin:18px 0 5px; }
+        .g16-single .g16-more-lead { color:#7e91a0; font-size:12px; margin-bottom:12px; }
+        .g16-single details.g16-details { border:1px solid #dce7ef; border-radius:12px; overflow:hidden; background:white; margin:10px 0; }
+        .g16-single details.g16-details > summary { cursor:pointer; list-style:none; display:flex; gap:13px; align-items:center; background:#f5f9fc; padding:15px 17px; }
+        .g16-single details.g16-details > summary::-webkit-details-marker { display:none; }
+        .g16-single details.g16-details > summary:hover { background:#edf5fa; }
+        .g16-single details.g16-details > summary:focus-visible { outline:2px solid #8eb2cd; outline-offset:-2px; }
+        .g16-single details.g16-details[open] > summary { border-bottom:1px solid #dce7ef; }
+        .g16-single .g16-details-num { background:#e4eff6; color:#4c7391; font-weight:800; font-size:13px; padding:9px 11px; border-radius:9px; }
+        .g16-single .g16-details-copy { flex:1; min-width:0; }
+        .g16-single .g16-details-copy strong { display:block; color:#365a76; font-size:15px; font-weight:800; }
+        .g16-single .g16-details-copy small { display:block; color:#7d90a0; font-size:12px; line-height:1.5; margin-top:3px; }
+        .g16-single .g16-details-action { flex:none; color:#527a9c; background:white; border:1px solid #c9dce9; border-radius:8px; padding:7px 11px; font-weight:750; font-size:12px; }
+        .g16-single details.g16-details[open] .g16-details-action { background:#e8f1f7; }
+        .g16-single details.g16-details[open] .g16-details-action::after { content:' ▴'; }
+        .g16-single details.g16-details:not([open]) .g16-details-action::after { content:' ▾'; }
+        .g16-single .g16-details-body { padding:15px 18px 20px; }
+        .g16-single .g16-details-body p { color:#73879a; font-size:12px; line-height:1.65; margin-bottom:12px; }
+        .g16-single .g16-table-scroll { overflow-x:auto; }
+        @media(max-width:1180px) { .g16-single .g16-graph-grid { grid-template-columns:1fr; } }
+        @media(max-width:900px) { .g16-single .g16-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+        @media(max-width:600px) { .g16-single .g16-head { padding:14px; } .g16-single .g16-head h3 { font-size:20px; } .g16-single .g16-kpi { padding:11px; } .g16-single .g16-kpi > strong { font-size:21px; } .g16-single .g16-kpi-state > strong { font-size:16px; } .g16-single details.g16-details > summary { padding:12px; gap:9px; } .g16-single .g16-details-copy strong { font-size:13px; } .g16-single .g16-details-action { padding:6px; } }
         .home-small-note { color:#7b8794; font-size:12px; margin:13px 0 0; }
         .home-legacy { margin-top:4px; }
         @media(max-width:900px) { .home-compare-grid { grid-template-columns:1fr; } .home-center { order:3; } .home-heading { flex-wrap:wrap; } .home-date { white-space:normal; } }
@@ -2433,52 +2489,99 @@ ui <- fluidPage(
           ),
 
           # --------------------------------------------------
-          # 2. 單檔 GARCH 模型
+          # 2. 單檔 GARCH：v16 只修改呈現方式，沿用全部既有輸出
           # --------------------------------------------------
           tabPanel(
             "GARCH 診斷：單檔",
-            br(),
-            fluidRow(
-              column(4, selectInput("g10_stock", "選擇股票：",
-                                    choices = setNames(stock_info$symbol,
-                                                       paste0(stock_info$name, " (", stock_info$symbol, ")")),
-                                    selected = "2330")),
-              column(4, selectInput("g10_window", "估計樣本（交易日）：",
-                                    choices = c("近 2 年" = 500, "近 4 年" = 1000, "近 6 年" = 1500),
-                                    selected = 1000)),
-              column(4, div(class = "time-info",
-                            strong("預測期："), "未來 63 個交易日（約一季）"))
-            ),
-            
-            h3("預測結果"),
-            fluidRow(
-              column(3, div(class = "info-card",
-                            div(class = "info-card-title", "預測年化波動（下一季）"),
-                            h3(class = "info-card-value", textOutput("g10_kpi_fvol", inline = TRUE)))),
-              column(3, div(class = "info-card",
-                            div(class = "info-card-title", "近一年實現波動"),
-                            h3(class = "info-card-value", textOutput("g10_kpi_rvol", inline = TRUE)))),
-              column(3, div(class = "info-card",
-                            div(class = "info-card-title", "預測／實現"),
-                            h3(class = "info-card-value", textOutput("g10_kpi_ratio", inline = TRUE)))),
-              column(3, div(class = "info-card",
-                            div(class = "info-card-title", "波動狀態"),
-                            h3(class = "info-card-value", textOutput("g10_kpi_regime", inline = TRUE))))
-            ),
-            
-            h3("參數估計（最大概似法）"),
-            tableOutput("g10_param_table"),
-            
-            h3("條件波動（模型配適）"),
-            plotOutput("g10_vol_path", height = "380px"),
-            
-            h3("未來 63 日波動預測"),
-            plotOutput("g10_fan", height = "340px"),
-            
-            h3("模型診斷"),
-            tableOutput("g10_diag"),
+            div(class = "g16-single",
+              div(class = "g16-head",
+                span(class = "g16-eyebrow", "GARCH(1,1) · 單檔分析"),
+                h3("這檔股票，未來一季的波動可能怎麼變？"),
+                p("先比較預測與歷史波動，再查看走勢；統計參數與檢定結果可於下方展開。")
+              ),
+              div(class = "g16-controls",
+                fluidRow(
+                  column(5, selectInput("g10_stock", "選擇股票",
+                    choices = setNames(stock_info$symbol,
+                      paste0(stock_info$name, " (", stock_info$symbol, ")")),
+                    selected = "2330")),
+                  column(4, selectInput("g10_window", "估計資料期間",
+                    choices = c("近 2 年" = 500, "近 4 年" = 1000, "近 6 年" = 1500),
+                    selected = 1000)),
+                  column(3, div(class = "g16-horizon",
+                    span("預測範圍"),
+                    strong("未來 63 個交易日"),
+                    small("約一季；非價格漲跌預測")))
+                )
+              ),
+              div(class = "g16-kpis",
+                div(class = "g16-kpi",
+                  span("未來一季預測年化波動"),
+                  strong(textOutput("g10_kpi_fvol", inline = TRUE)),
+                  small("GARCH 模型預測")),
+                div(class = "g16-kpi",
+                  span("近一年歷史年化波動"),
+                  strong(textOutput("g10_kpi_rvol", inline = TRUE)),
+                  small("作為比較基準")),
+                div(class = "g16-kpi",
+                  span("預測／歷史比值"),
+                  strong(textOutput("g10_kpi_ratio", inline = TRUE)),
+                  small("大於 1 表示預測波動較高")),
+                div(class = "g16-kpi g16-kpi-state",
+                  span("波動狀態"),
+                  strong(textOutput("g10_kpi_regime", inline = TRUE)),
+                  small("依現有 0.90／1.10 門檻判定"))
+              ),
+              div(class = "g16-insight",
+                div(class = "g16-insight-head", "這次的預測要怎麼看？"),
+                uiOutput("g16_one_summary")
+              ),
+              div(class = "g16-graph-grid",
+                div(class = "g16-graph-card",
+                  div(class = "g16-graph-tag", "01｜往後看"),
+                  h4("未來 63 日波動預測"),
+                  p("綠線為預測波動；紅色虛線為近一年歷史波動基準。"),
+                  plotOutput("g10_fan", height = "325px")),
+                div(class = "g16-graph-card",
+                  div(class = "g16-graph-tag", "02｜往回看"),
+                  h4("模型與歷史波動對照"),
+                  p("藍線為 GARCH 配適波動，灰線為近 21 日的歷史波動估計。"),
+                  plotOutput("g10_vol_path", height = "325px"))
+              ),
+              div(class = "g16-foot",
+                "波動代表價格起伏程度，不等於未來漲跌方向；本頁為模型估計，不代表投資建議。"
+              ),
+              h4(class = "g16-more-head", "完整統計資料"),
+              p(class = "g16-more-lead", "保留最大概似估計與診斷表。需要研究細節時，直接點開對應項目。"),
+              tags$details(class = "g16-details",
+                tags$summary(
+                  span(class = "g16-details-num", "01"),
+                  span(class = "g16-details-copy",
+                    tags$strong("查看模型參數｜ω、α、β 與波動持續性"),
+                    tags$small("最大概似估計值、標準誤、t 值與半衰期")),
+                  span(class = "g16-details-action", "展開")
+                ),
+                div(class = "g16-details-body",
+                  p("這一區說明模型如何描述波動的衝擊與延續；數值用來檢查估計結果，不是股票的預測報酬。"),
+                  div(class = "g16-table-scroll", tableOutput("g10_param_table"))
+                )
+              ),
+              tags$details(class = "g16-details",
+                tags$summary(
+                  span(class = "g16-details-num", "02"),
+                  span(class = "g16-details-copy",
+                    tags$strong("查看模型診斷｜殘差、收斂與風險值"),
+                    tags$small("Ljung-Box p 值、AIC／BIC、VaR／CVaR 等完整指標")),
+                  span(class = "g16-details-action", "展開")
+                ),
+                div(class = "g16-details-body",
+                  p("Ljung-Box 用來檢查標準化殘差是否仍有自相關；p 值大於 0.05 只代表沒有足夠證據拒絕無自相關假設，並非保證模型正確。"),
+                  div(class = "g16-table-scroll", tableOutput("g10_diag"))
+                )
+              )
+            )
           ),
-          
+
           # --------------------------------------------------
           # 3. 波動預測總表
           # --------------------------------------------------
@@ -11207,6 +11310,45 @@ server <- function(input, output, session) {
     )
   }, striped = TRUE, bordered = TRUE, hover = TRUE)
   
+  # v16 單檔 GARCH：只將既有數值轉為易懂的文字，沒有更動估計與預測
+  output$g16_one_summary <- shiny::renderUI({
+    a <- g10_one()
+    shiny::req(!is.null(a))
+    ratio <- a$ratio
+    if (!is.finite(ratio)) {
+      return(tags$div(
+        tags$p(class = "g16-insight-main", "目前無法比較預測與歷史波動"),
+        tags$p(class = "g16-insight-sub", "請確認該股票有足夠的資料，以及模型是否完成估計。")
+      ))
+    }
+    gap <- (ratio - 1) * 100
+    message <- if (ratio >= 1.10) {
+      paste0("預測波動比近一年歷史波動高約 ", sprintf("%.1f", gap), "%")
+    } else if (ratio <= 0.90) {
+      paste0("預測波動比近一年歷史波動低約 ", sprintf("%.1f", abs(gap)), "%")
+    } else {
+      paste0("預測波動與近一年歷史波動相近（差異約 ", sprintf("%+.1f", gap), "%）")
+    }
+    f <- a$fit
+    fit_status <- if (isTRUE(f$converged)) {
+      "模型估計已收斂。"
+    } else {
+      "模型估計尚未確認收斂，預測需審慎解讀。"
+    }
+    test_status <- if (!is.finite(f$lb_p)) {
+      "殘差檢定目前沒有可用 p 值。"
+    } else if (f$lb_p <= 0.05) {
+      "Ljung-Box 殘差檢定顯示可能仍有未捕捉的自相關。"
+    } else {
+      "Ljung-Box 殘差檢定未發現顯著自相關，但不代表模型一定正確。"
+    }
+    tags$div(
+      tags$p(class = "g16-insight-main", message),
+      tags$p(class = "g16-insight-sub", paste0(fit_status, " ", test_status)),
+      tags$p(class = "g16-insight-sub", "這裡預測的是波動大小，而不是未來股價漲跌方向。")
+    )
+  })
+
   # ----------------------------------------------------------
   # 2. 全成分股 GARCH 表（按鈕觸發 + 快取）
   # ----------------------------------------------------------
