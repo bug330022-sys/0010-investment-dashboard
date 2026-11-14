@@ -1,4 +1,4 @@
-# v30｜T+1 加入 Logistic 漲跌機率；AR(1)＋GARCH(1,1) 負責隔日價格及區間。
+# v31｜T+1 歷史特徵快取：減少全體逐日驗證的重複運算；模型規則沿用 v30。
 # 單一執行按鈕共用全體／單檔結果，預測區間預設 95%，驗證預設 63 日。
 # 在 v26 上增量擴充；尚未接每日持久化預測／自動檢查。
 # 0010 Investment Research v3.6：Growth 主排名＋防守資訊分離＋白話研究說明＋模型比較驗證
@@ -3035,7 +3035,7 @@ h3("日對數報酬分布"),
                 choices=c("95%（預設）"=0.95,"90%（較窄）"=0.90),selected=0.95),
               p(class="v27-hint","建模期間＝每個預測日用多少筆過去報酬估計；驗證期間＝評估最近多少個交易日。95% 比 90% 的區間通常更寬；涵蓋率仍需樣本外驗證。"))
           ),
-          p(class="v27-hint","隔日漲跌方向：Logistic Regression，以過去日報酬、動能、波動和 0050 當日報酬估計上漲機率（尚未校準）；隔日報酬／價格區間：AR(1)＋GARCH(1,1)。歷史驗證每 21 日重新估計 GARCH 參數，其間每日更新條件波動。一次執行全體後，單檔切換直接查看相同結果。"),
+          p(class="v27-hint","隔日漲跌方向：Logistic Regression，以過去日報酬、動能、波動和 0050 當日報酬估計上漲機率（尚未校準）；隔日報酬／價格區間：AR(1)＋GARCH(1,1)。歷史驗證每 21 日重新估計 GARCH 參數，其間每日更新條件波動。新版快取每檔的歷史特徵，避免逐日重算；一次執行全體後，單檔切換直接查看相同結果。"),
           div(class="v28-primary-tabs",
             tabsetPanel(id="v28_main_tabs",type="pills",
               tabPanel("預測",
@@ -3094,6 +3094,7 @@ h3("日對數報酬分布"),
                       h4("全體股票｜預測誤差摘要"),
                       tableOutput("v28_all_error_summary"),
                       p(class="v27-hint","AR＋GARCH 的 MAE／RMSE 衡量報酬點預測；Logistic 的方向命中率與 Brier 分數衡量漲跌機率。95% 區間涵蓋率必須搭配平均寬度一起看，各檔股票先計算再等權平均。"),
+                      p(class="v27-hint","解讀提醒：95% 預測區間本來就較寬，落在區間內的次數多，不代表明日漲跌猜得準；方向模型應與同期永遠猜漲的基準比較。若兩者差不多，暫時不宜當成交易建議。"),
                       tags$details(class="method-details",
                         tags$summary("查看每天的 Top 5 訊號驗證明細"),
                         div(class="v27-overflow",tableOutput("v28_daily_signal_table")),
@@ -3111,7 +3112,7 @@ h3("日對數報酬分布"),
                       p(class="v27-hint","誤差＝實際隔日報酬－AR 預測報酬，正值代表實際報酬較高。下方同時顯示 Logistic 方向表現與 AR＋GARCH 的區間品質。"),
                       h4("預測區間品質｜歷史樣本外"),
                       tableOutput("v30_interval_summary"),
-                      p(class="v27-hint","涵蓋率應與 95% 名目水準及區間寬度一同解讀。95% 區間比 90% 更寬，不等於預測方向更準。"),
+                      p(class="v27-hint","涵蓋率應與 95% 名目水準及區間寬度一同解讀。95% 區間比 90% 更寬，不等於預測方向更準；若區間已非常寬，應同時檢查平均寬度與區間損失。"),
                       tags$details(class="method-details",
                         tags$summary("查看完整逐日預測、區間與誤差"),
                         div(class="v27-overflow",tableOutput("v27_validation_table"))),
@@ -3384,7 +3385,7 @@ tabPanel(
           tags$summary("14. T+1 歷史滾動預測與區間：怎麼計算、怎麼驗證？"),
           p("漲跌方向：使用 Logistic Regression，以最近 252／504／756 個交易日報酬建立前日報酬、5／20 日動能、20 日波動及 0050 同期日報酬等特徵，預測下一交易日上漲機率。所有訓練標籤截至預測起點當日，機率尚未另外校準。"),
           p("報酬與價格：另以 AR(1) 最小平方法估計隔日對數報酬並換算調整後價格；使用 GARCH(1,1) 估計下一交易日條件波動，再結合當期標準化訓練殘差分位數建立預測區間。名目區間預設 95%（可切換 90%）；95% 通常較寬，不保證未來每次命中。"),
-          p("歷史驗證：預設用 0050 最近 63 個共同交易日，可改 20／126 日。每個預測日僅用此前的資料：Logistic 每天重新估計；AR 每天更新；為控制運算時間，GARCH 參數每 21 個測試日重估，其間仍每日更新條件波動。停牌或缺價形成的跨交易日報酬不計為 T+1。"),
+          p("歷史驗證：預設用 0050 最近 63 個共同交易日，可改 20／126 日。每個預測日僅用此前的資料：Logistic 每天重新估計（但歷史特徵只準備一次）；AR 每天更新；為控制運算時間，GARCH 參數每 21 個測試日重估，其間仍每日更新條件波動。停牌或缺價形成的跨交易日報酬不計為 T+1。"),
           p("評估：Logistic 查看隔日方向命中率、Brier 分數及與『永遠猜漲』比較；AR 報酬點估計查看 MAE／RMSE 及零報酬基準；GARCH 預測區間查看涵蓋率、平均寬度和區間損失。全體訊號依 Logistic 機率排序，偏多／偏空各最多五檔。"),
           p("研究限制：Logistic 機率尚未獨立校準；AR／GARCH 不保證具有方向預測能力，且市場可能結構變動。使用現行 0050 成分股回推歷史有存活者偏誤。最新預測尚未以每日不可覆寫紀錄保存，不能視為已完成即時前瞻驗證；亦未將訊號當作扣成本可交易績效。")
         ),
@@ -3722,34 +3723,78 @@ v30_market_returns<-function(stock_table) {
   stats::setNames(c(NA_real_,100*diff(log(as.numeric(d$adjusted)))),as.character(d$date))
 }
 
-v30_logit_prob<-function(price,dates,origin,window,market_returns) {
+# v31｜同檔股票整段歷史的 Logistic 特徵只建立一次。
+# 過去的 v30_logit_prob() 會在每一個樣本外日期，重算 5/20 日動能、
+# 20 日波動、0050 日期對齊與連續交易日檢查；這些值都不依模型參數改變。
+# 這裡只快取「截至各日已知」的特徵，仍對每個預測起點重新估計 glm。
+v31_logit_prepare<-function(price,dates,market_returns) {
+  pp<-as.numeric(price);dd<-as.Date(dates);n<-length(pp)
+  if(n<40L||length(dd)!=n||any(!is.finite(pp))||any(pp<=0))
+    stop("Logistic 特徵資料不足或價格無效")
+  rr<-diff(log(pp));m<-length(rr)
+  ix<-match(as.character(dd),names(market_returns))
+  mr<-as.numeric(market_returns[as.character(dd[-1L])])
+  cs<-c(0,cumsum(rr));cs2<-c(0,cumsum(rr^2))
+  k<-seq.int(20L,m)
+  sum5<-cs[k+1L]-cs[k-4L]
+  sum20<-cs[k+1L]-cs[k-19L]
+  sq20<-cs2[k+1L]-cs2[k-19L]
+  sd20<-sqrt(pmax(0,(sq20-sum20^2/20)/19))
+  features<-matrix(NA_real_,nrow=m,ncol=5L,
+    dimnames=list(NULL,c("r1","mom5","mom20","vol20","market")))
+  features[k,]<-cbind(100*rr[k],100*sum5,100*sum20,100*sd20,mr[k])
+  edge_ok<-is.finite(ix[-n])&is.finite(ix[-1L])&
+    ((ix[-1L]-ix[-n])==1L)
+  edge_ok[is.na(edge_ok)]<-FALSE
+  bad<-c(0L,cumsum(as.integer(!edge_ok)))
+  # 訓練特徵位於 k 日、標籤為 k+1 日；必須兩日均已公布。
+  train_ok<-rep(FALSE,m)
+  kk<-seq.int(20L,m-1L)
+  train_ok[kk]<-(bad[kk+2L]-bad[kk-19L]==0L)&is.finite(mr[kk])
+  # 要預測下一天，只需檢查到 origin 當日，不能偷看目標日。
+  future_ok<-rep(FALSE,m)
+  future_ok[k]<-(bad[k+1L]-bad[k-19L]==0L)&is.finite(mr[k])
+  list(features=features,returns=rr,train_ok=train_ok,future_ok=future_ok,
+       dates=dd)
+}
+
+v30_logit_prob<-function(price,dates,origin,window,market_returns,feature_cache=NULL) {
   if(is.null(market_returns)||length(market_returns)<30L)stop("缺少同期 0050 資料")
   first<-origin-window
   if(first<1L)stop("Logistic 訓練資料不足")
-  pp<-as.numeric(price[first:origin])
-  dd<-as.Date(dates[first:origin])
-  if(any(!is.finite(pp))||any(pp<=0))stop("Logistic 價格無效")
-  rr<-diff(log(pp))
-  dr<-dd[-1L]
-  mr<-as.numeric(market_returns[as.character(dr)])
-  ix<-match(as.character(dd),names(market_returns))
-  feature<-function(t) c(
-    r1=100*rr[t],
-    mom5=100*sum(rr[(t-4L):t]),
-    mom20=100*sum(rr[(t-19L):t]),
-    vol20=100*stats::sd(rr[(t-19L):t]),
-    market=mr[t])
-  # t+1 已知才可當訓練標籤；連續交易日檢查避免跨停牌日。
-  tset<-seq.int(20L,window-1L)
-  valid<-vapply(tset,function(t){
-    z<-ix[(t-19L):(t+2L)]
-    all(is.finite(z)) && all(diff(z)==1L) && is.finite(mr[t]) &&
-      all(is.finite(rr[(t-19L):(t+1L)]))
-  },logical(1))
-  tset<-tset[valid]
-  if(length(tset)<100L)stop("Logistic 有效連續交易日樣本少於 100 筆")
-  xx<-t(vapply(tset,feature,numeric(5)))
-  yy<-as.integer(rr[tset+1L]>0)
+  if(is.null(feature_cache)) {
+    pp<-as.numeric(price[first:origin])
+    dd<-as.Date(dates[first:origin])
+    if(any(!is.finite(pp))||any(pp<=0))stop("Logistic 價格無效")
+    rr<-diff(log(pp))
+    dr<-dd[-1L]
+    mr<-as.numeric(market_returns[as.character(dr)])
+    ix<-match(as.character(dd),names(market_returns))
+    feature<-function(t) c(
+      r1=100*rr[t],
+      mom5=100*sum(rr[(t-4L):t]),
+      mom20=100*sum(rr[(t-19L):t]),
+      vol20=100*stats::sd(rr[(t-19L):t]),
+      market=mr[t])
+    # t+1 已知才可當訓練標籤；連續交易日檢查避免跨停牌日。
+    tset<-seq.int(20L,window-1L)
+    valid<-vapply(tset,function(t){
+      z<-ix[(t-19L):(t+2L)]
+      all(is.finite(z)) && all(diff(z)==1L) && is.finite(mr[t]) &&
+        all(is.finite(rr[(t-19L):(t+1L)]))
+    },logical(1))
+    tset<-tset[valid]
+    if(length(tset)<100L)stop("Logistic 有效連續交易日樣本少於 100 筆")
+    xx<-t(vapply(tset,feature,numeric(5)))
+    yy<-as.integer(rr[tset+1L]>0)
+  } else {
+    # 與舊版同一訓練日期：t=20,...,window-1；回報至 origin 當日。
+    k<-seq.int(origin-window+19L,origin-2L)
+    k<-k[feature_cache$train_ok[k]]
+    if(length(k)<100L)stop("Logistic 有效連續交易日樣本少於 100 筆")
+    xx<-feature_cache$features[k,,drop=FALSE]
+    yy<-as.integer(feature_cache$returns[k+1L]>0)
+  }
   if(length(unique(yy))<2L)stop("Logistic 訓練樣本只有單一漲跌類別")
   mu<-colMeans(xx)
   sc<-apply(xx,2L,stats::sd)
@@ -3760,11 +3805,19 @@ v30_logit_prob<-function(price,dates,origin,window,market_returns) {
     control=stats::glm.control(maxit=50L)),error=function(e)NULL))
   if(is.null(fit)||!isTRUE(fit$converged)||any(!is.finite(fit$coefficients)))
     stop("Logistic 未收斂，該股票不納入模型比較")
-  i<-window
-  last_ix<-ix[(i-19L):(i+1L)]
-  if(!all(is.finite(last_ix))||!all(diff(last_ix)==1L)||!is.finite(mr[i]))
-    stop("Logistic 目前日期缺少相鄰交易資料")
-  next_x<-(feature(i)-mu)/sc
+  if(is.null(feature_cache)) {
+    i<-window
+    last_ix<-ix[(i-19L):(i+1L)]
+    if(!all(is.finite(last_ix))||!all(diff(last_ix)==1L)||!is.finite(mr[i]))
+      stop("Logistic 目前日期缺少相鄰交易資料")
+    next_row<-feature(i)
+  } else {
+    k<-origin-1L
+    if(!isTRUE(feature_cache$future_ok[k]))
+      stop("Logistic 目前日期缺少相鄰交易資料")
+    next_row<-feature_cache$features[k,]
+  }
+  next_x<-(next_row-mu)/sc
   eta<-sum(c(1,next_x)*fit$coefficients)
   prob<-stats::plogis(eta)
   if(!is.finite(prob))stop("Logistic 上漲機率無效")
@@ -3774,7 +3827,7 @@ v30_logit_prob<-function(price,dates,origin,window,market_returns) {
 # AR(1) 預測隔日報酬；GARCH(1,1) 預測條件波動。
 # 使用標準化訓練殘差估計名目預測區間；不再呈現舊固定區間。
 v27_one_step <- function(price, origin, window=252L, gfit=NULL, level=.95,
-                         dates=NULL, market_returns=NULL) {
+                         dates=NULL, market_returns=NULL,logit_cache=NULL) {
   ar<-v29_ar_inputs(price,origin,window)
   if(is.null(gfit))gfit<-v29_garch_fit(ar$resid_pct)
   v<-v29_garch_path(ar$resid_pct,gfit$omega,gfit$alpha,gfit$beta)
@@ -3788,7 +3841,8 @@ v27_one_step <- function(price, origin, window=252L, gfit=NULL, level=.95,
   lower<-ar$price*exp(ar$mu+q[1L]*sigma)
   upper<-ar$price*exp(ar$mu+q[2L]*sigma)
   if(is.null(dates))stop("Logistic 需要日期與共同交易日資訊")
-  prob<-v30_logit_prob(price,dates,origin,window,market_returns)
+  prob<-v30_logit_prob(price,dates,origin,window,market_returns,
+                         feature_cache=logit_cache)
   if(any(!is.finite(c(pred,lower,upper,prob)))||lower>upper)
     stop("T+1 預測結果不是有效數值")
   c(pred=pred,lower=lower,upper=upper,
@@ -3796,7 +3850,7 @@ v27_one_step <- function(price, origin, window=252L, gfit=NULL, level=.95,
 }
 
 v27_rolling_oos <- function(stock_table,symbol,test_days=63L,window=252L,
-                            level=.95,market_returns=NULL) {
+                            level=.95,market_returns=NULL,logit_cache=NULL) {
   d<-as.data.frame(stock_table)
   if(!all(c("symbol","date","adjusted")%in%names(d)))stop("缺少股票／日期／調整後價格欄")
   if(is.null(market_returns))market_returns<-v30_market_returns(d)
@@ -3807,7 +3861,9 @@ v27_rolling_oos <- function(stock_table,symbol,test_days=63L,window=252L,
   n<-nrow(d);window<-as.integer(window);test_days<-as.integer(test_days)
   if(n<window+test_days+1L)
     stop(paste0("至少需要 ",window+test_days+1L," 筆有效價格；目前 ",n," 筆"))
-  px<-as.numeric(d$adjusted);origins<-seq.int(n-test_days,n-1L)
+  px<-as.numeric(d$adjusted)
+  if(is.null(logit_cache))logit_cache<-v31_logit_prepare(px,d$date,market_returns)
+  origins<-seq.int(n-test_days,n-1L)
   rows<-vector("list",length(origins));cached_fit<-NULL
   for(j in seq_along(origins)) {
     i<-origins[j]
@@ -3821,7 +3877,8 @@ v27_rolling_oos <- function(stock_table,symbol,test_days=63L,window=252L,
     if(is.null(cached_fit))next
     # 當天若有缺漏或模型估計失敗，只排除該日，不淘汰整檔股票。
     fc<-tryCatch(v27_one_step(px,i,window,gfit=cached_fit,level=level,
-                     dates=d$date,market_returns=market_returns),error=function(e)NULL)
+                     dates=d$date,market_returns=market_returns,
+                     logit_cache=logit_cache),error=function(e)NULL)
     if(is.null(fc))next
     p0<-px[i];actual_price<-px[i+1L]
     actual_return<-100*(actual_price/p0-1)
@@ -3841,7 +3898,8 @@ v27_rolling_oos <- function(stock_table,symbol,test_days=63L,window=252L,
   test<-do.call(rbind,Filter(Negate(is.null),rows))
   if(is.null(test)||!nrow(test))stop("歷史測試沒有任何有效的相鄰交易日")
   rownames(test)<-NULL
-  future<-v27_one_step(px,n,window,level=level,dates=d$date,market_returns=market_returns)
+  future<-v27_one_step(px,n,window,level=level,dates=d$date,
+                        market_returns=market_returns,logit_cache=logit_cache)
   direction_valid<-is.finite(test$prob_up)&is.finite(test$actual_return)&test$actual_return!=0
   dn<-sum(direction_valid)
   metrics<-list(n=nrow(test),mae_pp=mean(abs(test$error_pp)),
@@ -3877,7 +3935,7 @@ v28_universe <- function(stock_table, symbols) {
 }
 
 v28_forecast_snapshot <- function(stock_table,symbols,window=252L,level=.95,
-                                  market_returns=NULL) {
+                                  market_returns=NULL,logit_cache_env=NULL) {
   u<-v28_universe(stock_table,symbols)
   if(!length(u$symbols))stop("共同資料日沒有可用的成分股")
   if(is.null(market_returns))market_returns<-v30_market_returns(u$data)
@@ -3885,8 +3943,21 @@ v28_forecast_snapshot <- function(stock_table,symbols,window=252L,level=.95,
     d<-u$data[u$data$symbol==sym,,drop=FALSE]
     px<-as.numeric(d$adjusted)
     if(length(px)<window+2L)return(NULL)
+    lgcache<-tryCatch({
+      if(!is.null(logit_cache_env)&&exists(as.character(sym),
+          envir=logit_cache_env,inherits=FALSE)) {
+        get(as.character(sym),envir=logit_cache_env,inherits=FALSE)
+      } else {
+        cc<-v31_logit_prepare(px,d$date,market_returns)
+        if(!is.null(logit_cache_env))assign(as.character(sym),cc,
+          envir=logit_cache_env)
+        cc
+      }
+    },error=function(e)NULL)
+    if(is.null(lgcache))return(NULL)
     fc<-tryCatch(v27_one_step(px,length(px),window,level=level,
-                              dates=d$date,market_returns=market_returns),error=function(e)NULL)
+                              dates=d$date,market_returns=market_returns,
+                              logit_cache=lgcache),error=function(e)NULL)
     if(is.null(fc)||any(!is.finite(fc)))return(NULL)
     p0<-tail(px,1L)
     data.frame(symbol=sym,date=u$date,last_price=p0,
@@ -3907,7 +3978,7 @@ v28_forecast_snapshot <- function(stock_table,symbols,window=252L,level=.95,
 }
 
 v28_all_oos <- function(stock_table,symbols,test_days=63L,window=252L,level=.95,
-                        progress=NULL,market_returns=NULL) {
+                        progress=NULL,market_returns=NULL,logit_cache_env=NULL) {
   u<-v28_universe(stock_table,symbols)
   if(is.null(market_returns))market_returns<-v30_market_returns(u$data)
   benchmark_dates<-as.Date(names(market_returns))
@@ -3919,8 +3990,12 @@ v28_all_oos <- function(stock_table,symbols,test_days=63L,window=252L,level=.95,
   rows<-vector("list",length(u$symbols))
   for(j in seq_along(u$symbols)) {
     sym<-u$symbols[j]
+    lgcache<-if(!is.null(logit_cache_env)&&exists(as.character(sym),
+      envir=logit_cache_env,inherits=FALSE))
+      get(as.character(sym),envir=logit_cache_env,inherits=FALSE) else NULL
     z<-tryCatch(v27_rolling_oos(u$data,sym,test_days=test_days,
-                 window=window,level=level,market_returns=market_returns),error=function(e)NULL)
+                 window=window,level=level,market_returns=market_returns,
+                 logit_cache=lgcache),error=function(e)NULL)
     if(!is.null(z)) {
       x<-z$test
       adj<-as.character(x$origin_date)==unname(prev_day[as.character(x$date)])
@@ -4001,11 +4076,15 @@ server <- function(input, output, session) {
     shiny::withProgress(message="執行全體 Logistic 方向及 AR＋GARCH 區間預測…",value=0,{
       z<-tryCatch({
         lookup<-v30_market_returns(d)
+        # 本次執行內共享全部股票特徵；換設定或重新執行即重建。
+        logit_cache_env<-new.env(parent=emptyenv())
         snap<-v28_forecast_snapshot(d,stock_info$symbol,window=train,
-                                    level=level,market_returns=lookup)
+                                    level=level,market_returns=lookup,
+                                    logit_cache_env=logit_cache_env)
         shiny::incProgress(.12,detail="已完成全體隔日預測")
         history<-v28_all_oos(d,stock_info$symbol,test_days=days,window=train,
                               level=level,market_returns=lookup,
+                              logit_cache_env=logit_cache_env,
           progress=function(j,n){
             if(n>0)shiny::setProgress(.12+.88*j/n,
               detail=paste0("歷史驗證第 ",j," / ",n," 檔"))
