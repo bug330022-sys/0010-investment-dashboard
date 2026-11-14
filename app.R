@@ -1707,7 +1707,7 @@ ui <- fluidPage(
         @media (max-width:700px) { .home-intro .home-side { min-height:0; } }
         /* v7 首頁：左右對照，只影響總覽新元件 */
         .home-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
-        .home-heading h2 { margin:0; font-size:clamp(38px,5vw,58px); line-height:1.1; letter-spacing:1px; }
+        .home-heading h2 { margin:0; font-size:clamp(28px,3vw,36px); line-height:1.1; letter-spacing:1px; }
         .home-date { color:#60758a; font-size:13px; white-space:nowrap; padding-top:6px; }
         .home-qualifier { background:#f6f8fa; padding:12px 15px; border-radius:9px; font-size:13px; line-height:1.7; color:#556779; margin:16px 0 8px; }
         .home-window { font-size:13px; color:#60758a; margin-bottom:14px; }
@@ -1716,11 +1716,12 @@ ui <- fluidPage(
         .home-side-0010 { background:#eef5fc; border-color:#d6e5f3; }
         .home-side-0050 { background:#fff5f1; border-color:#f1e0d9; }
         .home-center { background:#f8fafc; text-align:center; padding-left:11px; padding-right:11px; }
-        .home-side h2 { font-size:34px; font-weight:800; text-align:center; margin:0 0 3px; }
+        .home-side h2 { font-size:54px; font-weight:800; text-align:center; margin:0 0 3px; }
         .home-side-subtitle { text-align:center; color:#708092; font-size:12px; min-height:21px; margin:0 0 12px; }
         .home-stat { border-top:1px solid rgba(130,148,168,.20); padding:9px 0; display:flex; justify-content:space-between; align-items:center; gap:8px; }
         .home-stat span { font-size:13px; color:#677789; }
         .home-stat strong { font-size:19px; color:#34465a; white-space:nowrap; }
+        .home-center h2 { font-size:34px; }
         .home-center .home-stat { display:block; text-align:center; }
         .home-center .home-stat span { display:block; font-size:11px; margin-bottom:4px; }
         .home-center .home-stat strong { font-size:16px; }
@@ -1801,11 +1802,19 @@ ui <- fluidPage(
       ),
       div(class = "section-box",
           h2("0010 與 0050 累積報酬走勢"),
-          p(class = "page-description", "兩者以共同首日為 0%，比較同一期間累積漲跌；不是直接把 ETF 股價與組合價格相加。"),
+          p(class = "page-description", "選擇任意日期範圍，兩者都從選定區間的首個共同交易日 0% 開始。0010 採目前持股與權重回溯試算，非歷史逐期回測。"),
+          dateRangeInput("v9_curve_range", "累積報酬圖｜選擇起訖日期：",
+                         start=max(data_min_date, data_max_date-365), end=data_max_date,
+                         min=data_min_date, max=data_max_date, format="yyyy-mm-dd", separator=" 至 ", language="zh-TW"),
+          textOutput("v9_curve_actual_range"),
           plotOutput("v7_home_curve", height = "420px")),
       div(class = "section-box",
           h2("日對數報酬率｜0010 與 0050"),
-          p(class = "page-description", "左、右兩圖使用相同日期與 Y 軸範圍，方便比較每日波動幅度；本期 0010 為目前持股權重的回溯試算。"),
+          p(class = "page-description", "兩圖使用同一組日期與共同縱軸尺度，可獨立於上方的累積報酬圖調整期間。0010 為目前持股與權重的回溯試算。"),
+          dateRangeInput("v9_daily_range", "日對數報酬圖｜選擇起訖日期：",
+                         start=max(data_min_date, data_max_date-126), end=data_max_date,
+                         min=data_min_date, max=data_max_date, format="yyyy-mm-dd", separator=" 至 ", language="zh-TW"),
+          textOutput("v9_daily_actual_range"),
           fluidRow(
             column(6, h3("0010｜日對數報酬率"), plotOutput("v8_p10_daily_log", height = "290px")),
             column(6, h3("0050｜日對數報酬率"), plotOutput("v8_0050_daily_log", height = "290px"))
@@ -1837,9 +1846,20 @@ ui <- fluidPage(
           h2("0010 本期持股與權重"),
           tableOutput("v4_home_table"),
           tags$details(class = "method-details",
-                       tags$summary("查看資金分配及選股門檻"),
-                       tableOutput("v4_home_weight"),
-                       p("選股以動能 70%＋風險穩定 30% 評分，並有風險與產業集中限制。")),
+                       tags$summary("選股門檻（展開查看）"),
+                       tags$ul(
+                         tags$li("有效資料：至少 280 個交易日，不足者剔除。"),
+                         tags$li("風險穩定分：低於 20 分者剔除。"),
+                         tags$li("年化波動度：超過 90% 者剔除。"),
+                         tags$li("最大回撤：低於 −85% 者剔除。"),
+                         tags$li("單日 CVaR 95%：尾端損失超過 6% 者剔除。"),
+                         tags$li("產業分散：單一產業至多選取 3 檔。")
+                       ),
+                       p("以上為原選股模型設定，這次僅恢復顯示，不更改評分或篩選規則。"),
+                       tags$details(tags$summary("50 檔完整篩選結果"), tableOutput("v4_all_table"))),
+          tags$details(class = "method-details",
+                       tags$summary("權重與資金分配（展開查看）"),
+                       tableOutput("v4_home_weight")),
           p(class = "home-small-note", "本頁的選股名單是目前評分結果，並非歷史各季度當時的名單。")
       ),
       div(class = "section-box home-data-foot",
@@ -2821,8 +2841,49 @@ server <- function(input, output, session) {
     })
   }
 
+  # v9：圖表日期獨立可選，不改 v7_home_pair / v7_home_stats 的本期統計口徑。
+  # 採當前十檔及當前權重的歷史回溯試算，不能宣稱是當時的歷史選股回測。
+  v9_available_prices <- shiny::reactive({
+    pm <- v4_pm()
+    ww <- v4_w()
+    symbols <- names(ww)
+    shiny::req(length(symbols) > 0, all(symbols %in% colnames(pm)), "0050" %in% colnames(pm))
+    # 保持同日共同資料，不以前一天價格填補缺漏。
+    m <- pm[, c(symbols, "0050"), drop=FALSE]
+    ok <- apply(m, 1, function(row) all(is.finite(row) & row > 0))
+    m <- m[ok, , drop=FALSE]
+    shiny::req(nrow(m) >= 3)
+    m
+  })
+
+  v9_slice_pair <- function(selected_range) {
+    shiny::req(!is.null(selected_range), length(selected_range)==2)
+    m <- v9_available_prices()
+    dates <- as.Date(rownames(m))
+    take <- which(dates >= as.Date(selected_range[1]) & dates <= as.Date(selected_range[2]))
+    shiny::validate(shiny::need(length(take) >= 3, "選定期間共同有效交易日不足，請放寬日期範圍。"))
+    m <- m[take, , drop=FALSE]
+    symbols <- setdiff(colnames(m), "0050")
+    ww <- v4_w()[symbols]
+    ww <- as.numeric(ww / sum(ww))
+    relative <- sweep(m[, symbols, drop=FALSE], 2, m[1,symbols], "/")
+    p10 <- as.numeric(relative %*% ww)
+    etf <- as.numeric(m[, "0050"] / m[1, "0050"])
+    data.frame(date=as.Date(rownames(m)), p10=p10, etf=etf)
+  }
+
+  v9_curve_pair <- shiny::reactive({ v9_slice_pair(input$v9_curve_range) })
+  v9_daily_pair <- shiny::reactive({ v9_slice_pair(input$v9_daily_range) })
+  output$v9_curve_actual_range <- shiny::renderText({
+    z <- v9_curve_pair()
+    paste0("實際共同交易期間：",min(z$date)," 至 ",max(z$date),"｜",nrow(z)," 個交易日")
+  })
+  output$v9_daily_actual_range <- shiny::renderText({
+    z <- v9_daily_pair()
+    paste0("實際共同交易期間：",min(z$date)," 至 ",max(z$date),"｜",nrow(z)," 個交易日")
+  })
   output$v7_home_curve <- shiny::renderPlot({
-    z <- v7_home_pair()
+    z <- v9_curve_pair()
     d <- rbind(data.frame(date=z$date, pct=(z$p10-1)*100, label="0010"),
                data.frame(date=z$date, pct=(z$etf-1)*100, label="0050"))
     ggplot2::ggplot(d, ggplot2::aes(x=date, y=pct, colour=label)) +
@@ -2835,9 +2896,8 @@ server <- function(input, output, session) {
       ggplot2::theme(legend.position="bottom", panel.grid.minor=ggplot2::element_blank())
   })
 
-  # 兩張日對數報酬圖使用同日期及共同縱軸尺度。
   v8_daily <- shiny::reactive({
-    z <- v7_home_pair()
+    z <- v9_daily_pair()
     daily <- data.frame(date=z$date[-1],
                         p10=100*diff(log(z$p10)),
                         etf=100*diff(log(z$etf)))
