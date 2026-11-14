@@ -1458,8 +1458,8 @@ portfolio_default_start_date <- max(
 # 共用顏色
 # ============================================================
 
-UP_COLOR <- "#d95b5b"
-DOWN_COLOR <- "#4fa66a"
+UP_COLOR <- "#337B65"
+DOWN_COLOR <- "#B45F65"
 NEUTRAL_COLOR <- "#7b8794"
 
 # ============================================================
@@ -1476,7 +1476,7 @@ other_stock_symbols <-
   )
 
 stock_colors <- c(
-  "0050" = "#5b8ecb"
+  "0050" = "#879FB1"
 )
 
 if (
@@ -1701,8 +1701,8 @@ ui <- fluidPage(
         .dashboard-footer { text-align:center; color:#8b99a8; font-size:13px; padding-top:22px; }
 
         /* v8：首頁視覺微調，所有其他分頁樣式維持原樣 */
-        .v8-up { color:#d94b4b !important; font-weight:800; }
-        .v8-down { color:#238a58 !important; font-weight:800; }
+        .v8-up { color:#337B65 !important; font-weight:800; }
+        .v8-down { color:#B45F65 !important; font-weight:800; }
         .v8-flat { color:#5e7185 !important; }
         .home-data-foot p { margin-bottom:5px; }
         .home-intro .home-side { min-height:385px; }
@@ -1935,8 +1935,8 @@ ui <- fluidPage(
         .g10-v13 .g10-v14-summary-card:nth-child(3) { background:#faf8f5; }
         .g10-v13 .g10-v14-summary-card > span { display:block; font-size:12px; font-weight:700; color:#6a8294; margin-bottom:8px; }
         .g10-v13 .g10-v14-summary-card .shiny-html-output { font-size:23px; font-weight:800; color:#395f7c; line-height:1.3; }
-        .g10-v13 .g10-v14-positive { color:#b54d51 !important; }
-        .g10-v13 .g10-v14-negative { color:#2e8163 !important; }
+        .g10-v13 .g10-v14-positive { color:#337B65 !important; }
+        .g10-v13 .g10-v14-negative { color:#B45F65 !important; }
         .g10-v13 .g10-v14-title { margin:22px 0 8px; font-size:17px; font-weight:800; color:#375d7b; }
         .g10-v13 .g10-v14-explain { margin:0 0 12px; font-size:12px; color:#718496; line-height:1.6; }
         .g10-v13 .g10-v14-period { background:#f1f6fa; border:1px solid #e1e9ef; border-radius:8px; padding:10px 13px; color:#53738b; font-size:12px; line-height:1.6; }
@@ -2167,6 +2167,134 @@ ui <- fluidPage(
         .home-legacy { margin-top:4px; }
         @media(max-width:900px) { .home-compare-grid { grid-template-columns:1fr; } .home-center { order:3; } .home-heading { flex-wrap:wrap; } .home-date { white-space:normal; } }
 
+        /* =======================================================
+           v35 VISUAL ONLY | E editorial + F bento + G quant tables
+           Mist blue-gray / muted green-red / consistent typography
+           ======================================================= */
+        :root {
+          --blue:#3E5870; --blue2:#7894AB; --purple:#8E92AC;
+          --green:#337B65; --red:#B45F65; --amber:#A88A63;
+          --ink:#253746; --muted:#6B7C8C; --bg:#F7F9FB;
+          --card:#FFFFFF; --line:#D8E0E7;
+          --g35-up-bg:#EAF4EE; --g35-down-bg:#F9EEEE;
+          --g35-shadow:0 3px 14px rgba(32,52,69,.045);
+        }
+        body {
+          background:#F7F9FB;
+          color:var(--ink); line-height:1.62;
+          font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft JhengHei','Noto Sans TC',sans-serif;
+          font-variant-numeric:tabular-nums;
+        }
+        .container-fluid {max-width:1500px;padding:23px 30px 48px;}
+        .hero {
+          background:linear-gradient(112deg,#F0F4F7 0%,#F6F8FA 68%,#FFFFFF 100%);
+          color:var(--ink); border:1px solid #D8E2E9;
+          border-left:5px solid #3E5870; border-radius:14px;
+          padding:25px 29px; margin-bottom:16px; box-shadow:none;
+        }
+        .dashboard-title {font-size:30px;font-weight:760;letter-spacing:-.45px;color:#253746;}
+        .dashboard-subtitle {font-size:14px;line-height:1.8;color:#637789;max-width:960px;}
+        .hero-badge {font-size:12px;font-weight:600;background:#FFFFFF;border:1px solid #DCE4EB;color:#6B7C8C;}
+        .nav-tabs {background:#FFFFFF;border:1px solid #E1E7EC;box-shadow:none;padding:5px;border-radius:11px;margin-bottom:18px;}
+        .nav-tabs > li > a {color:#617587;font-weight:650;padding:11px 17px;border-radius:8px;transition:background .15s ease;}
+        .nav-tabs > li > a:hover {background:#F0F4F7;color:#3E5870;}
+        .nav-tabs > li.active > a,.nav-tabs > li.active > a:hover,.nav-tabs > li.active > a:focus {
+          background:#3E5870;color:#FFFFFF;box-shadow:none;border-radius:8px;
+        }
+        .tabbable > .nav-pills {display:flex;flex-wrap:wrap;gap:5px;margin-bottom:17px;}
+        .tabbable > .nav-pills > li {float:none;margin:0;}
+        .tabbable > .nav-pills > li > a {background:#EDF2F5;color:#60798B;font-weight:620;border-radius:8px;padding:9px 16px;}
+        .tabbable > .nav-pills > li.active > a,.tabbable > .nav-pills > li.active > a:hover,.tabbable > .nav-pills > li.active > a:focus {
+          background:#3E5870;color:#FFFFFF;
+        }
+        .section-box {background:#FFFFFF;border:1px solid var(--line);border-radius:14px;padding:23px 25px;margin-bottom:17px;box-shadow:var(--g35-shadow);}
+        .section-box h2 {color:#2F4658;font-size:23px;letter-spacing:-.3px;font-weight:760;}
+        .section-box h3,.section-box h4 {color:#3E5870;}
+        .page-description {font-size:14px;color:#6B7C8C;line-height:1.75;}
+        .v25-main-lead {background:transparent;border:none;box-shadow:none;padding:3px 2px 12px;margin-bottom:6px;}
+        .v25-main-lead h2 {color:#253746;font-size:24px;}
+        .v25-main-lead p {color:#6B7C8C;font-size:13px;}
+        .reading-guide,.plot-explanation,.v25-method-hint {background:#F3F6F8;border-left-color:#91A9BA;color:#536D7F;}
+        .method-note,.warning-note {background:#FCFAF5;border-color:#E6DCCB;border-left-color:#B7A083;color:#766950;}
+        .info-card {background:#FFFFFF;border:1px solid #E1E7EC;border-radius:12px;box-shadow:none;min-height:102px;padding:15px 17px;}
+        .info-card:hover {transform:none;box-shadow:0 3px 11px rgba(43,65,83,.05);}
+        .info-card-title {color:#718292;font-size:12px;font-weight:650;}
+        .info-card-value {color:#354E61;font-size:23px;font-weight:760;}
+        .accent-blue {border-top:3px solid #6E8AA1;}
+        .accent-purple {border-top:3px solid #9295A9;}
+        .accent-green {border-top:3px solid #79A38D;}
+        .accent-amber {border-top:3px solid #B6A180;}
+        .accent-red {border-top:3px solid #C7898B;}
+        .btn-primary,.btn-primary:focus {background:#3E5870;border-color:#3E5870;color:#fff;box-shadow:none;border-radius:8px;font-weight:650;}
+        .btn-primary:hover,.btn-primary:active {background:#304A60;border-color:#304A60;color:#fff;}
+        .quick-button-row .btn {border:1px solid #D5DFE7;background:#FFFFFF;color:#587188;border-radius:8px;}
+        .quick-button-row .btn:hover {background:#EDF3F7;border-color:#9CB2C3;color:#3E5870;}
+        .form-control,.selectize-input {border-color:#CCD9E2;border-radius:8px;box-shadow:none;}
+        .form-control:focus,.selectize-input.focus {border-color:#7798B1;box-shadow:0 0 0 2px rgba(62,88,112,.10);}
+        .table > thead > tr > th {background:#F1F5F7;color:#4D677B;border-bottom:1px solid #D8E2E9;font-weight:720;}
+        .table > tbody > tr > td {border-top-color:#E7EDF1;vertical-align:middle;}
+        .table-striped > tbody > tr:nth-of-type(odd) {background:#FBFCFD;}
+        .table-hover > tbody > tr:hover {background:#F1F6F9;}
+        .home-intro .home-side {min-height:0!important;}
+        .home-compare-grid {grid-template-columns:minmax(0,1fr) minmax(160px,.66fr) minmax(0,1fr);gap:12px;}
+        .home-side {background:#FFFFFF;border:1px solid #DDE6ED;border-radius:12px;padding:15px 19px;box-shadow:none;}
+        .home-side-0010 {background:#F2F6F9;border-color:#D8E3EA;border-top:3px solid #3E5870;}
+        .home-side-0050 {background:#F7F9FA;border-color:#E1E7EC;border-top:3px solid #91A6B5;}
+        .home-center {background:#FFFFFF;border-top:3px solid #C4D1DB;}
+        .home-heading h2 {color:#263D50;letter-spacing:-.5px;}
+        .home-stat {border-top:1px solid #E4EBF0;padding:10px 0;}
+        .home-stat > span {color:#667B8C;font-size:12px;}
+        .home-compare-grid .home-stat > strong {font-size:clamp(17px,1.65vw,24px)!important;letter-spacing:-.15px;}
+        .home-compare-grid .home-center .home-stat > strong {font-size:clamp(16px,1.45vw,21px)!important;}
+        .home-stat > strong span {font-weight:750;}
+        .home-qualifier {background:#F4F7F9;color:#627788;border-left:3px solid #9EB3C3;border-radius:7px;}
+        .v8-up,.g10-v13 .g10-v14-positive {color:#337B65!important;}
+        .v8-down,.g10-v13 .g10-v14-negative {color:#B45F65!important;}
+        .v8-flat {color:#3D5366!important;}
+        .g10-v13 .g10-v13-head,.g10-v12 .g10-v12-banner {background:linear-gradient(110deg,#EFF4F7,#FAFCFD);border-color:#DAE4EB;border-left-color:#6B889F;}
+        .g10-v13 .g10-v13-block,.g10-v12 .g10-v12-card {border-color:#DCE5EC;border-radius:12px;box-shadow:none;}
+        .g10-v13 .g10-v10-metric,.g10-v12 .g10-v10-metric {background:#F5F8FA!important;border-color:#E1E8ED;}
+        .g10-v13 .g10-v10-metric .shiny-text-output {color:#3E5870;}
+        .g10-v12 .g10-v11-fill,.g10-v13 .g10-v11-fill {background:#6587A0;}
+        .g10-v13 .g10-v13-block-num,.g10-v12 .g10-v12-summary-icon {background:#E7EEF3;color:#527087;}
+        .g10-v13 details.g10-v13-expand {box-shadow:none;border-color:#D9E3E9;border-left-color:#91A9BA;}
+        .rank-compare .rank-compare-card {border-color:#DDE6ED;background:#FFFFFF;}
+        .rank-compare .rank-compare-card.momentum {background:#F6F9FB;border-top-color:#6689A4;}
+        .rank-compare .rank-compare-card.risk {background:#FBFAF7;border-top-color:#B2A087;}
+        .g18-panel .g18-stat {background:#F7F9FA!important;border:1px solid #DDE6EC;border-top:3px solid #A5B6C2;border-radius:11px;}
+        .g18-panel .g18-stat:nth-child(even) {background:#F7F9FA!important;border-top-color:#A5B6C2;}
+        .g18-panel .g18-stat-label {color:#697F90;}
+        .g18-panel .g18-stat-value {color:#354E61;}
+        .g18-panel .g18-stat.g35-tone-positive {border-top-color:#70A58E;}
+        .g18-panel .g18-stat.g35-tone-positive .g18-stat-value {color:#337B65;}
+        .g18-panel .g18-stat.g35-tone-negative {border-top-color:#C78B8D;}
+        .g18-panel .g18-stat.g35-tone-negative .g18-stat-value {color:#B45F65;}
+        .g18-panel .g18-table-wrap {border:1px solid #E1E8ED;border-radius:10px;overflow-x:auto;}
+        .g18-panel .g18-table-wrap table {margin:0;min-width:710px;}
+        .g18-panel .g18-colored-table td,.g18-panel .g35-colored-table td {font-variant-numeric:tabular-nums;}
+        .g18-panel .g35-colored-table td.g35-number {font-weight:720;white-space:nowrap;}
+        .g18-panel .g35-colored-table td.g35-positive {color:#337B65;background:rgba(234,244,238,.35);}
+        .g18-panel .g35-colored-table td.g35-negative {color:#B45F65;background:rgba(249,238,238,.38);}
+        .g18-panel .g35-colored-table td.g35-neutral {color:#647789;}
+        .g18-panel .g35-colored-table th,.g18-panel .g35-colored-table td {padding:10px 12px;white-space:nowrap;}
+        .g18-panel .g35-colored-table th {font-size:12px;}
+        details.method-details {border-color:#E0E7ED;background:#FAFCFD;}
+        details.method-details summary {color:#496B83;}
+        .dashboard-footer {color:#8292A0;}
+        @media(max-width:1000px) {.container-fluid{padding:17px 17px 32px;}}
+        @media(max-width:900px) {.home-compare-grid{grid-template-columns:1fr;}.home-center{order:3;}}
+        @media(max-width:600px) {
+          .container-fluid{padding:12px 10px 28px;}
+          .hero{padding:19px 17px;border-radius:11px;}
+          .dashboard-title{font-size:24px;}
+          .section-box{padding:16px 14px;border-radius:11px;}
+          .nav-tabs>li>a{padding:9px 11px;font-size:12px;}
+          .home-compare-grid .home-stat>strong{font-size:21px!important;}
+          .home-compare-grid .home-center .home-stat>strong{font-size:19px!important;}
+          .g18-panel .g18-stat-grid{gap:8px;}
+          .g18-panel .g18-stat{padding:12px 13px;}
+        }
+
         "
         
       )
@@ -2227,7 +2355,7 @@ tabPanel(
                   div(class = "home-stat", span("年化波動"), strong(uiOutput("v7_50_vol", inline = TRUE))),
                   div(class = "home-stat", span("Sharpe 比率"), strong(uiOutput("v7_50_sharpe", inline = TRUE))))
           ),
-          p(class = "home-small-note", "漲跌數字：漲紅、跌綠。差額以百分點（pp）表示；風險指標不以正負代表好壞。"),
+          p(class = "home-small-note", "報酬數字：正向柔綠、負向柔紅。差額以百分點（pp）表示；風險指標不以正負代表好壞。"),
           div(class = "home-qualifier",
               "比較口徑：0010 為目前十檔名單及權重的本期回溯持有試算，非歷史各期實際選股績效；",
               "未扣交易成本。完整的下一交易日進場、含成本季度策略回測請見「模型驗證 → 季度策略回測」。")
@@ -2578,10 +2706,10 @@ tabPanel(
               h4("各評分年度的 0010／0050 報酬"),
               p(class = "g18-hint", "將同一評分年度內的季度報酬複利串接；不是按 1 月 1 日至 12 月 31 日計算。"),
               plotOutput("g18_bt_year_plot", height = "330px"),
-              div(class = "g18-table-wrap", tableOutput("g18_bt_year_table")),
+              div(class = "g18-table-wrap", uiOutput("g18_bt_year_table")),
               h4(textOutput("g18_bt_quarter_title", inline = TRUE)),
               p(class = "g18-hint", "選定年度可查看該年度所有已完成回測季度；選「全部年度」時先顯示最近八季。"),
-              div(class = "g18-table-wrap", tableOutput("g18_bt_quarter_table")),
+              div(class = "g18-table-wrap", uiOutput("g18_bt_quarter_table")),
               tags$details(class = "g18-detail",
                 tags$summary(
                   span(class = "g18-detail-icon", "02"),
@@ -4332,7 +4460,7 @@ server <- function(input, output, session) {
     list(p10 = metric(z$p10), etf = metric(z$etf))
   })
 
-  # v8 數字：僅報酬類以漲紅跌綠；波動、回撤、Sharpe 等維持中性色。
+  # v35 數字：僅報酬類以正向柔綠、負向柔紅；波動、回撤、Sharpe 等維持中性色。
   v8_color_value <- function(x, label, use_color = TRUE) {
     cls <- if (!use_color || !is.finite(x)) "v8-flat" else
       if (x > 0) "v8-up" else if (x < 0) "v8-down" else "v8-flat"
@@ -4436,7 +4564,7 @@ server <- function(input, output, session) {
     ggplot2::ggplot(d, ggplot2::aes(x=date,y=pct)) +
       ggplot2::geom_hline(yintercept=0, colour="gray65") +
       ggplot2::geom_col(ggplot2::aes(fill=pct>=0), width=.85, show.legend=FALSE) +
-      ggplot2::scale_fill_manual(values=c("TRUE"="#d94b4b", "FALSE"="#238a58")) +
+      ggplot2::scale_fill_manual(values=c("TRUE"="#337B65", "FALSE"="#B45F65")) +
       ggplot2::scale_y_continuous(limits=v8_daily_limits(),labels=function(x) paste0(round(x,1),"%")) +
       ggplot2::labs(x=NULL,y="日對數報酬率") +
       ggplot2::theme_minimal(base_size=11) +
@@ -9099,7 +9227,7 @@ server <- function(input, output, session) {
           "Top5" = "#6f9fd0",
           "Top10" = "#a28bd2",
           "Bottom5" = "#dfb46f",
-          "0050" = "#5b8ecb"
+          "0050" = "#879FB1"
         )
       ) +
       scale_y_continuous(
@@ -12078,8 +12206,9 @@ server <- function(input, output, session) {
     g[valid, , drop = FALSE]
   })
 
-  g18_stat_box <- function(label, value, sub = "") {
-    tags$div(class = "g18-stat",
+  g18_stat_box <- function(label, value, sub = "", tone = "neutral") {
+    class_name <- paste("g18-stat", paste0("g35-tone-", tone))
+    tags$div(class = class_name,
       tags$span(class = "g18-stat-label", label),
       tags$strong(class = "g18-stat-value", value),
       tags$span(class = "g18-stat-sub", sub))
@@ -12135,7 +12264,7 @@ server <- function(input, output, session) {
     d <- data.frame(label = factor(labs, levels = rev(labs)),
                     value = as.numeric(x$forecast_vol), stringsAsFactors = FALSE)
     ggplot2::ggplot(d, ggplot2::aes(x = label, y = value)) +
-      ggplot2::geom_col(fill = "#6d96ba", width = .7) +
+      ggplot2::geom_col(fill = "#62839D", width = .7) +
       ggplot2::coord_flip() +
       ggplot2::scale_y_continuous(labels = function(z) sprintf("%.0f%%", 100 * z),
                                   expand = ggplot2::expansion(mult = c(0, .20))) +
@@ -12209,6 +12338,29 @@ server <- function(input, output, session) {
     paste0("NT$ ", formatC(round(z), format = "d", big.mark = ","))
   }
 
+  # v35｜季度表格的正負色彩。只接受程式計算的數值，不改動任何收益或回測公式。
+  g35_tone <- function(x) {
+    if (length(x) != 1L || !is.finite(x) || x == 0) return("neutral")
+    if (x > 0) "positive" else "negative"
+  }
+
+  g35_color_table <- function(df, numeric_tones = list()) {
+    if (!is.data.frame(df)) return(NULL)
+    header_cells <- lapply(names(df), function(label) tags$th(scope = "col", label))
+    header <- do.call(tags$tr, header_cells)
+    body <- lapply(seq_len(nrow(df)), function(i) {
+      cells <- lapply(seq_along(df), function(j) {
+        key <- names(df)[j]
+        colored <- key %in% names(numeric_tones)
+        cls <- if (colored) paste("g35-number", paste0("g35-", g35_tone(numeric_tones[[key]][i]))) else NULL
+        tags$td(class = cls, as.character(df[[j]][i]))
+      })
+      do.call(tags$tr, cells)
+    })
+    tags$table(class = "table table-striped table-bordered table-hover g35-colored-table",
+      tags$thead(header), tags$tbody(body))
+  }
+
   output$g18_bt_summary <- shiny::renderUI({
     # eventReactive 尚未執行時會 req()，先檢查按鈕次數才能顯示提示。
     if (is.null(input$v5_run_bt) || input$v5_run_bt < 1) {
@@ -12230,10 +12382,10 @@ server <- function(input, output, session) {
     tags$div(
       tags$p(class = "g18-hint", paste0("目前查看：", label, "（", nrow(q), " 季）")),
       tags$div(class = "g18-stat-grid g19-bt-stat-grid",
-        g18_stat_box("0010 期間報酬（扣成本）", g18_pct(ret_a), "季度淨報酬複利串接"),
-        g18_stat_box("0050 同期報酬", g18_pct(ret_b), "相同回測季度比較"),
+        g18_stat_box("0010 期間報酬（扣成本）", g18_pct(ret_a), "季度淨報酬複利串接", tone = g35_tone(ret_a)),
+        g18_stat_box("0050 同期報酬", g18_pct(ret_b), "相同回測季度比較", tone = g35_tone(ret_b)),
         g18_stat_box("勝過 0050 的季度", if (n) sprintf("%d / %d（%.0f%%）", w, n, 100 * w / n) else "—", "季度勝率，不等於累積報酬"),
-        g18_stat_box("累積報酬差距", g19_pp(ret_a - ret_b), "0010 累積報酬 − 0050 累積報酬"),
+        g18_stat_box("累積報酬差距", g19_pp(ret_a - ret_b), "0010 累積報酬 − 0050 累積報酬", tone = g35_tone(ret_a - ret_b)),
         g18_stat_box("累計交易成本", g18_money(sum(as.numeric(q$成本合計), na.rm = TRUE)), "所選季度的模擬交易費用")
       )
     )
@@ -12251,16 +12403,16 @@ server <- function(input, output, session) {
     ggplot2::ggplot(df, ggplot2::aes(x = year, y = value, fill = series)) +
       ggplot2::geom_hline(yintercept = 0, colour = "#a6b2bc", linewidth = 0.4) +
       ggplot2::geom_col(position = ggplot2::position_dodge(width = .74), width = .64) +
-      ggplot2::scale_fill_manual(values = c("0010（扣成本）" = "#628db3", "0050" = "#c3a68a")) +
+      ggplot2::scale_fill_manual(values = c("0010（扣成本）" = "#3E5870", "0050" = "#8AA4B6")) +
       ggplot2::scale_y_continuous(labels = function(x) sprintf("%+.0f%%", 100*x)) +
       ggplot2::labs(x = "評分年度", y = "該年度評分季度報酬", fill = NULL) +
       ggplot2::theme_minimal(base_size = 12) +
       ggplot2::theme(legend.position = "bottom", panel.grid.major.x = ggplot2::element_blank())
   })
 
-  output$g18_bt_year_table <- shiny::renderTable({
+  output$g18_bt_year_table <- shiny::renderUI({
     y <- g18_bt_yearly()
-    data.frame(
+    df <- data.frame(
       評分年度 = y$year,
       回測季數 = y$n,
       `0010淨報酬` = vapply(y$ret0010, g18_pct, character(1)),
@@ -12269,18 +12421,23 @@ server <- function(input, output, session) {
       勝過0050 = ifelse(y$compared > 0, paste0(y$win, "/", y$compared), "—"),
       交易成本 = vapply(y$cost, g18_money, character(1)),
       check.names = FALSE, stringsAsFactors = FALSE)
-  }, striped = TRUE, bordered = TRUE, hover = TRUE)
+    tones <- list()
+    tones[["0010淨報酬"]] <- y$ret0010
+    tones[["0050同期報酬"]] <- y$ret0050
+    tones[["累積報酬差距"]] <- y$gap
+    g35_color_table(df, tones)
+  })
 
   output$g18_bt_quarter_title <- shiny::renderText({
     y <- input$g18_bt_year
     if (is.null(y) || identical(y, "all")) "最近八季績效" else paste0(y, " 年評分季度績效")
   })
 
-  output$g18_bt_quarter_table <- shiny::renderTable({
+  output$g18_bt_quarter_table <- shiny::renderUI({
     q <- g18_bt_quarters()
     y <- input$g18_bt_year
     if (is.null(y) || identical(y, "all")) q <- utils::tail(q, 8)
-    data.frame(
+    df <- data.frame(
       評分日 = format(as.Date(q$評分日), "%Y-%m-%d"),
       成交日 = format(as.Date(q$成交日), "%Y-%m-%d"),
       出場日 = format(as.Date(q$出場日), "%Y-%m-%d"),
@@ -12289,7 +12446,12 @@ server <- function(input, output, session) {
       超額 = vapply(q$淨報酬 - q$基準0050, g18_pct, character(1)),
       跨年 = ifelse(format(as.Date(q$評分日), "%Y") != format(as.Date(q$出場日), "%Y"), "是", "否"),
       check.names = FALSE, stringsAsFactors = FALSE)
-  }, striped = TRUE, bordered = TRUE, hover = TRUE)
+    tones <- list()
+    tones[["0010淨報酬"]] <- as.numeric(q$淨報酬)
+    tones[["0050同期報酬"]] <- as.numeric(q$基準0050)
+    tones[["超額"]] <- as.numeric(q$淨報酬 - q$基準0050)
+    g35_color_table(df, tones)
+  })
 
   # ----------------------------------------------------------
   # 3. 0010 組合
