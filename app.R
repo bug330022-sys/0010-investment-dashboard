@@ -2349,27 +2349,6 @@ ui <- fluidPage(
           id = "validation_tabs",
           type = "pills",
           tabPanel(
-            "結果穩不穩｜區塊拔靴法",
-            br(),
-            fluidRow(
-              column(3, selectInput("bootstrap_stock", "比較成分股：", choices = setNames(stock_info$symbol, paste0(stock_info$name, " (", stock_info$symbol, ")")), selected = "2330")),
-              column(3, selectInput("bootstrap_window", "抽樣歷史期間：", choices = c("近 6 個月" = 126, "近 1 年" = 252, "近 3 年" = 756), selected = 252)),
-              column(3, selectInput("bootstrap_block", "每個區塊多長：", choices = c("5 個交易日" = 5, "10 個交易日" = 10, "20 個交易日" = 20), selected = 10)),
-              column(3, selectInput("bootstrap_reps", "重新抽幾次：", choices = c("50 次｜最快" = 50, "100 次｜建議" = 100, "200 次｜較完整" = 200), selected = 100))
-            ),
-            div(
-              class = "time-info",
-              strong("實際抽樣資料： "),
-              textOutput("bootstrap_period_info", inline = TRUE)
-            ),
-            actionButton("run_bootstrap", "開始快速檢查", class = "btn-primary"),
-            div(class = "method-note", "網站版以速度為優先，建議先用 100 次。正式報告若需要更穩定的區間，可在離線或每日更新流程中使用 1000 次以上，不需要讓每位使用者現場等待。"),
-            h3("結果摘要"),
-            tableOutput("bootstrap_summary_table"),
-            h3("相對 0050 的成長分數差異分布"),
-            plotOutput("bootstrap_diff_chart", height = "500px"),
-          ),
-          tabPanel(
             "過去有沒有用｜歷史回測",
             br(),
             div(
