@@ -1738,16 +1738,16 @@ ui <- fluidPage(
         /* v12 排名第二頁：雙 Top10 長條圖＋可展開細項（只作用於此頁） */
         .rank-compare .rank-compare-lead { color:#465c72; font-size:16px; font-weight:600; line-height:1.55; margin:0 0 13px; }
         .rank-compare .rank-compare-date { margin:0 0 15px; }
-        .rank-compare .rank-compare-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; align-items:stretch; }
-        .rank-compare .rank-compare-card { min-width:0; border:1px solid #dce7f1; border-radius:14px; padding:17px 16px; background:#fff; display:flex; flex-direction:column; }
+        .rank-compare .rank-compare-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; align-items:start; }
+        .rank-compare .rank-compare-card { min-width:0; align-self:start; height:auto; border:1px solid #dce7f1; border-radius:14px; padding:17px 16px; background:#fff; display:flex; flex-direction:column; }
         .rank-compare .rank-compare-card.momentum { border-top:4px solid #5289c0; background:#f9fcff; }
         .rank-compare .rank-compare-card.risk { border-top:4px solid #d39651; background:#fffdf9; }
         .rank-compare .rank-compare-card h3 { font-size:22px; font-weight:800; color:#30495e; margin:0 0 6px; }
         .rank-compare .rank-compare-description { color:#597083; font-size:13px; margin:0 0 4px; line-height:1.5; }
-        .rank-compare .rank-compare-chart { flex:1; min-width:0; padding:4px 0 2px; }
+        .rank-compare .rank-compare-chart { flex:0 0 auto; min-width:0; padding:4px 0 2px; }
         .rank-compare .rank-compare-chart .shiny-plot-output { max-width:100%; }
         .rank-compare .rank-compare-hint { font-size:12px; color:#71869a; margin:2px 0 15px; line-height:1.5; }
-        .rank-compare details.rank-compare-expand { border:1px solid #cddce9; background:#fff; border-radius:10px; padding:0; margin-top:auto; }
+        .rank-compare details.rank-compare-expand { border:1px solid #cddce9; background:#fff; border-radius:10px; padding:0; margin-top:0; }
         .rank-compare details.rank-compare-expand > summary { cursor:pointer; list-style:none; text-align:center; padding:11px 9px; color:#3b648b; font-size:14px; font-weight:750; border-radius:10px; }
         .rank-compare details.rank-compare-expand > summary::-webkit-details-marker { display:none; }
         .rank-compare details.rank-compare-expand > summary:after { content:' ▾'; }
@@ -1765,7 +1765,6 @@ ui <- fluidPage(
         .rank-compare .rank-compare-step strong { display:block; color:#385a79; font-size:14px; }
         .rank-compare .rank-compare-step small { display:block; color:#738599; margin-top:4px; font-size:12px; }
         .rank-compare .rank-compare-arrow { flex:none; color:#7f97aa; font-size:20px; font-weight:700; }
-        .rank-compare .rank-compare-next { text-align:right; margin-top:13px; }
         .rank-compare .rank-compare-note { color:#7a8996; font-size:12px; line-height:1.55; margin:12px 0 0; }
         @media(max-width:980px) { .rank-compare .rank-compare-grid { grid-template-columns:1fr; } }
         @media(max-width:570px) { .rank-compare .rank-compare-flow { padding:11px; } .rank-compare .rank-compare-steps { gap:4px; } .rank-compare .rank-compare-step { padding:8px 3px; } .rank-compare .rank-compare-step strong { font-size:12px; } .rank-compare .rank-compare-step small { font-size:10px; } .rank-compare .rank-compare-arrow { font-size:14px; } }
@@ -1985,9 +1984,7 @@ ui <- fluidPage(
                   span(class = "rank-compare-arrow", "→"),
                   div(class = "rank-compare-step", strong("組成 0010"), tags$small("評分＋風險門檻")),
                   span(class = "rank-compare-arrow", "→"),
-                  div(class = "rank-compare-step", strong("歷史驗證"), tags$small("檢查排名是否有用"))),
-              div(class = "rank-compare-next",
-                  actionButton("rank_compare_go_experiment", "查看權重實驗與歷史驗證", class = "btn-default"))
+                  div(class = "rank-compare-step", strong("歷史驗證"), tags$small("檢查排名是否有用")))
             ),
             p(class = "rank-compare-note",
               "兩張榜單獨立排名，左右相同名次不一定是同一檔股票。排名是研究依據，不代表未來報酬保證。")
@@ -2877,10 +2874,6 @@ server <- function(input, output, session) {
     shiny::req(!is.null(t), nrow(t) > 0)
     rank_compare_bar_v8(t, "risk_score", "#d39651", "風險穩定分（0～100）")
   }, res = 110)
-
-  shiny::observeEvent(input$rank_compare_go_experiment, {
-    shiny::updateTabsetPanel(session, "rank_subtabs", selected = "權重比較實驗")
-  })
 
   # 原始 v6_mom_table 在 v5_server.R；改成新的顯示表，避免動到共用模組。
   output$rank_compare_mom_detail <- shiny::renderTable({
