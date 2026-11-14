@@ -1697,6 +1697,30 @@ ui <- fluidPage(
         .term-chip { display:inline-block; padding:5px 9px; margin:3px; background:#f0f4fb; color:#6d6298; border-radius:999px; font-size:12px; font-weight:700; }
 
         .dashboard-footer { text-align:center; color:#8b99a8; font-size:13px; padding-top:22px; }
+
+        /* v7 首頁：左右對照，只影響總覽新元件 */
+        .home-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
+        .home-heading h2 { margin:0; }
+        .home-date { color:#60758a; font-size:13px; white-space:nowrap; padding-top:6px; }
+        .home-qualifier { background:#f6f8fa; padding:12px 15px; border-radius:9px; font-size:13px; line-height:1.7; color:#556779; margin:16px 0 8px; }
+        .home-window { font-size:13px; color:#60758a; margin-bottom:14px; }
+        .home-compare-grid { display:grid; grid-template-columns:minmax(0,2fr) minmax(160px,1fr) minmax(0,2fr); gap:13px; }
+        .home-side { border:1px solid #dfe7ee; border-radius:13px; padding:18px 20px; min-width:0; }
+        .home-side-0010 { background:#eef5fc; border-color:#d6e5f3; }
+        .home-side-0050 { background:#fff5f1; border-color:#f1e0d9; }
+        .home-center { background:#f8fafc; text-align:center; padding-left:11px; padding-right:11px; }
+        .home-side h2 { font-size:26px; font-weight:800; text-align:center; margin:0 0 3px; }
+        .home-side-subtitle { text-align:center; color:#708092; font-size:12px; min-height:21px; margin:0 0 12px; }
+        .home-stat { border-top:1px solid rgba(130,148,168,.20); padding:9px 0; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+        .home-stat span { font-size:13px; color:#677789; }
+        .home-stat strong { font-size:19px; color:#34465a; white-space:nowrap; }
+        .home-center .home-stat { display:block; text-align:center; }
+        .home-center .home-stat span { display:block; font-size:11px; margin-bottom:4px; }
+        .home-center .home-stat strong { font-size:16px; }
+        .home-small-note { color:#7b8794; font-size:12px; margin:13px 0 0; }
+        .home-legacy { margin-top:4px; }
+        @media(max-width:900px) { .home-compare-grid { grid-template-columns:1fr; } .home-center { order:3; } .home-heading { flex-wrap:wrap; } .home-date { white-space:normal; } }
+
         "
         
       )
@@ -1733,9 +1757,67 @@ ui <- fluidPage(
     # ========================================================
     
     tabPanel(
-      
       "總覽",
-      
+      div(class = "section-box home-intro",
+          div(class = "home-heading",
+              div(h2("0010 vs 0050"),
+                  p(class = "page-description", "自訂十檔投資組合與元大台灣50｜同期間績效與風險比較")),
+              div(class = "home-date", "最新資料：", textOutput("v7_home_date", inline = TRUE))),
+          div(class = "home-qualifier",
+              strong("比較口徑："),
+              "本區為『目前選出的 0010 名單及權重』自上次季末起回溯試算的本期持有表現；",
+              "非當時已確立持股的正式策略回測，也未扣交易成本。",
+              "完整的 T+1、含成本逐季回測請至「0010組合 → 季度再平衡回測」。"),
+          div(class = "home-window", "比較區間：", textOutput("v7_home_period", inline = TRUE)),
+          div(class = "home-compare-grid",
+              div(class = "home-side home-side-0010",
+                  h2("0010"), p("自訂十檔投資組合", class = "home-side-subtitle"),
+                  div(class = "home-stat", span("本期累積報酬"), strong(textOutput("v7_10_ret", inline = TRUE))),
+                  div(class = "home-stat", span("年化報酬"), strong(textOutput("v7_10_ann", inline = TRUE))),
+                  div(class = "home-stat", span("最大回撤"), strong(textOutput("v7_10_mdd", inline = TRUE))),
+                  div(class = "home-stat", span("年化波動"), strong(textOutput("v7_10_vol", inline = TRUE))),
+                  div(class = "home-stat", span("Sharpe 比率"), strong(textOutput("v7_10_sharpe", inline = TRUE)))),
+              div(class = "home-side home-center",
+                  h2("VS"), p("0010 − 0050", class = "home-side-subtitle"),
+                  div(class = "home-stat", span("超額報酬"), strong(textOutput("v7_diff_ret", inline = TRUE))),
+                  div(class = "home-stat", span("年化報酬差"), strong(textOutput("v7_diff_ann", inline = TRUE))),
+                  div(class = "home-stat", span("最大回撤差"), strong(textOutput("v7_diff_mdd", inline = TRUE))),
+                  div(class = "home-stat", span("年化波動差"), strong(textOutput("v7_diff_vol", inline = TRUE))),
+                  div(class = "home-stat", span("Sharpe 差"), strong(textOutput("v7_diff_sharpe", inline = TRUE)))),
+              div(class = "home-side home-side-0050",
+                  h2("0050"), p("元大台灣50 ETF", class = "home-side-subtitle"),
+                  div(class = "home-stat", span("本期累積報酬"), strong(textOutput("v7_50_ret", inline = TRUE))),
+                  div(class = "home-stat", span("年化報酬"), strong(textOutput("v7_50_ann", inline = TRUE))),
+                  div(class = "home-stat", span("最大回撤"), strong(textOutput("v7_50_mdd", inline = TRUE))),
+                  div(class = "home-stat", span("年化波動"), strong(textOutput("v7_50_vol", inline = TRUE))),
+                  div(class = "home-stat", span("Sharpe 比率"), strong(textOutput("v7_50_sharpe", inline = TRUE))))
+          ),
+          p(class = "home-small-note", "百分比差額以百分點（pp）表示；樣本不足時顯示 —。年化指標基於本期交易日數推算，期間太短時不宜單獨解讀。")
+      ),
+      div(class = "section-box",
+          h2("累積淨值比較"),
+          p(class = "page-description", "本期同起點淨值（起始 = 1.00），顯示目前選股名單的回溯持有試算與 0050；非正式歷史回測曲線。"),
+          plotOutput("v7_home_curve", height = "350px")
+      ),
+      div(class = "section-box",
+          h2("本期持股與比較基準"),
+          fluidRow(
+            column(7, h3("0010｜本期選出十檔"), tableOutput("v4_home_table"),
+                   p(class = "page-description", "目前名單、分數及波動反比權重。正式回測需按各歷史時點重新選股。")),
+            column(5, h3("0050｜比較基準"),
+                   p("元大台灣50 ETF（0050）作為相同期間的市場基準。"),
+                   p("首頁不臆測 ETF 的實際持股權重；詳細成分與個股分析仍可從其他頁面查看。"),
+                   h4("比較期間"), textOutput("v7_home_period_second"),
+                   h4("最近資料日期"), textOutput("v7_home_date_second"))
+          )
+      ),
+      div(class = "section-box",
+          h2("本期比較摘要"),
+          textOutput("v7_home_result"),
+          p(class = "page-description", "結果僅為統計研究與歷史資料試算，不構成投資建議。")
+      ),
+      tags$details(class = "method-details home-legacy",
+                   tags$summary("展開原版首頁：其他行情圖表、完整資料與詳細說明"),
       # ======================================================
       # v4 新增：本期 0010 —— 貼在 0050 總覽 的內容之前
       # ======================================================
@@ -1768,7 +1850,7 @@ ui <- fluidPage(
         ),
         
         h3("名單"),
-        tableOutput("v4_home_table"),
+        p("本期持股名單已移至上方精簡表格。"),
         tags$details(class = "method-details",
           tags$summary("篩選門檻（哪些股票會被剔除）"),
           tags$ul(
@@ -2054,6 +2136,7 @@ ui <- fluidPage(
         ),
         
         
+      )
       )
     ),
     
@@ -2953,6 +3036,97 @@ server <- function(input, output, session) {
                value = x / x[1])
   })
   
+  output$v7_home_date <- shiny::renderText(as.character(latest_date()))
+  output$v7_home_date_second <- shiny::renderText(as.character(latest_date()))
+  output$v7_home_period <- shiny::renderText({
+    z <- v7_home_pair()
+    paste0(as.character(min(z$date)), " ～ ", as.character(max(z$date)))
+  })
+  output$v7_home_period_second <- shiny::renderText({
+    z <- v7_home_pair()
+    paste0(as.character(min(z$date)), " ～ ", as.character(max(z$date)))
+  })
+
+  # v7 首頁：全部比較數據只在同一批日期計算，不改變既有選股與回測模型。
+  v7_home_pair <- shiny::reactive({
+    a <- v4_hold()
+    b <- v4_bench()
+    shiny::req(!is.null(a), !is.null(b))
+    a <- data.frame(date = as.Date(a$date), p10 = as.numeric(a$value))
+    b <- data.frame(date = as.Date(b$date), etf = as.numeric(b$value))
+    z <- merge(a, b, by = "date")
+    z <- z[order(z$date), , drop = FALSE]
+    z <- z[is.finite(z$p10) & is.finite(z$etf) & z$p10 > 0 & z$etf > 0, , drop = FALSE]
+    shiny::req(nrow(z) >= 2)
+    # 同一天共同基準 = 1.00
+    z$p10 <- z$p10 / z$p10[1]
+    z$etf <- z$etf / z$etf[1]
+    z
+  })
+
+  v7_home_stats <- shiny::reactive({
+    z <- v7_home_pair()
+    metric <- function(v) {
+      r <- diff(log(v))
+      days <- length(r)
+      ret <- tail(v, 1) / v[1] - 1
+      dd <- min(v / cummax(v) - 1)
+      # 樣本不足時不提供容易誤導的年化數值
+      ann <- if (days >= 21) (tail(v, 1) / v[1])^(252 / days) - 1 else NA_real_
+      vol <- if (days >= 21 && stats::sd(r) > 0) stats::sd(r) * sqrt(252) else NA_real_
+      sharpe <- if (is.finite(vol) && vol > 0) mean(r) * 252 / vol else NA_real_
+      c(ret = ret, ann = ann, mdd = dd, vol = vol, sharpe = sharpe)
+    }
+    list(p10 = metric(z$p10), etf = metric(z$etf))
+  })
+
+  # 數值顯示：報酬／風險差額採百分點 pp，Sharpe 為純數值。
+  for (k in c("ret", "ann", "mdd", "vol", "sharpe")) {
+    local({
+      key <- k
+      format_metric <- function(v, difference = FALSE) {
+        if (length(v) != 1 || !is.finite(v)) return("—")
+        if (key == "sharpe") return(sprintf("%+.2f", v))
+        if (difference) return(sprintf("%+.2f pp", v * 100))
+        sprintf("%+.2f%%", v * 100)
+      }
+      output[[paste0("v7_10_", key)]] <- shiny::renderText({
+        format_metric(v7_home_stats()$p10[[key]])
+      })
+      output[[paste0("v7_50_", key)]] <- shiny::renderText({
+        format_metric(v7_home_stats()$etf[[key]])
+      })
+      output[[paste0("v7_diff_", key)]] <- shiny::renderText({
+        a <- v7_home_stats()
+        format_metric(a$p10[[key]] - a$etf[[key]], difference = TRUE)
+      })
+    })
+  }
+
+  output$v7_home_curve <- shiny::renderPlot({
+    z <- v7_home_pair()
+    d <- rbind(data.frame(date=z$date, value=z$p10, label="0010（當期名單回溯試算）"),
+               data.frame(date=z$date, value=z$etf, label="0050"))
+    ggplot2::ggplot(d, ggplot2::aes(x=date, y=value, colour=label)) +
+      ggplot2::geom_line(linewidth=1.05) +
+      ggplot2::scale_colour_manual(values=c("0010（當期名單回溯試算）"="#4b82ba", "0050"="#d07a65")) +
+      ggplot2::labs(x=NULL, y="淨值（共同起點 = 1）", colour=NULL) +
+      ggplot2::theme_minimal() +
+      ggplot2::theme(legend.position="bottom")
+  })
+
+  output$v7_home_result <- shiny::renderText({
+    a <- v7_home_stats()
+    extra <- (a$p10[["ret"]] - a$etf[["ret"]]) * 100
+    risk <- (a$p10[["vol"]] - a$etf[["vol"]]) * 100
+    direction <- if (extra > 0) "高於" else if (extra < 0) "低於" else "與其相同"
+    volatility <- if (!is.finite(risk)) "本期資料不足，暫不比較年化波動。" else
+      sprintf("年化波動相差 %+.2f 個百分點。", risk)
+    paste0("在本期共同日期的回溯試算中，0010 累積報酬", direction,
+           " 0050（差額 ", sprintf("%+.2f", extra), " 個百分點）。", volatility,
+           "這不是逐季實際選股績效，不能據此認定策略具有超額報酬能力。")
+  })
+
   v4_hold_ret <- shiny::reactive({
     h <- v4_hold()
     shiny::req(!is.null(h))
