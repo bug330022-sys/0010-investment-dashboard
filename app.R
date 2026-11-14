@@ -2134,8 +2134,18 @@ ui <- fluidPage(
         .home-compare-grid .home-center .home-stat > strong {font-size:20px !important;}
         .home-compare-grid .home-side h2 {font-size:34px;}
         @media(max-width:700px){.home-compare-grid .home-stat > strong{font-size:24px !important;}.home-compare-grid .home-center .home-stat > strong{font-size:19px !important;}}
-        .v25-hero-actions{display:flex;gap:11px;flex-wrap:wrap;margin-top:16px;}
-        .v25-hero-actions .btn{border-radius:9px;padding:9px 16px;font-weight:700;}
+        /* v26｜GARCH 第二層切換：放入獨立淺色區域，與市場分析主頁籤區隔 */
+        .v26-garch-panel {background:#f8fafc;border:1px solid #dce5ec;border-radius:12px;padding:17px 18px;margin:14px 0 20px;}
+        .v26-garch-intro {margin:0 0 14px;}
+        .v26-garch-intro h3 {font-size:18px;color:#3c5f79;font-weight:700;margin:0 0 7px;}
+        .v26-garch-intro p {font-size:12px;color:#697e8c;line-height:1.65;margin:0;}
+        .v26-garch-switch > .tabbable > ul.nav-pills {display:inline-flex;flex-wrap:wrap;gap:4px;background:#eaf0f4;padding:5px;border-radius:9px;margin:0 0 18px;float:none;}
+        .v26-garch-switch > .tabbable > ul.nav-pills > li {float:none;margin:0;}
+        .v26-garch-switch > .tabbable > ul.nav-pills > li > a {font-size:13px;font-weight:600;letter-spacing:0;padding:8px 17px;border-radius:7px;color:#54748b;background:transparent;border:0;}
+        .v26-garch-switch > .tabbable > ul.nav-pills > li.active > a,
+        .v26-garch-switch > .tabbable > ul.nav-pills > li.active > a:hover {background:#547f9d;color:#fff;}
+        .v26-garch-switch > .tabbable > .tab-content {clear:both;}
+        @media(max-width:650px){.v26-garch-panel{padding:13px 10px;}.v26-garch-switch > .tabbable > ul.nav-pills{display:flex;}.v26-garch-switch > .tabbable > ul.nav-pills > li > a{padding:8px 10px;font-size:12px;}}
         .v25-main-lead{padding-top:19px;padding-bottom:14px;margin-bottom:13px;}
         .v25-main-lead h2{font-size:23px;margin:0 0 8px;color:#315875;}
         .v25-main-lead p{margin:0;color:#667b8d;line-height:1.75;font-size:13px;}
@@ -2173,10 +2183,6 @@ ui <- fluidPage(
       class = "hero-badge",
       "統計研究｜非投資建議｜資料更新至：",
       textOutput("header_latest_date", inline = TRUE)
-    ),
-    div(class="v25-hero-actions",
-      actionButton("v25_go_portfolio", "查看 0010 組合", class="btn-primary"),
-      actionButton("v25_go_verify", "查看模型驗證")
     )
   ),
   
@@ -3050,7 +3056,12 @@ tabPanel(
       
     ),
         tabPanel("GARCH 波動預測",
-          tabsetPanel(id="v25_garch_tabs",type="pills",
+          div(class="v26-garch-panel",
+            div(class="v26-garch-intro",
+              h3("GARCH｜未來波動預測"),
+              p("選擇單一股票查看預測走勢，或比較 0050 全體成分股的預測波動排名。")),
+            div(class="v26-garch-switch",
+tabsetPanel(id="v25_garch_tabs",type="pills",
 tabPanel(
             "單檔預測",
             div(class = "g16-single",
@@ -3191,6 +3202,8 @@ tabPanel(
               )
             )
           ))
+            )
+          )
         )
       )
     ),
@@ -3462,12 +3475,6 @@ server <- function(input, output, session) {
   # v5 新功能（T+1 回測、GARCH 診斷、樣本外評估）
   source("v5_server.R", local = TRUE)
 
-  # v25：首頁雙入口，僅切換現有主頁，不更動任何計算。
-  observeEvent(input$v25_go_portfolio,
-    shiny::updateTabsetPanel(session, "main_tabs", selected = "0010 組合"))
-  observeEvent(input$v25_go_verify,
-    shiny::updateTabsetPanel(session, "main_tabs", selected = "模型驗證"))
-
   # v25：季度回測執行後，依已完成且實際回測使用的評分日期提供季別選單。
   observeEvent(v5_bt(), {
     z <- v5_bt()
@@ -3549,10 +3556,11 @@ server <- function(input, output, session) {
     div(class="v25-rank-grid",
       cell("入選股票的未來前 10 名命中",sprintf("%d／%d 檔",z$hit,nrow(z$selected)),
            paste0("全體 ",z$n," 檔，隨機命中比例約 ",sprintf("%.1f%%",100*z$top_k/z$n))),
-      cell("入選股票等權平均報酬",sprintf("%+.2f%%",100*z$mean_selected),
-           "單檔報酬等權平均；不等於扣成本組合績效"),
-      cell("相對全體等權平均差距",sprintf("%+.2f 百分點",100*(z$mean_selected-z$mean_universe)),
-           paste0("同期全體等權平均 ",sprintf("%+.2f%%",100*z$mean_universe)))
+      cell("入選股票平均報酬",sprintf("%+.2f%%",100*z$mean_selected),
+           "每檔股票算一票、取算術平均；未扣交易成本"),
+      cell("比全體股票平均高／低多少",sprintf("%+.2f 個百分點",100*(z$mean_selected-z$mean_universe)),
+           paste0("同期可比較的 ",z$n," 檔股票（含入選股）平均報酬 ",
+                  sprintf("%+.2f%%",100*z$mean_universe)))
     )
   })
   output$v25_rank_selected <- shiny::renderTable({
