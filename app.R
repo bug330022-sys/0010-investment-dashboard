@@ -1926,6 +1926,22 @@ ui <- fluidPage(
         .g10-v13 details.g10-v13-expand .g10-v10-expand-body { padding:18px 21px 23px; }
         @media(max-width:1000px) { .g10-v13 .g10-v13-config-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .g10-v13 .g10-v13-config-grid > div:last-child { grid-column:1 / -1; } }
         @media(max-width:740px) { .g10-v13 .g10-v13-block { padding:14px; } .g10-v13 .g10-v10-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } .g10-v13 .g10-v13-config-grid { grid-template-columns:1fr; gap:9px; } .g10-v13 .g10-v13-config-grid > div:last-child { grid-column:auto; } .g10-v13 .g10-v11-row { grid-template-columns:minmax(90px,1fr) minmax(60px,1.6fr) 54px; gap:7px; } .g10-v13 .g10-v13-exp-action { padding:7px 8px; font-size:11px; } .g10-v13 .g10-v13-exp-copy strong { font-size:14px; } }
+        /* v14：持有追蹤的組合摘要與三種資金配置比較（只影響 0010 組合） */
+        .g10-v13 .g10-v14-summary-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:15px 0 18px; }
+        .g10-v13 .g10-v14-summary-card { background:#f6f9fc; border:1px solid #dfe8ef; border-radius:11px; padding:14px 16px; min-width:0; }
+        .g10-v13 .g10-v14-summary-card:nth-child(2) { background:#f8faf9; }
+        .g10-v13 .g10-v14-summary-card:nth-child(3) { background:#faf8f5; }
+        .g10-v13 .g10-v14-summary-card > span { display:block; font-size:12px; font-weight:700; color:#6a8294; margin-bottom:8px; }
+        .g10-v13 .g10-v14-summary-card .shiny-html-output { font-size:23px; font-weight:800; color:#395f7c; line-height:1.3; }
+        .g10-v13 .g10-v14-positive { color:#b54d51 !important; }
+        .g10-v13 .g10-v14-negative { color:#2e8163 !important; }
+        .g10-v13 .g10-v14-title { margin:22px 0 8px; font-size:17px; font-weight:800; color:#375d7b; }
+        .g10-v13 .g10-v14-explain { margin:0 0 12px; font-size:12px; color:#718496; line-height:1.6; }
+        .g10-v13 .g10-v14-period { background:#f1f6fa; border:1px solid #e1e9ef; border-radius:8px; padding:10px 13px; color:#53738b; font-size:12px; line-height:1.6; }
+        .g10-v13 .g10-v14-summary-card .shiny-html-output:empty { min-height:30px; }
+        .g10-v13 .g10-v14-track-table .table { min-width:1100px; }
+        .g10-v13 .g10-v14-track-table .table tbody tr:last-child { background:#eaf3f9 !important; color:#345a78; font-weight:800; border-top:2px solid #9fbfd5; }
+        @media(max-width:760px) { .g10-v13 .g10-v14-summary-grid { grid-template-columns:1fr; } }
         .home-small-note { color:#7b8794; font-size:12px; margin:13px 0 0; }
         .home-legacy { margin-top:4px; }
         @media(max-width:900px) { .home-compare-grid { grid-template-columns:1fr; } .home-center { order:3; } .home-heading { flex-wrap:wrap; } .home-date { white-space:normal; } }
@@ -2345,14 +2361,30 @@ ui <- fluidPage(
                 ),
                 div(class = "g10-v10-expand-body",
                   p(class = "g10-v10-subtle",
-                    "以先前季末的持股為基準，觀察目前報酬與波動倍數所對應的參考停損／停利價。"),
+                    "以最近一次已結束季度的選股名單為基準，使用季末收盤價進行持有模擬；上方的配置方式與單檔上限會同步套用。"),
+                  uiOutput("g10_v14_track_period"),
+                  div(class = "g10-v14-summary-grid",
+                    div(class = "g10-v14-summary-card",
+                      span("組合累積報酬"), uiOutput("g10_v14_track_return")),
+                    div(class = "g10-v14-summary-card",
+                      span("模擬總損益"), uiOutput("g10_v14_track_profit")),
+                    div(class = "g10-v14-summary-card",
+                      span("目前模擬總市值"), uiOutput("g10_v14_track_value"))
+                  ),
+                  h4(class = "g10-v14-title", "同一批股票｜三種資金配置比較"),
+                  p(class = "g10-v14-explain",
+                    "固定選股名單、起始日期、投入金額與單檔上限，只比較資金分配方式。標記「目前」的是上方選用的配置。"),
+                  div(class = "g10-v12-table-wrap", tableOutput("g10_v14_track_compare")),
+                  h4(class = "g10-v14-title", "個股持有明細與停損／停利參考"),
                   fluidRow(
                     column(6, sliderInput("g10_k_stop", "停損倍數 k",
                       min = 1, max = 3, value = 2, step = 0.1)),
                     column(6, sliderInput("g10_k_take", "停利倍數 k",
                       min = 2, max = 5, value = 3, step = 0.1))
                   ),
-                  tableOutput("g10_track"),
+                  p(class = "g10-v14-explain",
+                    "起始權重會跟著上方配置設定改變；目前權重是持有期間價格變動後自然產生的比例。表格最後一列是組合合計。"),
+                  div(class = "g10-v12-table-wrap g10-v14-track-table", tableOutput("g10_track")),
                   uiOutput("g10_track_note")
                 )
               ),
@@ -11548,7 +11580,13 @@ server <- function(input, output, session) {
     sel <- sel[sel$symbol %in% colnames(pm), , drop = FALSE]
     shiny::req(nrow(sel) >= 3)
     
-    w <- v4_weights(sel, scheme = "inv_vol", cap = 0.20)
+    # v14：與上方本期資金配置共用權重方式及單檔上限。
+    # 只同步「配置方法」，不把本期新名單套用到上一季持有追蹤。
+    scheme <- input$g10_scheme
+    if (is.null(scheme) || !scheme %in% c("inv_vol", "equal", "score")) scheme <- "inv_vol"
+    wt_cap <- suppressWarnings(as.numeric(input$g10_cap))
+    if (length(wt_cap) != 1L || !is.finite(wt_cap)) wt_cap <- 0.20
+    w <- v4_weights(sel, scheme = scheme, cap = wt_cap)
     i <- reb$idx
     buy <- unname(pm[i, sel$symbol]); names(buy) <- sel$symbol
     now <- unname(pm[nrow(pm), sel$symbol]); names(now) <- sel$symbol
@@ -11563,6 +11601,98 @@ server <- function(input, output, session) {
          ret = now / buy - 1)
   })
   
+  # v14：同一上季持股清單，依各種配置方式計算買進持有的單期試算。
+  # 調整後股價試算；不扣交易成本、不執行停損、不取代正式季度 T+1 回測。
+  g10_v14_money <- function(x, signed = FALSE) {
+    if (length(x) != 1L || !is.finite(x)) return("資料不足")
+    val <- paste0("NT$ ", formatC(round(abs(x)), format = "d", big.mark = ","))
+    if (!signed) return(val)
+    paste0(if (x >= 0) "+" else "−", val)
+  }
+
+  g10_v14_pct <- function(x, signed = TRUE) {
+    if (length(x) != 1L || !is.finite(x)) return("資料不足")
+    sprintf(if (signed) "%+.2f%%" else "%.2f%%", x * 100)
+  }
+
+  g10_v14_financial <- function(track, weights, capital) {
+    capital <- suppressWarnings(as.numeric(capital))
+    if (length(capital) != 1L || !is.finite(capital) || capital <= 0) return(NULL)
+    symbols <- as.character(track$sel$symbol)
+    w <- as.numeric(weights[symbols])
+    b <- as.numeric(track$buy[symbols])
+    p <- as.numeric(track$now[symbols])
+    if (length(w) != length(symbols) || any(!is.finite(w)) ||
+        any(w < 0) || sum(w) <= 0 ||
+        any(!is.finite(b)) || any(!is.finite(p)) ||
+        any(b <= 0) || any(p <= 0)) return(NULL)
+    w <- w / sum(w)
+    r <- p / b - 1
+    initial <- capital * w
+    current <- initial * (1 + r)
+    total <- sum(current)
+    if (!is.finite(total) || total <= 0) return(NULL)
+    list(w = w, r = r, initial = initial, current = current,
+         profit = current - initial, total = total,
+         total_profit = total - capital, total_return = total / capital - 1,
+         current_w = current / total, capital = capital)
+  }
+
+  g10_v14_track_summary <- shiny::reactive({
+    t <- g10_track_v4()
+    g10_v14_financial(t, t$w, input$g10_capital)
+  })
+
+  output$g10_v14_track_period <- shiny::renderUI({
+    t <- g10_track_v4()
+    dates <- as.Date(rownames(v4_pm()))
+    end <- max(dates, na.rm = TRUE)
+    scheme <- switch(input$g10_scheme,
+      inv_vol = "波動度反比", equal = "等權重", score = "分數加權", "波動度反比")
+    shiny::div(class = "g10-v14-period",
+      paste0("試算區間：", as.character(t$date), " ～ ", as.character(end)),
+      "｜上季持股 ", nrow(t$sel), " 檔｜目前配置：", scheme,
+      "｜單檔上限：", sprintf("%.0f%%", 100 * (if (is.null(input$g10_cap) || !is.finite(input$g10_cap)) 0.20 else input$g10_cap)))
+  })
+
+  output$g10_v14_track_return <- shiny::renderUI({
+    z <- g10_v14_track_summary()
+    if (is.null(z)) return(shiny::span("資料不足"))
+    shiny::span(class = if (z$total_return >= 0) "g10-v14-positive" else "g10-v14-negative",
+                g10_v14_pct(z$total_return))
+  })
+  output$g10_v14_track_profit <- shiny::renderUI({
+    z <- g10_v14_track_summary()
+    if (is.null(z)) return(shiny::span("資料不足"))
+    shiny::span(class = if (z$total_profit >= 0) "g10-v14-positive" else "g10-v14-negative",
+                g10_v14_money(z$total_profit, signed = TRUE))
+  })
+  output$g10_v14_track_value <- shiny::renderUI({
+    z <- g10_v14_track_summary()
+    shiny::span(if (is.null(z)) "資料不足" else g10_v14_money(z$total))
+  })
+
+  output$g10_v14_track_compare <- shiny::renderTable({
+    t <- g10_track_v4()
+    capital <- input$g10_capital
+    cap <- suppressWarnings(as.numeric(input$g10_cap))
+    if (length(cap) != 1L || !is.finite(cap)) cap <- 0.20
+    options <- c(inv_vol = "波動度反比", equal = "等權重", score = "分數加權")
+    current <- input$g10_scheme
+    rows <- lapply(names(options), function(scheme) {
+      weights <- v4_weights(t$sel, scheme = scheme, cap = cap)
+      z <- g10_v14_financial(t, weights, capital)
+      data.frame(
+        配置方式 = paste0(options[[scheme]], if (identical(scheme, current)) "（目前）" else ""),
+        最大起始權重 = if (is.null(z)) "—" else g10_v14_pct(max(z$w), signed = FALSE),
+        組合累積報酬 = if (is.null(z)) "資料不足" else g10_v14_pct(z$total_return),
+        模擬總損益 = if (is.null(z)) "資料不足" else g10_v14_money(z$total_profit, TRUE),
+        目前模擬市值 = if (is.null(z)) "資料不足" else g10_v14_money(z$total),
+        check.names = FALSE, stringsAsFactors = FALSE)
+    })
+    do.call(rbind, rows)
+  }, striped = TRUE, bordered = TRUE, hover = TRUE)
+
   g10_cmp_v4 <- shiny::reactive({
     tr <- g10_track_v4()
     cur <- v4_sel()
@@ -11660,41 +11790,84 @@ server <- function(input, output, session) {
   
   output$g10_track <- shiny::renderTable({
     tr <- g10_track_v4()
+    symbols <- as.character(tr$sel$symbol)
+    z <- g10_v14_track_summary()
     g <- tryCatch(get("g10_store")(), error = function(e) NULL)
     fv <- NULL
-    if (!is.null(g)) fv <- g$forecast_vol[match(tr$sel$symbol, g$symbol)]
+    if (!is.null(g)) fv <- g$forecast_vol[match(symbols, g$symbol)]
     if (is.null(fv) || all(!is.finite(fv))) fv <- tr$sel$vol
     bad <- !is.finite(fv)
     fv[bad] <- tr$sel$vol[bad]
-    
+
     s <- fv / sqrt(252) * sqrt(21)
     stop_px <- tr$buy * (1 - input$g10_k_stop * s)
     take_px <- tr$buy * (1 + input$g10_k_take * s)
     status <- ifelse(tr$now <= stop_px, "已觸停損",
                      ifelse(tr$now >= take_px, "已觸停利", "持有中"))
     status[is.na(status)] <- "—"
-    
-    data.frame(
-      股票 = paste0(tr$sel$name, "（", tr$sel$symbol, "）"),
-      權重 = sprintf("%.1f%%", as.numeric(tr$w) * 100),
+
+    amt0 <- if (is.null(z)) rep(NA_real_, length(symbols)) else z$initial
+    amt1 <- if (is.null(z)) rep(NA_real_, length(symbols)) else z$current
+    gains <- if (is.null(z)) rep(NA_real_, length(symbols)) else z$profit
+    start_w <- if (is.null(z)) as.numeric(tr$w[symbols]) else z$w
+    end_w <- if (is.null(z)) rep(NA_real_, length(symbols)) else z$current_w
+
+    fmt_amt <- function(v) vapply(v, function(x) {
+      if (!is.finite(x)) return("—")
+      formatC(round(x), format = "d", big.mark = ",")
+    }, character(1))
+    fmt_change <- function(v) vapply(v, function(x) {
+      if (!is.finite(x)) return("—")
+      paste0(if (x >= 0) "+" else "−",
+             formatC(round(abs(x)), format = "d", big.mark = ","))
+    }, character(1))
+    fmt_weight <- function(v) ifelse(is.finite(v), sprintf("%.1f%%", 100 * v), "—")
+
+    individual <- data.frame(
+      股票 = paste0(tr$sel$name, "（", symbols, "）"),
+      起始權重 = fmt_weight(start_w),
+      目前權重 = fmt_weight(end_w),
+      起始金額 = fmt_amt(amt0),
+      目前市值 = fmt_amt(amt1),
+      模擬損益 = fmt_change(gains),
+      個股報酬 = ifelse(is.finite(tr$ret), sprintf("%+.2f%%", tr$ret * 100), "—"),
       買進價 = ifelse(is.finite(tr$buy), sprintf("%.2f", tr$buy), "—"),
       現價 = ifelse(is.finite(tr$now), sprintf("%.2f", tr$now), "—"),
-      報酬 = ifelse(is.finite(tr$ret), sprintf("%+.2f%%", tr$ret * 100), "—"),
       停損價 = ifelse(is.finite(stop_px), sprintf("%.2f", stop_px), "—"),
       停利價 = ifelse(is.finite(take_px), sprintf("%.2f", take_px), "—"),
       狀態 = status,
       check.names = FALSE, stringsAsFactors = FALSE
     )
+
+    cap <- suppressWarnings(as.numeric(input$g10_capital))
+    total <- data.frame(
+      股票 = "組合合計",
+      起始權重 = if (is.null(z)) "—" else "100.0%",
+      目前權重 = if (is.null(z)) "—" else "100.0%",
+      起始金額 = if (is.null(z)) "—" else fmt_amt(cap),
+      目前市值 = if (is.null(z)) "—" else fmt_amt(z$total),
+      模擬損益 = if (is.null(z)) "—" else fmt_change(z$total_profit),
+      個股報酬 = if (is.null(z)) "—" else g10_v14_pct(z$total_return),
+      買進價 = "—", 現價 = "—", 停損價 = "—", 停利價 = "—",
+      狀態 = "持有模擬合計",
+      check.names = FALSE, stringsAsFactors = FALSE
+    )
+    rbind(individual, total)
   }, striped = TRUE, bordered = TRUE, hover = TRUE)
-  
+
   output$g10_track_note <- shiny::renderUI({
-    div(class = "method-note",
-        "停損／停利距離 = k × 預測 21 日波動。波動估計優先採用 GARCH 預測值；若尚未執行全成分股估計，改用近一年實現波動。此為統計參考距離，非交易建議。")
+    z <- g10_v14_track_summary()
+    shiny::tagList(
+      shiny::div(class = "method-note",
+        "組合報酬採起始資金權重加權；期末權重由價格變動自然形成。所有方案使用同一批上季持股、相同季末收盤價與目前價格（調整後股價），不扣交易成本、不執行停損／停利交易，也不會改變正式季度回測。"),
+      shiny::div(class = "method-note",
+        "停損／停利距離 = k × 預測 21 日波動。優先使用 GARCH 預測值；若尚未估計則改用近一年實現波動。參考價不會因資金權重改變，也不是交易建議。"),
+      if (is.null(z)) shiny::div(class = "method-note",
+        "部分股票缺少有效的起始或目前價格，或模擬金額無效；本期整體績效暫不計算，以免低估風險或錯誤計入缺失資料。")
+    )
   })
-  
-  
-  
-  
+
+
   # ============================================================
   # 時間序列檢定（畫面）
   # ============================================================
