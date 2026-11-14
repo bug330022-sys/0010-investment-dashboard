@@ -2293,17 +2293,17 @@ ui <- fluidPage(
     
     
     # ========================================================
-    # 8. 模型驗證：區塊拔靴法＋歷史回測
+    # 8. 模型驗證：時間序列檢定與 GARCH 診斷
     # ========================================================
     
     tabPanel(
       "模型驗證",
       div(
         class = "section-box",
-        h2("模型驗證｜結果穩不穩？過去有沒有用？"),
+        h2("模型驗證｜時間序列檢定與 GARCH 診斷"),
         p(
           class = "page-description",
-          "主排名先告訴我們誰的成長分數較高；模型驗證再從兩個方向檢查：這個差異會不會只是剛好，以及過去真的使用這套排名時，下一期是否有區辨能力。"
+          "這一頁檢查三件事：報酬序列是否定態、ARIMA 是否優於白噪音、GARCH 的殘差是否還有結構。所有檢定都是即時計算，不是預先寫好的數字。"
         ),
         h3("時間序列檢定"),
         p(class = "page-description",
@@ -2345,103 +2345,6 @@ ui <- fluidPage(
         tableOutput("v5_gall_summary"),
         tableOutput("v5_gall_tab"),
 
-        tabsetPanel(
-          id = "validation_tabs",
-          type = "pills",
-          tabPanel(
-            "過去有沒有用｜歷史回測",
-            br(),
-            div(
-              class = "reading-guide",
-              strong("白話版： "),
-              "假裝回到過去，在每個評分日期只使用當時已經知道的資料算分數，再看未來 1週、1月、1季、半年、1年到多年後，高分組是否真的比低分組更好。重點是驗證評分方法，不是找漂亮的買賣點。"
-            ),
-            fluidRow(
-              column(
-                3,
-                selectInput(
-                  "backtest_lookback_days",
-                  "每次評分往回看多久：",
-                  choices = c(
-                    "近 6 個月" = 126,
-                    "近 1 年" = 252,
-                    "近 2 年" = 504,
-                    "近 3 年｜完整主模型" = 756
-                  ),
-                  selected = 756
-                )
-              ),
-              column(
-                3,
-                selectInput(
-                  "backtest_forward_days",
-                  "評分後觀察多久：",
-                  choices = VALIDATION_FORWARD_WINDOWS,
-                  selected = 126
-                )
-              ),
-              column(
-                3,
-                selectInput(
-                  "backtest_frequency",
-                  "多久重新評分一次：",
-                  choices = c("每月" = 21, "每季" = 63, "每年" = 252),
-                  selected = 21
-                )
-              ),
-              column(
-                3,
-                selectInput(
-                  "backtest_model",
-                  "要驗證哪個排名模型：",
-                  choices = c(
-                    "新版成長分數｜70% 報酬 + 30% 夏普" = "growth",
-                    "報酬分數（Return Score）" = "return",
-                    "6 個月動能（Momentum）" = "momentum_6m",
-                    "舊綜合分數｜40/25/20/15（比較用）" = "legacy_composite"
-                  ),
-                  selected = "growth"
-                )
-              )
-            ),
-            fluidRow(
-              column(
-                4,
-                numericInput(
-                  "backtest_start_year",
-                  "從哪一年開始驗證：",
-                  value = 2019,
-                  min = 2017,
-                  max = max(2019, as.integer(format(data_max_date, "%Y"))),
-                  step = 1
-                )
-              ),
-              column(
-                4,
-                br(),
-                actionButton("run_backtest", "執行評分模型驗證", class="btn-primary")
-              )
-            ),
-            div(
-              class = "time-info",
-              strong("時間定義： "),
-              "『往回看多久』是算分數時可用的歷史資料；『評分後觀察多久』是完全不參與評分的未來資料。兩者會分開顯示，避免把未來資料混進當時的評分。"
-            ),
-            div(class = "method-note", strong("模型選擇是做什麼？ "), "這裡不是讓使用者一直調到歷史績效最好，而是拿不同排名方法做公平比較。新版成長分數、單獨報酬分數、6 個月動能，以及舊綜合分數，都會使用相同的評分日期與未來觀察期間。預設採『每月重新評分、往後看 6 個月』，對應目前研究診斷的主要比較方式。"),
-            div(class = "warning-note", strong("研究限制： "), "目前回測仍以現有成分股名單往回分析，因此較早年份可能有存活者偏誤（Survivorship Bias）。白話說，就是今天仍在 0050 裡的公司，本來就可能是過去表現相對好的公司；正式結論必須保留這項限制。"),
-            uiOutput("backtest_status"),
-            h3("各次評分後的實際表現"),
-            plotOutput("backtest_cumulative_chart", height="520px"),
-            h3("模型驗證摘要"),
-            tableOutput("backtest_summary_table"),
-            h3("高分組和低分組真的有拉開嗎？"),
-            tableOutput("backtest_separation_table"),
-            h3("分數和未來排名是否一致？"),
-            tableOutput("backtest_spearman_table"),
-            h3("各次驗證結果"),
-            tableOutput("backtest_yearly_table"),
-          )
-        )
       )
     ),
     
@@ -2941,25 +2844,6 @@ ui <- fluidPage(
                      p("風險控制分數（Risk Score）主要看年化波動度、最大回撤（Maximum Drawdown）與條件風險值（CVaR, Conditional Value at Risk）。它回答的是『歷史上有多防守』，不是『未來誰一定漲最多』。"),
                      p("穩定性分數（Stability Score）看不同期間的報酬、排名與波動是否一致。它回答的是『表現是否依賴某一段行情』，也不是未來報酬保證。"),
                      p("因此新版把成長能力和防守資訊分開：主排名用 Growth；Risk 與 Stability 放在旁邊幫助判斷股票是『強勢但波動大』，還是『強勢且相對防守』。")
-        ),
-        div(class="method-note",
-            strong("目前模型診斷怎麼做？ "),
-            "我們先在歷史資料的每個評分日期把成分股分成 Top5 與 Bottom5，再看未來 6 個月。主要看兩個數：報酬差距（Spread）與 Top5 勝率。這個流程的目的，是確認一個分數是否真的能把後續表現較強與較弱的股票分開，而不是只看分數本身是否漂亮。"
-        ),
-        tags$details(class="method-details",
-                     tags$summary("區塊拔靴法（Block Bootstrap）：這個優勢會不會只是剛好？"),
-                     p("做法：把歷史日對數報酬一小段一小段重新抽很多次，每次重新計算成分股與 0050 的分數差。"),
-                     p("怎麼看：如果重新抽很多次，大部分結果仍然高於 0050，就表示這個優勢比較不容易因資料稍微改變就消失；如果結果常常跨過 0，就代表還有不小的不確定性。")
-        ),
-        tags$details(class="method-details",
-                     tags$summary("歷史回測：如果以前真的照這個排名看，後來呢？"),
-                     p("做法：假裝回到過去的每一個評分日期，只使用當時已經知道的資料做排名，再依使用者選擇觀察未來 1 週、1 個月、1 季、半年、1 年到多年後的實際表現。"),
-                     p("怎麼看：如果 Top 組合在很多不同年度都比 Bottom 組合好，而且常常能勝過 0050，代表這套排名比較可能真的有區分能力，而不是只對整段歷史資料看起來漂亮。")
-        ),
-        tags$details(class="method-details",
-                     tags$summary("主成分分析（PCA）與 K-means 分群：把複雜指標整理成比較好懂的類型"),
-                     p("主成分分析（PCA, Principal Component Analysis）：使用者可切換近 3 個月、6 個月、1 年或 3 年；同一次分析中的年化報酬、波動、最大回撤、CVaR、夏普與三種穩定性都來自同一期間。若指標之間有重複資訊，主成分分析會把它們整理成幾個主要方向。"),
-                     p("K-means 分群（K-means Clustering）：再把統計特性相近的股票自動分成幾類，例如低波動穩定型或高報酬高風險型。分群是用來解釋股票特色，不直接決定排名。")
         ),
         h3("目前資料清單與有效期間"),
         tableOutput("stock_table"),
