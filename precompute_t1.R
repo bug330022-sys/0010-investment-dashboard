@@ -65,8 +65,70 @@ if(!cache_is_current) {
   lookup<-v30_market_returns(d)
   cache_env<-new.env(parent=emptyenv())
   message("開始預算 T+1：有效清單 ",length(symbols)," 檔")
-  snap<-v28_forecast_snapshot(d,symbols,window=params$window,level=params$level,
-                              market_returns=lookup,logit_cache_env=cache_env)
+  # 診斷僅在全體快照失敗時執行；正常路徑不增加估計負擔。
+  inspect_snapshot_failure <- function(err) {
+    message("[診斷] 全體快照失敗：", conditionMessage(err))
+    uu <- tryCatch(v28_universe(d, symbols), error=function(e) {
+      message("[診斷] 交易日篩選錯誤：", conditionMessage(e)); NULL
+    })
+    if(is.null(uu))return(invisible(NULL))
+    message("[診斷] 0050 基準資料日：", format(uu$date, "%Y-%m-%d"),
+            "；同期有價格股票：", length(uu$symbols), " 檔")
+    if(!length(uu$symbols))return(invisible(NULL))
+    counts <- vapply(uu$symbols, function(sym) {
+      sum(uu$data$symbol == sym)
+    }, integer(1L))
+    need <- params$window + 2L
+    message("[診斷] 本次每檔最低價格筆數：", need,
+            "；足夠筆數的股票：", sum(counts >= need), "/", length(counts))
+    message("[診斷] 各檔歷史筆數範圍：", min(counts), "～", max(counts))
+    order_sym <- uu$symbols[order(counts, decreasing=TRUE)]
+    # 使用歷史最多的股票作樣本，優先區分資料缺漏、Logistic、AR、GARCH。
+    for(sym in head(order_sym, 5L)) {
+      ss <- uu$data[uu$data$symbol==sym,,drop=FALSE]
+      ss <- ss[order(ss$date),,drop=FALSE]
+      pp <- as.numeric(ss$adjusted)
+      message("[診斷] ", sym, ": n=", length(pp),
+              "；最新日=", format(max(ss$date), "%Y-%m-%d"))
+      if(length(pp) < need) {
+        message("[診斷] ", sym, ": 資料不足（需要至少 ",need," 筆）")
+        next
+      }
+      lg <- tryCatch(v31_logit_prepare(pp,ss$date,lookup),error=function(e){
+        message("[診斷] ",sym," Logistic 特徵失敗：",conditionMessage(e));NULL
+      })
+      if(is.null(lg))next
+      prob <- tryCatch(v30_logit_prob(pp,ss$date,length(pp),params$window,
+                                      lookup,feature_cache=lg),error=function(e){
+        message("[診斷] ",sym," Logistic 估計失敗：",conditionMessage(e));NULL
+      })
+      if(is.null(prob))next
+      ar <- tryCatch(v29_ar_inputs(pp,length(pp),params$window),error=function(e){
+        message("[診斷] ",sym," AR 估計失敗：",conditionMessage(e));NULL
+      })
+      if(is.null(ar))next
+      gg <- tryCatch(v29_garch_fit(ar$resid_pct),error=function(e){
+        message("[診斷] ",sym," GARCH 估計失敗：",conditionMessage(e));NULL
+      })
+      if(is.null(gg))next
+      fc <- tryCatch(v27_one_step(pp,length(pp),params$window,gfit=gg,
+                       level=params$level,dates=ss$date,market_returns=lookup,
+                       logit_cache=lg),error=function(e){
+        message("[診斷] ",sym," 最終預測失敗：",conditionMessage(e));NULL
+      })
+      if(!is.null(fc))message("[診斷] ",sym," 單檔完整估計成功，請核對全體資料的型別與日期")
+    }
+    invisible(NULL)
+  }
+  snap <- tryCatch(
+    v28_forecast_snapshot(d,symbols,window=params$window,level=params$level,
+                          market_returns=lookup,logit_cache_env=cache_env),
+    error=function(e) {
+      inspect_snapshot_failure(e)
+      stop("全體預測未完成，以上 [診斷] 訊息指出具體問題；舊快取沒有被覆蓋。原始錯誤：",
+           conditionMessage(e),call.=FALSE)
+    }
+  )
   history<-v28_all_oos(d,symbols,test_days=params$test_days,window=params$window,
                          level=params$level,market_returns=lookup,logit_cache_env=cache_env,
     progress=function(j,n){
