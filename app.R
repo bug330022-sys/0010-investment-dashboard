@@ -1,6 +1,8 @@
-# v31｜T+1 歷史特徵快取：減少全體逐日驗證的重複運算；模型規則沿用 v30。
+# v32｜T+1 預算快取：預設分析可直接讀檔，避免每位訪客重估模型。
+# 每日預算從此完整 app.R 取得 T+1 函數；自訂參數可手動重新估計。
+# 日更預算是回溯樣本外與最新訊號快照，不等於不可覆寫的事前預測紀錄。
 # 單一執行按鈕共用全體／單檔結果，預測區間預設 95%，驗證預設 63 日。
-# 在 v26 上增量擴充；尚未接每日持久化預測／自動檢查。
+# 尚未建立不可覆寫的逐日事前預測紀錄；每日預先計算的是當日快照與歷史模擬結果。
 # 0010 Investment Research v3.6：Growth 主排名＋防守資訊分離＋白話研究說明＋模型比較驗證
 # Connect Cloud auto-publish test
 # ============================================================
@@ -4053,6 +4055,38 @@ v28_all_oos <- function(stock_table,symbols,test_days=63L,window=252L,level=.95,
        benchmark_days=length(common_test_dates))
 }
 
+# v32｜模型版號。更動 T+1 公式後請一併更新，以免讀到舊快取。
+T1_ENGINE_VERSION <- "v31-t1-20261115"
+
+# v32｜只讀入符合當前資料檔及預設設定的已計算結果。
+# 不讓網站啟動時同步估計數千次模型，也不會顯示過期快取。
+v32_cache_path <- "data/t1_precomputed.rds"
+v32_cache_settings <- list(window=252L,test_days=63L,level=.95)
+v32_data_md5 <- function(path=DATA_FILE) {
+  if(!file.exists(path))return(NA_character_)
+  as.character(unname(tools::md5sum(path))[[1L]])
+}
+v32_read_cache <- function(path=v32_cache_path) {
+  if(!file.exists(path))return(NULL)
+  cache<-tryCatch(readRDS(path),error=function(e)NULL)
+  if(is.null(cache)||!is.list(cache)||!identical(cache$schema,1L)||
+     !identical(cache$engine_version,T1_ENGINE_VERSION)||
+     !identical(cache$data_md5,v32_data_md5())||
+     !identical(cache$params,v32_cache_settings)||
+     !is.list(cache$result)||is.null(cache$result$snapshot$result)||
+     is.null(cache$result$history$per_stock))return(NULL)
+  if(!nrow(cache$result$snapshot$result)||!nrow(cache$result$history$per_stock))return(NULL)
+  list(snapshot=cache$result$snapshot,history=cache$result$history,
+       cache_info=list(from_disk=TRUE,computed_at=cache$computed_at,
+                       data_md5=cache$data_md5))
+}
+v32_default_cache <- v32_read_cache()
+v32_can_use_cache <- function(train,days,level) {
+  !is.null(v32_default_cache)&&identical(as.integer(train),252L)&&
+    identical(as.integer(days),63L)&&isTRUE(all.equal(as.numeric(level),.95))&&
+    identical(v32_default_cache$cache_info$data_md5,v32_data_md5())
+}
+
 server <- function(input, output, session) {
   
   # v5 新功能（T+1 回測、GARCH 診斷、樣本外評估）
@@ -4061,7 +4095,8 @@ server <- function(input, output, session) {
 
   # v30｜單一按鈕執行全體預測和歷史驗證；單檔僅讀取同一批結果。
   # 所有模型的目標日資料不參與估計，單檔切換不會重新計算。
-  v28_all_result<-shiny::reactiveVal(NULL)
+  # 有有效快取時，訪客進站即可看預設結果；無快取仍可手動執行。
+  v28_all_result<-shiny::reactiveVal(v32_default_cache)
   shiny::observeEvent(input$v30_run,{
     train<-as.integer(input$v28_train);days<-as.integer(input$v27_m_test)
     level<-as.numeric(input$v29_level)
@@ -4071,9 +4106,17 @@ server <- function(input, output, session) {
       v28_all_result(list(error="請選擇有效的建模期間、驗證期間及預測區間"))
       return(invisible(NULL))
     }
+    # 預設組合優先重用每日預先估計結果，避免每個訪客消耗雲端 CPU。
+    # 自訂視窗或快取過期，才沿用原本的逐檔計算流程。
+    if(v32_can_use_cache(train,days,level)) {
+      v28_all_result(v32_default_cache)
+      shiny::updateTabsetPanel(session,"v28_main_tabs",selected="預測")
+      shiny::updateTabsetPanel(session,"v28_prediction_tabs",selected="全體偏多／偏空訊號")
+      return(invisible(NULL))
+    }
     d<-as.data.frame(data())
     v28_all_result(NULL)
-    shiny::withProgress(message="執行全體 Logistic 方向及 AR＋GARCH 區間預測…",value=0,{
+    shiny::withProgress(message="自訂設定或無有效快取：執行全體 T+1 估計…",value=0,{
       z<-tryCatch({
         lookup<-v30_market_returns(d)
         # 本次執行內共享全部股票特徵；換設定或重新執行即重建。
@@ -4137,9 +4180,11 @@ server <- function(input, output, session) {
   })
   v28_all_status_ui<-function(){
     z<-v28_all_result()
-    if(is.null(z)) return(tags$p(class="v27-status","請按上方「執行 T+1 全體＋單檔分析」：一次產生偏多／偏空訊號、單檔預測和共同日期的樣本外驗證。"))
+    if(is.null(z)) return(tags$p(class="v27-status","目前沒有對應資料版本的 T+1 預算快取。可按上方按鈕手動估計，或先執行 precompute_t1.R 產生快取並重新部署。"))
     if(!is.null(z$error)) return(tags$p(class="v27-error",z$error))
-    msg<-paste0("全體預測基準日：",format(z$snapshot$date),
+    msg<-paste0(if(!is.null(z$cache_info)&&isTRUE(z$cache_info$from_disk))
+                     "已載入每日預先計算結果｜" else "已完成手動估計｜",
+      "全體預測基準日：",format(z$snapshot$date),
       "｜有效預測 ",nrow(z$snapshot$result)," 檔；歷史驗證 ",nrow(z$history$per_stock),
       " 檔、最近 ",z$history$test_days," 日｜建模 ",z$history$window,
       " 日｜區間 ",sprintf("%.0f%%",100*z$history$level))
@@ -4148,7 +4193,9 @@ server <- function(input, output, session) {
        as.numeric(input$v29_level)!=z$history$level) msg<-paste0(msg,"。設定已變更，請按上方唯一按鈕重新執行。")
     market<-as.data.frame(data()); market<-market[market$symbol=="0050" & !is.na(market$date),,drop=FALSE]
     if(nrow(market)&&max(as.Date(market$date))>z$snapshot$date)
-      msg<-paste0(msg,"。已有更新交易資料，請按上方按鈕重新估計。")
+      msg<-paste0(msg,"。已有更新交易資料，請重新產生快取或手動估計。")
+    if(!is.null(z$cache_info)&&!identical(z$cache_info$data_md5,v32_data_md5()))
+      msg<-paste0(msg,"。股票資料已變更，快取不再有效，請執行每日預算更新。")
     tags$p(class="v27-status",msg)
   }
   output$v28_all_status<-shiny::renderUI({v28_all_status_ui()})
@@ -4243,7 +4290,7 @@ server <- function(input, output, session) {
                              request_level=NULL) {
     z <- v27_result()
     if (is.null(z)) return(tags$p(class="v27-status",
-      "尚未執行。請按上方唯一按鈕，單檔會直接使用全體樣本外結果。"))
+      "尚未載入有效快取或手動估計。單檔會直接使用與全體相同的結果。"))
     if (!is.null(z$error)) return(tags$p(class="v27-error",z$error))
     label <- get_stock_label(z$symbol)
     msg <- paste0("已完成：",label,"｜歷史測試 ",z$metrics$n," 日（",
