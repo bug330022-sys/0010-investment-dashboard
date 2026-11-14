@@ -22,7 +22,7 @@ needed <- c("stock_info","T1_ENGINE_VERSION","v29_ar_inputs",
 found <- vapply(assignments,function(expr)as.character(expr[[2L]]),character(1))
 if(!all(needed%in%found))stop("app.R 缺少必要 T+1 模型函數：",
                             paste(setdiff(needed,found),collapse=", "))
-model_env <- new.env(parent=baseenv())
+model_env <- new.env(parent=.GlobalEnv)
 for(expr in assignments[found%in%needed])eval(expr,envir=model_env)
 for(nm in needed)assign(nm,get(nm,envir=model_env),envir=.GlobalEnv)
 symbols <- as.character(stock_info$symbol)
