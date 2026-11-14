@@ -1720,12 +1720,15 @@ ui <- fluidPage(
         .home-side-subtitle { text-align:center; color:#708092; font-size:12px; min-height:21px; margin:0 0 12px; }
         .home-stat { border-top:1px solid rgba(130,148,168,.20); padding:9px 0; display:flex; justify-content:space-between; align-items:center; gap:8px; }
         .home-stat span { font-size:13px; color:#677789; }
-        .home-stat strong { font-size:31px; color:#34465a; white-space:nowrap; line-height:1.25; }
+        .home-stat strong { font-size:32px; color:#34465a; white-space:nowrap; line-height:1.25; }
         .home-center h2 { font-size:34px; }
         .home-center .home-stat { display:block; text-align:center; }
         .home-center .home-stat span { display:block; font-size:11px; margin-bottom:4px; }
         .home-center .home-stat strong { font-size:29px; }
-        @media(max-width:1100px) { .home-stat strong { font-size:23px; } .home-center .home-stat strong { font-size:19px; } }
+        @media(max-width:1100px) {
+  .home-stat strong { font-size:30px; }
+  .home-center .home-stat strong { font-size:26px; }
+}
         .home-small-note { color:#7b8794; font-size:12px; margin:13px 0 0; }
         .home-legacy { margin-top:4px; }
         @media(max-width:900px) { .home-compare-grid { grid-template-columns:1fr; } .home-center { order:3; } .home-heading { flex-wrap:wrap; } .home-date { white-space:normal; } }
