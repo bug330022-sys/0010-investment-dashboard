@@ -1942,6 +1942,12 @@ ui <- fluidPage(
         .g10-v13 .g10-v14-track-table .table { min-width:1100px; }
         .g10-v13 .g10-v14-track-table .table tbody tr:last-child { background:#eaf3f9 !important; color:#345a78; font-weight:800; border-top:2px solid #9fbfd5; }
         @media(max-width:760px) { .g10-v13 .g10-v14-summary-grid { grid-template-columns:1fr; } }
+        /* v24：全體樣本外 MAE 誤差幅度，比單純的勝出股票數多一個直觀尺度 */
+        .v15-validation .v24-error-interpretation { margin-top:5px; }
+        /* v23：模型驗證圖表的簡短讀圖提示 */
+        .v15-validation .v23-howto { font-size:12px; line-height:1.7; color:#566f83; background:#f7fafc; border-left:3px solid #a4bccc; border-radius:5px; padding:9px 12px; margin:7px 0 14px; }
+        .v15-validation .v23-howto strong { font-weight:750; color:#42627b; }
+        .v15-validation .v23-sample-note { background:#f6f8fa; border:1px solid #e2e9ef; border-radius:9px; color:#657f90; font-size:12px; padding:10px 13px; line-height:1.75; margin:10px 0 13px; }
         /* v22：全體優先的樣本外模型比較；只影響模型驗證頁 */
         .v15-validation .v22-block { border:1px solid #dbe6ee; border-radius:14px; padding:19px 20px; background:#fff; margin:13px 0 23px; }
         .v15-validation .v22-top { border-top:4px solid #7e9fb8; background:linear-gradient(120deg,#f7fafc,#fff 62%); }
@@ -2791,17 +2797,36 @@ ui <- fluidPage(
             span(class = "v22-note", "按下後才執行；切換單檔股票不會重跑全體。")),
           uiOutput("v22_all_status"),
           uiOutput("v22_all_kpis"),
-          plotOutput("v22_all_qlike_plot", height = "270px"),
-          h4("三種方法的整體誤差"),
+          p(class = "v23-sample-note",
+            tags$strong("N／樣本數怎麼看？ "),
+            "『有效比較股票 N 檔』代表有 N 檔股票通過檢查，不是 N 個交易日。",
+            "每檔至少需要 601 筆有效價格：以前 80% 報酬估計，後 20% 留作樣本外測試（切分時至少 120 個交易日）；",
+            "仍需 GARCH 估計收斂，且三種方法的 RMSE、MAE、QLIKE 都有效，才算可比較。",
+            "這是本程式的資料門檻，不代表統計學上有通用的『足夠樣本數』。"),
+          h4("哪種方法在最多股票上預測誤差較小？"),
+          plotOutput("v22_all_qlike_plot", height = "255px"),
+          p(class = "v23-howto", tags$strong("這張圖怎麼看？ "),
+            "每根長條代表該方法在多少檔股票的 QLIKE 最低。",
+            "長條越長，表示這次測試在越多股票上領先；若有並列最低，不算進任何一種方法。"),
+          h4("整體預測誤差有多大？｜平均 MAE"),
+          plotOutput("v24_all_mae_plot", height = "245px"),
+          p(class = "v23-howto v24-error-interpretation", tags$strong("這張圖怎麼看？ "),
+            "MAE 比較模型預測的每日波動幅度，和當天實際 |日報酬| 相差多少個百分點；越低越好。",
+            "例如 MAE = 0.80，代表平均相差約 0.80 個百分點，不是 80% 的錯誤率或準確率。",
+            "先計算每檔股票的 MAE，再將有效股票等權平均。"),
+          h4("三種方法的整體誤差摘要"),
           div(class = "v22-table-scroll", tableOutput("v22_all_summary_table")),
-          p(class = "v22-note", "平均 QLIKE 以每檔有效股票等權平均，越低代表此測試的誤差較小（可能為負值）；領先股票數看各檔 QLIKE 最小的方法。"),
+          p(class = "v23-howto", tags$strong("這張表怎麼看？ "),
+            "MAE 是平均絕對誤差；RMSE 對較大的誤差更敏感，兩者單位都是日報酬的百分點。",
+            "QLIKE 是波動預測的另一種誤差衡量，可能為負值，不能當作百分比。",
+            "三項皆越低越好；平均數均以相同一批有效股票等權計算。"),
           uiOutput("v22_all_conclusion"),
           tags$details(class = "v15-detail",
             tags$summary(
               span(class = "v15-detail-icon", "附表"),
               span(class = "v15-detail-copy",
                    tags$strong("逐檔預測誤差與領先方法"),
-                   tags$small("各股 GARCH、EWMA、21 日滾動法的 QLIKE、有效測試天數及狀態")),
+                   tags$small("各股 QLIKE、有效測試天數及狀態；下載 CSV 可查看逐檔 MAE、RMSE")),
               span(class = "v15-detail-action", "展開詳細資料")),
             div(class = "v15-detail-body",
               div(class = "v22-table-scroll", tableOutput("v22_all_stock_table")),
@@ -2835,9 +2860,15 @@ ui <- fluidPage(
           ),
           h4("單檔誤差比較"),
           tableOutput("v5_goos_tab"),
+          p(class = "v23-howto", tags$strong("先看表格： "),
+            "RMSE、MAE、QLIKE 都是誤差指標，數值越低越好。先用 QLIKE 看三種方法的排名，再看另外兩項是否支持相同結論。"),
+          h4("單檔逐日波動：實際幅度與模型預測"),
           plotOutput("v22_single_all_plot", height = "320px"),
+          p(class = "v23-howto", tags$strong("這張折線圖怎麼看？ "),
+            "橫軸是測試期間第幾個交易日，縱軸是百分比。『實際 |日報酬|』是當天漲跌幅的絕對值，用作波動的觀察代理；",
+            "另外三條是各方法預測的每日波動幅度。波動預測不必逐日貼合尖峰；整體準確度仍應看上方誤差表。"),
           p(class = "v15-footnote",
-            "折線為實際 |日報酬| 與三種方法的預測波動；單次誤差較小不代表統計上顯著，也不表示股票報酬一定較高。")
+            "此處比較的是樣本外每日波動預測，不是股價漲跌方向，也不是未來 63 日預測的直接驗證。誤差較小不代表差異達統計顯著，更不代表投資報酬較高。")
         ),
 
         h3(class = "v15-more-title", "完整統計資料"),
@@ -2854,6 +2885,9 @@ ui <- fluidPage(
             h4("單檔殘差診斷"),
             p(class = "v15-plain-note", "以下結果對應上方選擇的股票；p 值大於 0.05 只代表未發現顯著殘留結構，並非保證模型正確。"),
             tableOutput("v5_gdiag_tab"),
+            p(class = "v23-howto", tags$strong("殘差檢定怎麼看？ "),
+              "Ljung-Box 檢查殘差自相關，ARCH-LM 檢查是否還留有波動叢聚。",
+              "p 值較小（例如不大於 0.05）表示模型可能未充分捕捉資料特徵；p 值較大不能證明模型一定準。"),
             h4("全部成分股：GARCH 收斂狀況"),
             p(class = "v15-plain-note", "此項需要手動執行，完成後才顯示全體結果。"),
             fluidRow(
@@ -2883,12 +2917,21 @@ ui <- fluidPage(
               column(4, actionButton("v4ts_run_persist", "計算動能持續性", class = "btn-primary"))
             ),
             p(class = "v15-plain-note", "時間序列檢定標的可獨立選擇，不會改動上方 GARCH 預測比較的股票。"),
+            p(class = "v23-howto", tags$strong("這裡的樣本 n 是什麼？ "),
+              "上方 n 是該股票可取得的有效價格交易日數；下方時間序列檢定最多採最近 1261 筆價格計算。",
+              "它和前面『有效比較股票數』不同。觀察日數多不等於模型必然有效，仍要看檢定條件與殘差結果。"),
             h4("定態性與殘差檢查"),
             tableOutput("v4ts_diag"),
             h4("ARIMA 模型選擇（AIC 排序）"),
             tableOutput("v4ts_grid"),
+            p(class = "v23-howto", tags$strong("這兩張表怎麼看？ "),
+              "ADF 用來檢查序列是否有單根；ARIMA 表中的 AIC 越低，表示在這批候選模型中相對較合適，",
+              "並非保證未來預測更準。"),
             h4("動能持續性檢驗"),
-            tableOutput("v4ts_persist")
+            tableOutput("v4ts_persist"),
+            p(class = "v23-howto", tags$strong("動能持續性怎麼看？ "),
+              "觀察過去表現能否延續到後續期間；beta 的正負代表方向，R 平方描述擬合程度。",
+              "這項分析與上方的波動預測誤差比較是不同研究問題。")
           )
         ),
 
@@ -3447,8 +3490,12 @@ server <- function(input, output, session) {
           all(is.finite(q$MAE)) && isTRUE(obj$fit$converged)
         if (complete) {
           model_order <- c("GARCH(1,1)", "EWMA(0.94)", "21 日滾動")
-          vals <- q$QLIKE[match(model_order, q$模型)]
-          complete <- all(is.finite(vals))
+          idx <- match(model_order, q$模型)
+          vals <- q$QLIKE[idx]
+          mae_vals <- q$MAE[idx]
+          rmse_vals <- q$RMSE[idx]
+          complete <- !anyNA(idx) && all(is.finite(vals)) &&
+            all(is.finite(mae_vals)) && all(is.finite(rmse_vals))
         }
         if (complete) {
           best <- if (sum(abs(vals - min(vals)) < 1e-8) > 1L) "並列" else
@@ -3457,6 +3504,8 @@ server <- function(input, output, session) {
             股票代號 = symbol, 股票 = get_stock_name_one(symbol),
             狀態 = "有效", 樣本外天數 = obj$n_test,
             GARCH = vals[1], EWMA = vals[2], ROLL21 = vals[3],
+            GARCH_MAE = mae_vals[1], EWMA_MAE = mae_vals[2], ROLL21_MAE = mae_vals[3],
+            GARCH_RMSE = rmse_vals[1], EWMA_RMSE = rmse_vals[2], ROLL21_RMSE = rmse_vals[3],
             最佳方法 = best, stringsAsFactors = FALSE
           )
         } else {
@@ -3467,6 +3516,8 @@ server <- function(input, output, session) {
             股票代號 = symbol, 股票 = get_stock_name_one(symbol),
             狀態 = status, 樣本外天數 = NA_integer_,
             GARCH = NA_real_, EWMA = NA_real_, ROLL21 = NA_real_,
+            GARCH_MAE = NA_real_, EWMA_MAE = NA_real_, ROLL21_MAE = NA_real_,
+            GARCH_RMSE = NA_real_, EWMA_RMSE = NA_real_, ROLL21_RMSE = NA_real_,
             最佳方法 = "—", stringsAsFactors = FALSE
           )
         }
@@ -3477,9 +3528,15 @@ server <- function(input, output, session) {
     mods <- c("GARCH(1,1)", "EWMA(0.94)", "21 日滾動")
     keys <- c("GARCH", "EWMA", "ROLL21")
     means <- if (nrow(valid)) vapply(keys, function(z) mean(valid[[z]]), numeric(1)) else rep(NA_real_, 3)
+    # 與 QLIKE 相同有效股票集合，逐檔計算後等權平均；RMSE 不宣稱為全體合併 RMSE。
+    mean_mae <- if (nrow(valid)) vapply(paste0(keys, "_MAE"),
+      function(z) mean(valid[[z]]), numeric(1)) else rep(NA_real_, 3)
+    mean_rmse <- if (nrow(valid)) vapply(paste0(keys, "_RMSE"),
+      function(z) mean(valid[[z]]), numeric(1)) else rep(NA_real_, 3)
     wins <- vapply(mods, function(z) sum(valid$最佳方法 == z), integer(1))
-    avg <- data.frame(模型 = mods, 平均QLIKE = unname(means), 領先股票數 = unname(wins),
-                      stringsAsFactors = FALSE)
+    avg <- data.frame(模型 = mods, 平均QLIKE = unname(means),
+                      平均MAE = unname(mean_mae), 平均RMSE = unname(mean_rmse),
+                      領先股票數 = unname(wins), stringsAsFactors = FALSE)
     list(stocks = all_stocks, valid = valid, avg = avg, total = length(syms))
   }, ignoreInit = TRUE)
 
@@ -3499,7 +3556,7 @@ server <- function(input, output, session) {
     if (is.null(z) || !nrow(z$valid)) return(NULL)
     n <- nrow(z$valid)
     gw <- sum(z$valid$最佳方法 == "GARCH(1,1)")
-    leader <- z$avg$模型[which.min(z$avg$平均QLIKE)]
+    best_mae <- z$avg[which.min(z$avg$平均MAE), , drop = FALSE]
     card <- function(label, val, desc) tags$div(class = "v22-kpi",
       tags$div(class = "v22-kpi-label", label),
       tags$div(class = "v22-kpi-num", val),
@@ -3507,30 +3564,68 @@ server <- function(input, output, session) {
     tags$div(class = "v22-kpis",
       card("有效比較股票", paste0(n, " / ", z$total, " 檔"), "逐檔 80% / 20% 樣本外測試"),
       card("GARCH 領先比例", sprintf("%.1f%%", 100*gw/n), paste0(gw, " 檔的 QLIKE 最低")),
-      card("全體平均 QLIKE 最低", leader, "只代表本次樣本外誤差較低"))
+      card("全體平均 MAE 最低", sprintf("%.3f 百分點", best_mae$平均MAE),
+           paste0(best_mae$模型, "（每日幅度誤差）")))
   })
 
+  # v23：將三個散點改為「QLIKE 最低的股票檔數」單色長條；QLIKE 原始數值仍列於下方表格。
   output$v22_all_qlike_plot <- shiny::renderPlot({
     z <- v22_all_oos()
     shiny::req(!is.null(z), nrow(z$valid) > 0L)
     t <- z$avg
-    t$模型 <- factor(t$模型, levels = rev(t$模型[order(t$平均QLIKE)]))
-    ggplot2::ggplot(t, ggplot2::aes(x = 平均QLIKE, y = 模型)) +
-      ggplot2::geom_point(size = 5, color = "#6389a8") +
-      ggplot2::geom_text(ggplot2::aes(label = sprintf("%.3f", 平均QLIKE)),
-                         hjust = -0.22, size = 4, color = "#425d73") +
-      ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = c(0.22, 0.32))) +
-      ggplot2::labs(title = "全體有效股票：平均 QLIKE 比較", x = "平均 QLIKE（越低越好）", y = NULL) +
+    n <- nrow(z$valid)
+    t <- t[order(t$領先股票數, decreasing = TRUE), , drop = FALSE]
+    t$模型 <- factor(t$模型, levels = rev(as.character(t$模型)))
+    t$文字位置 <- t$領先股票數 + max(0.7, n * 0.018)
+    t$標籤 <- sprintf("%d 檔（%.1f%%）", t$領先股票數, 100 * t$領先股票數 / n)
+    ggplot2::ggplot(t, ggplot2::aes(x = 領先股票數, y = 模型)) +
+      ggplot2::geom_col(width = 0.56, fill = "#6f98b5") +
+      ggplot2::geom_text(ggplot2::aes(x = 文字位置, label = 標籤),
+                         hjust = 0, color = "#3f5e77", size = 4) +
+      ggplot2::scale_x_continuous(
+        limits = c(0, max(3, n * 1.25)),
+        breaks = function(x) pretty(x, n = 5),
+        expand = ggplot2::expansion(mult = c(0, 0))) +
+      ggplot2::labs(x = "QLIKE 最低的股票數（檔）", y = NULL) +
       ggplot2::theme_minimal(base_size = 12) +
-      ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5),
-                     panel.grid.major.y = ggplot2::element_blank())
+      ggplot2::theme(panel.grid.major.y = ggplot2::element_blank(),
+                     panel.grid.minor = ggplot2::element_blank(),
+                     plot.margin = ggplot2::margin(8, 12, 8, 8))
+  })
+
+  # v24：全體平均 MAE，使用與 QLIKE 完全相同的有效股票樣本。
+  # 單位是百分點（r = 100 * diff(log(price))），不是錯誤率／準確率。
+  output$v24_all_mae_plot <- shiny::renderPlot({
+    z <- v22_all_oos()
+    shiny::req(!is.null(z), nrow(z$valid) > 0L)
+    t <- z$avg[order(z$avg$平均MAE, decreasing = FALSE), , drop = FALSE]
+    t$模型 <- factor(t$模型, levels = rev(as.character(t$模型)))
+    t$標籤 <- sprintf("%.3f 百分點", t$平均MAE)
+    hi <- max(t$平均MAE)
+    t$文字位置 <- t$平均MAE + max(hi * 0.025, 0.008)
+    ggplot2::ggplot(t, ggplot2::aes(x = 平均MAE, y = 模型)) +
+      ggplot2::geom_col(width = 0.56, fill = "#729ab5") +
+      ggplot2::geom_text(ggplot2::aes(x = 文字位置, label = 標籤),
+                         hjust = 0, color = "#3f5e77", size = 3.9) +
+      ggplot2::scale_x_continuous(
+        limits = c(0, max(0.20, hi * 1.35)),
+        breaks = function(x) pretty(x, n = 5),
+        expand = ggplot2::expansion(mult = c(0, 0))) +
+      ggplot2::labs(x = "各股票等權平均 MAE（百分點；越低越好）", y = NULL) +
+      ggplot2::theme_minimal(base_size = 12) +
+      ggplot2::theme(panel.grid.major.y = ggplot2::element_blank(),
+                     panel.grid.minor = ggplot2::element_blank(),
+                     plot.margin = ggplot2::margin(8, 12, 8, 8))
   })
 
   output$v22_all_summary_table <- shiny::renderTable({
     z <- v22_all_oos()
     shiny::req(!is.null(z), nrow(z$valid) > 0L)
-    t <- z$avg[order(z$avg$平均QLIKE), , drop = FALSE]
-    data.frame(方法 = t$模型, 平均QLIKE = sprintf("%.4f", t$平均QLIKE),
+    t <- z$avg[order(z$avg$平均MAE), , drop = FALSE]
+    data.frame(方法 = t$模型,
+               '平均MAE（百分點）' = sprintf("%.3f", t$平均MAE),
+               '平均RMSE（百分點）' = sprintf("%.3f", t$平均RMSE),
+               '平均QLIKE' = sprintf("%.4f", t$平均QLIKE),
                領先股票數 = t$領先股票數,
                領先比例 = sprintf("%.1f%%", 100*t$領先股票數/nrow(z$valid)),
                check.names = FALSE)
@@ -3540,13 +3635,16 @@ server <- function(input, output, session) {
     z <- v22_all_oos()
     if (is.null(z) || !nrow(z$valid)) return(NULL)
     t <- z$avg
-    best <- t$模型[which.min(t$平均QLIKE)]
+    best_qlike <- t$模型[which.min(t$平均QLIKE)]
+    best_mae <- t$模型[which.min(t$平均MAE)]
     n <- nrow(z$valid)
     tags$div(class = "v22-all-note",
       tags$strong("本次結果怎麼看？"),
-      tags$div(paste0("依全部有效股票的平均 QLIKE，", best,
-        " 的樣本外誤差最低。GARCH 在 ", sum(z$valid$最佳方法 == "GARCH(1,1)"),
-        " / ", n, " 檔股票上領先。這是誤差比較，並非統計顯著性或投資報酬的保證。")))
+      tags$div(paste0("以平均 MAE 衡量每日幅度誤差，", best_mae,
+        " 最低；以平均 QLIKE 衡量波動預測，", best_qlike, " 最低。")),
+      tags$div(paste0("GARCH 在 ", sum(z$valid$最佳方法 == "GARCH(1,1)"),
+        " / ", n, " 檔股票的 QLIKE 領先。不同指標可能有不同結論；",
+        "誤差較小不等於差異具有統計顯著性，也不保證投資報酬。")))
   })
 
   output$v22_all_stock_table <- shiny::renderTable({
@@ -3583,7 +3681,7 @@ server <- function(input, output, session) {
     )
     ggplot2::ggplot(d, ggplot2::aes(x = 日數, y = 值, colour = 模型)) +
       ggplot2::geom_line(linewidth = 0.65, alpha = 0.88) +
-      ggplot2::labs(title = "樣本外預測與實際日報酬幅度", x = "樣本外第 N 個交易日",
+      ggplot2::labs(title = "樣本外每日波動幅度比較", x = "測試期間交易日序號",
                     y = "日波動／|報酬|（%）", colour = NULL) +
       ggplot2::theme_minimal() +
       ggplot2::theme(legend.position = "bottom",
