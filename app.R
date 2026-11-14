@@ -1735,6 +1735,35 @@ ui <- fluidPage(
         .rank-lab .rank-lab-actions .btn { margin-right:6px; margin-bottom:8px; }
         .rank-lab .rank-lab-formula { padding:12px 14px; border-radius:10px; background:#f2f6fa; margin:12px 0; }
         .rank-lab .rank-lab-section { margin-top:25px; }
+        /* v11 第二頁：動能分／風險穩定分左右並排，不影響其他分頁 */
+        .rank-compare .rank-compare-lead { color:#5a7085; line-height:1.7; margin:0 0 13px; }
+        .rank-compare .rank-compare-date { margin:0 0 18px; }
+        .rank-compare .rank-compare-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:stretch; gap:16px; }
+        .rank-compare .rank-compare-card { min-width:0; display:flex; flex-direction:column; border:1px solid #dce7f1; border-radius:13px; padding:18px 16px; background:#fff; }
+        .rank-compare .rank-compare-card.momentum { border-top:4px solid #648fb9; background:#f9fcff; }
+        .rank-compare .rank-compare-card.risk { border-top:4px solid #749a89; background:#fbfdfc; }
+        .rank-compare .rank-compare-card h3 { margin:0 0 8px; font-size:21px; font-weight:800; color:#314e6b; }
+        .rank-compare .rank-compare-description { margin:0 0 10px; min-height:39px; color:#5b7084; font-size:13px; line-height:1.6; }
+        .rank-compare .rank-compare-section { color:#49647e; font-size:14px; font-weight:800; margin:11px 0 7px; }
+        .rank-compare .rank-compare-table { min-width:0; overflow-x:auto; }
+        .rank-compare .rank-compare-table .table { font-size:13px; margin-bottom:8px; }
+        .rank-compare .rank-compare-table .table th,
+        .rank-compare .rank-compare-table .table td { padding:6px 7px; white-space:nowrap; }
+        .rank-compare .rank-compare-weight { padding:12px; background:#f1f5f9; border-radius:9px; margin:8px 0 14px; font-size:12px; color:#576c80; line-height:1.7; }
+        .rank-compare .rank-compare-weight strong { color:#3e5e7e; }
+        .rank-compare .rank-compare-card .rank-compare-expand { margin-top:auto; }
+        .rank-compare details.rank-compare-expand { border:1px solid #cad9e7; background:#fff; border-radius:9px; padding:0; }
+        .rank-compare details.rank-compare-expand > summary { cursor:pointer; list-style:none; text-align:center; padding:11px 9px; color:#38658f; font-weight:750; border-radius:9px; }
+        .rank-compare details.rank-compare-expand > summary::-webkit-details-marker { display:none; }
+        .rank-compare details.rank-compare-expand > summary:after { content:' ▾'; }
+        .rank-compare details.rank-compare-expand[open] > summary:after { content:' ▴'; }
+        .rank-compare details.rank-compare-expand[open] > summary { border-bottom:1px solid #dce7f1; border-radius:9px 9px 0 0; }
+        .rank-compare .rank-compare-expanded { padding:11px 12px 13px; overflow-x:auto; }
+        .rank-compare .rank-compare-expanded .table { font-size:12px; }
+        .rank-compare .rank-compare-expanded .table th,
+        .rank-compare .rank-compare-expanded .table td { white-space:nowrap; }
+        .rank-compare .rank-compare-note { font-size:12px; line-height:1.65; margin:11px 0 0; color:#718294; }
+        @media(max-width:980px) { .rank-compare .rank-compare-grid { grid-template-columns:1fr; } .rank-compare .rank-compare-description { min-height:0; } }
         .home-small-note { color:#7b8794; font-size:12px; margin:13px 0 0; }
         .home-legacy { margin-top:4px; }
         @media(max-width:900px) { .home-compare-grid { grid-template-columns:1fr; } .home-center { order:3; } .home-heading { flex-wrap:wrap; } .home-date { white-space:normal; } }
@@ -1891,34 +1920,64 @@ ui <- fluidPage(
         id = "rank_subtabs",
         type = "pills",
 
+        # v11：合併原動能分與風險分排名，只調整第二頁展示方式。
         tabPanel(
-          "動能分排名",
+          "雙排名對照",
           div(
-            class = "section-box",
-            h2("動能分排名"),
-            p(class = "page-description",
-              "動能分＝0.55 × 6 個月報酬百分位 ＋ 0.45 × 12−1 個月報酬百分位。現行排名未啟用跨期分數平滑；分數是同一評分日成分股間的相對位置，不是預期漲幅。"),
-            div(class = "time-info", strong("評分日："), textOutput("v6_rank_date", inline = TRUE)),
-            h3("動能分前 10 名"),
-            plotOutput("v6_mom_chart", height = "520px"),
-            div(class = "plot-explanation", textOutput("v6_mom_result", inline = TRUE)),
-            h3("完整動能分排名"),
-            tableOutput("v6_mom_table")
-          )
-        ),
-
-        tabPanel(
-          "風險／穩定分",
-          div(
-            class = "section-box",
-            h2("風險／穩定分"),
-            p(class = "page-description",
-              "風險穩定分＝30% 波動 ＋ 25% 最大回撤 ＋ 20% CVaR ＋ 15% Sharpe ＋ 10% GARCH 前瞻波動。分數高代表歷史風險較可控；它不代表未來報酬較高。"),
-            h3("風險穩定分前 10 名"),
-            plotOutput("v6_risk_chart", height = "520px"),
-            div(class = "plot-explanation", textOutput("v6_risk_result", inline = TRUE)),
-            h3("50 檔完整拆解"),
-            tableOutput("v4_risk_decomp")
+            class = "section-box rank-compare",
+            h2("成分股排名比較"),
+            p(class = "rank-compare-lead",
+              "動能排名看過去相對報酬強弱；風險穩定排名看波動、回撤與尾端風險等特性。兩側各自排序，名次相同不代表是同一檔股票。"),
+            div(class = "time-info rank-compare-date", strong("評分日："),
+                textOutput("v6_rank_date", inline = TRUE),
+                "｜分數為成分股間的相對評價，不代表未來漲幅。"),
+            div(
+              class = "rank-compare-grid",
+              div(
+                class = "rank-compare-card momentum",
+                h3("動能分排名"),
+                p(class = "rank-compare-description", "核心問題：哪些股票過去的報酬相對強勢？"),
+                div(class = "rank-compare-section", "動能 Top 10"),
+                div(class = "rank-compare-table", tableOutput("rank_compare_mom_top")),
+                div(class = "rank-compare-weight",
+                    strong("評分組成"), tags$br(),
+                    "近 6 個月報酬百分位：55%", tags$br(),
+                    "12−1 個月報酬百分位：45%"),
+                tags$details(
+                  class = "rank-compare-expand",
+                  tags$summary("展開動能排名與完整明細"),
+                  div(class = "rank-compare-expanded",
+                      div(class = "rank-compare-section", "動能分前十名圖"),
+                      plotOutput("v6_mom_chart", height = "390px"),
+                      div(class = "plot-explanation", textOutput("v6_mom_result", inline = TRUE)),
+                      div(class = "rank-compare-section", "完整成分股動能排名（不含產業欄）"),
+                      tableOutput("rank_compare_mom_detail"))
+                )
+              ),
+              div(
+                class = "rank-compare-card risk",
+                h3("風險／穩定分排名"),
+                p(class = "rank-compare-description", "核心問題：哪些股票的歷史風險相對可控？"),
+                div(class = "rank-compare-section", "風險穩定 Top 10"),
+                div(class = "rank-compare-table", tableOutput("rank_compare_risk_top")),
+                div(class = "rank-compare-weight",
+                    strong("評分組成"), tags$br(),
+                    "年化波動：30%｜最大回撤：25%", tags$br(),
+                    "CVaR：20%｜Sharpe：15%｜GARCH：10%"),
+                tags$details(
+                  class = "rank-compare-expand",
+                  tags$summary("展開風險排名與完整明細"),
+                  div(class = "rank-compare-expanded",
+                      div(class = "rank-compare-section", "風險穩定分前十名圖"),
+                      plotOutput("v6_risk_chart", height = "390px"),
+                      div(class = "plot-explanation", textOutput("v6_risk_result", inline = TRUE)),
+                      div(class = "rank-compare-section", "完整成分股風險指標拆解"),
+                      tableOutput("v4_risk_decomp"))
+                )
+              )
+            ),
+            p(class = "rank-compare-note",
+              "備註：GARCH 尚未完成估計時，沿用目前中性 50 分與缺值顯示方式；此處僅整理排名，不更動估計與選股模型。")
           )
         ),
 
@@ -2744,6 +2803,47 @@ server <- function(input, output, session) {
   # 貼在 server 內（位置任意，建議最後）
   # 依賴：v4_score.R、v4_drawdown.R
   # ============================================================
+  # v11：第二頁雙排名對照用資料；只讀現有 v4_tbl()，不重算或改寫模型分數。
+  output$rank_compare_mom_top <- shiny::renderTable({
+    t <- v4_tbl()
+    shiny::req(!is.null(t), nrow(t) > 0)
+    o <- utils::head(t[order(-t$mom_score), , drop = FALSE], 10)
+    data.frame(
+      名次 = seq_len(nrow(o)),
+      股票 = paste0(o$name, "（", o$symbol, "）"),
+      動能分 = sprintf("%.1f", o$mom_score),
+      check.names = FALSE, stringsAsFactors = FALSE
+    )
+  }, striped = TRUE, bordered = TRUE, hover = TRUE)
+
+  output$rank_compare_risk_top <- shiny::renderTable({
+    t <- v4_tbl()
+    shiny::req(!is.null(t), nrow(t) > 0)
+    o <- utils::head(t[order(-t$risk_score), , drop = FALSE], 10)
+    data.frame(
+      名次 = seq_len(nrow(o)),
+      股票 = paste0(o$name, "（", o$symbol, "）"),
+      風險穩定分 = sprintf("%.1f", o$risk_score),
+      check.names = FALSE, stringsAsFactors = FALSE
+    )
+  }, striped = TRUE, bordered = TRUE, hover = TRUE)
+
+  # 原始 v6_mom_table 在 v5_server.R；改成新的顯示表，避免動到共用模組。
+  output$rank_compare_mom_detail <- shiny::renderTable({
+    t <- v4_tbl()
+    shiny::req(!is.null(t), nrow(t) > 0)
+    o <- t[order(-t$mom_score), , drop = FALSE]
+    data.frame(
+      名次 = seq_len(nrow(o)),
+      股票 = paste0(o$name, "（", o$symbol, "）"),
+      動能分 = sprintf("%.1f", o$mom_score),
+      `6個月報酬` = ifelse(is.finite(o$r6), sprintf("%+.1f%%", o$r6 * 100), "—"),
+      `12-1個月報酬` = ifelse(is.finite(o$r12_1), sprintf("%+.1f%%", o$r12_1 * 100), "—"),
+      `0010分` = sprintf("%.1f", o$p10_smooth),
+      check.names = FALSE, stringsAsFactors = FALSE
+    )
+  }, striped = TRUE, bordered = TRUE, hover = TRUE)
+
   output$v4_risk_decomp <- shiny::renderTable({
     t <- v4_tbl()
     shiny::req(!is.null(t))
