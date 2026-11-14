@@ -1,4 +1,4 @@
-# v32｜每日 T+1 全體預先估計（僅依 app.R 的選股名單）
+# v33｜每日 T+1 全體預先估計（Ridge Logistic 與一般 Logistic 同期比較）（僅依 app.R 的選股名單）
 # Rscript precompute_t1.R
 # 不啟動 Shiny，不修改 app.R / 模型公式；直接取用 app.R 的純計算函數。
 # 固定預設設定 252/63/95%。其他自訂設定仍可網站手動計算。
@@ -17,7 +17,8 @@ assignments <- Filter(function(expr) is.call(expr)&&
   as.list(expressions))
 needed <- c("stock_info","T1_ENGINE_VERSION","v29_ar_inputs",
   "v29_garch_path","v29_garch_fit","v29_interval_score","v30_market_returns",
-  "v31_logit_prepare","v30_logit_prob","v27_one_step","v27_rolling_oos",
+  "v31_logit_prepare","v30_logit_prob","v33_ridge_fit",
+  "v33_ridge_prob","v27_one_step","v27_rolling_oos",
   "v28_universe","v28_forecast_snapshot","v28_all_oos")
 found <- vapply(assignments,function(expr)as.character(expr[[2L]]),character(1))
 if(!all(needed%in%found))stop("app.R 缺少必要 T+1 模型函數：",
@@ -103,6 +104,11 @@ if(!cache_is_current) {
         message("[診斷] ",sym," Logistic 估計失敗：",conditionMessage(e));NULL
       })
       if(is.null(prob))next
+      ridge <- tryCatch(v33_ridge_prob(lg,length(pp),params$window,lambda=10),
+        error=function(e){
+          message("[診斷] ",sym," Ridge 估計失敗：",conditionMessage(e));NULL
+        })
+      if(is.null(ridge))next
       ar <- tryCatch(v29_ar_inputs(pp,length(pp),params$window),error=function(e){
         message("[診斷] ",sym," AR 估計失敗：",conditionMessage(e));NULL
       })
