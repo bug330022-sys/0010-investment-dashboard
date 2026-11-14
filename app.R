@@ -2048,6 +2048,37 @@ ui <- fluidPage(
         @media(max-width:1180px) { .g16-single .g16-graph-grid { grid-template-columns:1fr; } }
         @media(max-width:900px) { .g16-single .g16-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); } }
         @media(max-width:600px) { .g16-single .g16-head { padding:14px; } .g16-single .g16-head h3 { font-size:20px; } .g16-single .g16-kpi { padding:11px; } .g16-single .g16-kpi > strong { font-size:21px; } .g16-single .g16-kpi-state > strong { font-size:16px; } .g16-single details.g16-details > summary { padding:12px; gap:9px; } .g16-single .g16-details-copy strong { font-size:13px; } .g16-single .g16-details-action { padding:6px; } }
+        /* v18：全體 GARCH / 季度回測易讀版。僅影響兩個既有子頁。 */
+        .g18-panel { padding:10px 0 14px; }
+        .g18-panel > h3 { color:#304f68; font-size:24px; font-weight:800; margin:8px 0 8px; }
+        .g18-panel > h4 { color:#365c78; font-size:18px; font-weight:750; margin:22px 0 10px; }
+        .g18-panel .g18-intro { color:#536e83; font-size:14px; line-height:1.7; margin:4px 0 17px; }
+        .g18-panel .g18-hint { color:#77899a; font-size:12px; line-height:1.65; margin:9px 0 13px; }
+        .g18-panel .g18-warning { background:#faf8f4; border-left:4px solid #c0ab8d; padding:11px 14px; border-radius:7px; color:#806f56; line-height:1.6; font-size:13px; margin:9px 0 18px; }
+        .g18-panel .g18-control-row { background:#f6f9fc; border:1px solid #dce7f0; border-radius:11px; margin:14px 0 17px; padding:13px 15px 2px; max-width:420px; }
+        .g18-panel .g18-control-row label { color:#3c607b; font-weight:750; }
+        .g18-panel .g18-stat-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:17px 0 20px; }
+        .g18-panel .g18-stat { min-width:0; border:1px solid #dae5ec; border-top:3px solid #94b4cc; border-radius:11px; padding:13px 14px; background:#f7fafc; }
+        .g18-panel .g18-stat:nth-child(even) { background:#faf9f6; border-top-color:#baa68d; }
+        .g18-panel .g18-stat-label { display:block; color:#688092; font-size:12px; margin-bottom:6px; }
+        .g18-panel .g18-stat-value { display:block; color:#355b79; font-size:20px; font-weight:800; line-height:1.3; overflow-wrap:anywhere; }
+        .g18-panel .g18-stat-sub { display:block; color:#8494a0; font-size:11px; line-height:1.5; margin-top:4px; }
+        .g18-panel .g18-placeholder { border:1px dashed #cbdbe6; background:#f8fbfd; padding:20px; border-radius:10px; text-align:center; color:#72889a; font-size:13px; }
+        .g18-panel .g18-table-wrap { overflow-x:auto; width:100%; margin:8px 0 17px; }
+        .g18-panel .g18-table-wrap table { width:100%; }
+        .g18-panel details.g18-detail { border:1px solid #dbe7ee; border-radius:12px; margin:20px 0; background:white; overflow:hidden; }
+        .g18-panel details.g18-detail > summary { display:flex; align-items:center; gap:13px; list-style:none; cursor:pointer; padding:15px 16px; background:#f3f8fb; }
+        .g18-panel details.g18-detail > summary::-webkit-details-marker { display:none; }
+        .g18-panel details.g18-detail > summary:hover { background:#eaf2f8; }
+        .g18-panel details.g18-detail[open] > summary { border-bottom:1px solid #deebf1; }
+        .g18-panel .g18-detail-icon { background:#e4eff6; border-radius:8px; color:#557a96; font-weight:800; padding:9px 11px; }
+        .g18-panel .g18-detail-copy { flex:1; min-width:0; }
+        .g18-panel .g18-detail-copy strong { display:block; color:#365b78; font-size:15px; }
+        .g18-panel .g18-detail-copy small { display:block; color:#768b9d; line-height:1.6; font-size:12px; margin-top:3px; }
+        .g18-panel .g18-detail-action { font-size:12px; color:#527a99; font-weight:750; background:white; border-radius:7px; padding:7px 9px; white-space:nowrap; }
+        .g18-panel .g18-detail-content { padding:16px 18px 21px; }
+        @media(max-width:950px) { .g18-panel .g18-stat-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+        @media(max-width:550px) { .g18-panel .g18-stat-grid { grid-template-columns:1fr; } .g18-panel .g18-stat-value { font-size:18px; } .g18-panel .g18-detail-copy small { font-size:11px; } }
         .home-small-note { color:#7b8794; font-size:12px; margin:13px 0 0; }
         .home-legacy { margin-top:4px; }
         @media(max-width:900px) { .home-compare-grid { grid-template-columns:1fr; } .home-center { order:3; } .home-heading { flex-wrap:wrap; } .home-date { white-space:normal; } }
@@ -2597,48 +2628,84 @@ ui <- fluidPage(
           ),
 
           # --------------------------------------------------
-          # 3. 波動預測總表
+          # 3. v18 全體 GARCH：先看分類與波動比，再展開模型參數
           # --------------------------------------------------
           tabPanel(
             "GARCH 診斷：全體",
-            br(),
-            actionButton("g10_run_all", "估計全部成分股 GARCH（約 5–15 秒）", class = "btn-primary"),
-            div(class = "method-note",
-                "第一次使用請先按這個按鈕。結果會快取，切換頁籤不會重算。"),
-            h3("50 檔成分股波動預測"),
-            tableOutput("g10_all_table"),
-            h3("預測／實現波動比"),
-            plotOutput("g10_ratio_bar", height = "700px"),
+            div(class = "g18-panel",
+              h3("0050 成分股｜整體波動分析"),
+              p(class = "g18-intro", "比較各檔股票的未來一季預測波動與近一年歷史波動。先看哪些風險正在變化，完整模型參數可於下方展開。"),
+              actionButton("g10_run_all", "執行全體 GARCH 估計", class = "btn-primary"),
+              p(class = "g18-hint", "首次使用需執行估計；切換頁籤不會重算。估計期間沿用單檔 GARCH 的設定。"),
+              uiOutput("g18_g_summary"),
+              div(class = "g18-control-row",
+                selectInput("g18_g_filter", "查看股票範圍",
+                  choices = c("全部估計股票" = "all", "本期 0010 入選股" = "p10",
+                              "波動可能增加（比值 > 1.10）" = "up",
+                              "波動大致接近（0.90～1.10）" = "flat",
+                              "波動可能減少（比值 < 0.90）" = "down"),
+                  selected = "all", width = "100%")
+              ),
+              h4("預測／歷史波動比"),
+              p(class = "g18-hint", "比值高於 1 表示預測波動高於過去一年的基準；低於 1 則相反。這不是預測股價漲跌。"),
+              uiOutput("g18_g_chart_box"),
+              tags$details(class = "g18-detail",
+                tags$summary(
+                  span(class = "g18-detail-icon", "01"),
+                  span(class = "g18-detail-copy", tags$strong("完整 GARCH 參數與個股數據"),
+                       tags$small("查看所有已完成估計股票的 ω、α、β、持續性、半衰期及波動比值")),
+                  span(class = "g18-detail-action", "展開 ▾")
+                ),
+                div(class = "g18-detail-content",
+                  p(class = "g18-hint", "這張詳細表保留全部有效估計結果，不受上方股票篩選影響；部分股票可能因資料不足無法估計。"),
+                  div(class = "g18-table-wrap", tableOutput("g10_all_table"))
+                )
+              )
+            )
           ),
-          
+
           # --------------------------------------------------
-          # 4. 季度再平衡回測
+          # 4. v18 季度回測：評分年度篩選與季度績效比較
           # --------------------------------------------------
           tabPanel(
             "季度再平衡回測",
-            br(),
-            div(class = "reading-guide", strong("這頁在驗證什麼？"),
-                "每一季只用當時已知的資料重新評分、選股、給權重，持有 63 個交易日後再換股，並扣掉手續費、證交稅與滑價。看的是「扣完成本之後還剩多少」。"),
-            div(class = "warning-note",
-                strong("注意："),
-                "本頁數字為新分數（動能 70% ＋ 風險穩定 30%）的結果；成交時點為評分日的次一交易日（T+1），避免前視偏差。"),
-            actionButton("v5_run_bt", "執行季度回測（約 20–60 秒）", class = "btn-primary"),
-            div(class = "method-note",
-                "波動估計採 EWMA（λ = 0.94）；只有當期最新預測使用完整 GARCH(1,1)。兩者不可混稱為「完整 GARCH 回測」。"),
-
-            h3("準確度"),
-            tableOutput("v5_bt_acc"),
-            div(class = "plot-explanation", textOutput("v5_bt_result", inline = TRUE)),
-
-            h3("績效摘要"),
-            tableOutput("v5_bt_stats"),
-
-            h3("淨值曲線（已扣成本）"),
-            plotOutput("v5_bt_curve", height = "420px"),
-
-            h3("交易明細（可追溯）"),
-            tableOutput("v5_bt_log"),
-            downloadButton("v5_bt_csv", "下載交易明細 CSV")
+            div(class = "g18-panel",
+              h3("0010 季度再平衡回測"),
+              p(class = "g18-intro", "每季依當時資料選股、於次一交易日進場，觀察扣除成本後是否優於 0050。可按評分年度查看季度結果。"),
+              div(class = "g18-warning", "年份依「評分日」分組，不是日曆年度報酬；部分季度的成交至出場期間可能跨年。"),
+              actionButton("v5_run_bt", "執行完整季度回測", class = "btn-primary"),
+              p(class = "g18-hint", "只在按下按鈕時執行回測；後續切換年份直接篩選結果，不會重新運算。歷史波動風險依既有模型使用 EWMA（λ = 0.94），並非每季完整 GARCH 估計。"),
+              div(class = "g18-control-row",
+                selectInput("g18_bt_year", "查看評分年度", choices = c("全部年度" = "all"),
+                  selected = "all", width = "100%")
+              ),
+              uiOutput("g18_bt_summary"),
+              h4("各評分年度的 0010／0050 報酬"),
+              p(class = "g18-hint", "將同一評分年度內的季度報酬複利串接；不是按 1 月 1 日至 12 月 31 日計算。"),
+              plotOutput("g18_bt_year_plot", height = "330px"),
+              div(class = "g18-table-wrap", tableOutput("g18_bt_year_table")),
+              h4(textOutput("g18_bt_quarter_title", inline = TRUE)),
+              p(class = "g18-hint", "選定年度可查看該年度所有已完成回測季度；選「全部年度」時先顯示最近八季。"),
+              div(class = "g18-table-wrap", tableOutput("g18_bt_quarter_table")),
+              tags$details(class = "g18-detail",
+                tags$summary(
+                  span(class = "g18-detail-icon", "02"),
+                  span(class = "g18-detail-copy", tags$strong("完整績效、排名有效性與淨值曲線"),
+                       tags$small("Spearman IC、命中率、Sharpe、最大回撤、扣成本淨值與全部交易明細")),
+                  span(class = "g18-detail-action", "展開 ▾")
+                ),
+                div(class = "g18-detail-content",
+                  p(class = "g18-hint", "以下是原本的「全回測期間」指標與淨值，不隨年份選單改變；避免把局部年度與完整期間混淆。"),
+                  h4("排名有效性"), tableOutput("v5_bt_acc"),
+                  div(class = "plot-explanation", textOutput("v5_bt_result", inline = TRUE)),
+                  h4("全期間績效摘要"), tableOutput("v5_bt_stats"),
+                  h4("全期間淨值走勢（已扣成本）"), plotOutput("v5_bt_curve", height = "420px"),
+                  h4("完整交易明細"),
+                  div(class = "g18-table-wrap", tableOutput("v5_bt_log")),
+                  downloadButton("v5_bt_csv", "下載完整交易明細 CSV")
+                )
+              )
+            )
           )
         )
       )
@@ -11478,6 +11545,56 @@ server <- function(input, output, session) {
     g10_store(tbl)
   })
   
+  # v18：全體 GARCH 波動分類摘要（只讀快取，不額外估計）
+  g18_g_filtered <- shiny::reactive({
+    g <- g10_store()
+    shiny::req(!is.null(g), is.data.frame(g))
+    g <- g[is.finite(g$ratio) & g$ratio > 0, , drop = FALSE]
+    f <- input$g18_g_filter
+    if (is.null(f) || !nzchar(f)) f <- "all"
+    if (identical(f, "p10")) {
+      sel <- v4_sel()
+      g <- g[g$symbol %in% as.character(sel$symbol), , drop = FALSE]
+    } else if (identical(f, "up")) {
+      g <- g[g$ratio > 1.10, , drop = FALSE]
+    } else if (identical(f, "flat")) {
+      g <- g[g$ratio >= 0.90 & g$ratio <= 1.10, , drop = FALSE]
+    } else if (identical(f, "down")) {
+      g <- g[g$ratio < 0.90, , drop = FALSE]
+    }
+    g
+  })
+
+  g18_stat_box <- function(label, value, sub = "") {
+    tags$div(class = "g18-stat",
+      tags$span(class = "g18-stat-label", label),
+      tags$strong(class = "g18-stat-value", value),
+      tags$span(class = "g18-stat-sub", sub))
+  }
+
+  output$g18_g_summary <- shiny::renderUI({
+    g <- g10_store()
+    if (is.null(g) || !is.data.frame(g) || !nrow(g)) {
+      return(tags$div(class = "g18-placeholder", "按下「執行全體 GARCH 估計」後，這裡會顯示波動分類。"))
+    }
+    ratio <- suppressWarnings(as.numeric(g$ratio))
+    valid <- is.finite(ratio) & ratio > 0
+    tags$div(class = "g18-stat-grid",
+      g18_stat_box("波動可能增加", sum(valid & ratio > 1.10), "預測／歷史 > 1.10"),
+      g18_stat_box("波動大致接近", sum(valid & ratio >= .90 & ratio <= 1.10), "比值 0.90～1.10"),
+      g18_stat_box("波動可能減少", sum(valid & ratio < .90), "預測／歷史 < 0.90"),
+      g18_stat_box("有效估計資料", sum(valid), paste0("目標 ", length(stock_info$symbol), " 檔；資料不足者不列入"))
+    )
+  })
+
+  output$g18_g_chart_box <- shiny::renderUI({
+    g <- g10_store()
+    if (is.null(g)) return(tags$div(class = "g18-placeholder", "估計完成後顯示股票波動比值長條圖。"))
+    x <- g18_g_filtered()
+    if (!nrow(x)) return(tags$div(class = "g18-placeholder", "此篩選條件下沒有可比較的股票。"))
+    plotOutput("g10_ratio_bar", height = paste0(max(290L, min(920L, nrow(x) * 28L)), "px"))
+  })
+
   output$g10_all_table <- shiny::renderTable({
     g <- g10_store()
     if (is.null(g)) return(data.frame(提示 = "請先按上方按鈕估計"))
@@ -11498,9 +11615,8 @@ server <- function(input, output, session) {
   }, striped = TRUE, bordered = TRUE, hover = TRUE)
   
   output$g10_ratio_bar <- shiny::renderPlot({
-    g <- g10_store()
-    shiny::req(!is.null(g))
-    x <- g[is.finite(g$ratio), , drop = FALSE]
+    x <- g18_g_filtered()
+    shiny::req(nrow(x) > 0)
     x <- x[order(x$ratio), , drop = FALSE]
     labs <- paste0(get_stock_name(x$symbol), "(", x$symbol, ")")
     x$label <- factor(labs, levels = labs)
@@ -11516,6 +11632,141 @@ server <- function(input, output, session) {
                      plot.title = ggplot2::element_text(hjust = 0.5, face = "bold"))
   })
   
+  # v18：季度回測「評分年度」整理；讀取 v5_server.R 的 v5_bt()。
+  # 日期篩選絕不觸發 v5_backtest_v4 的再次估計。
+  g18_bt_yearly <- shiny::reactive({
+    r <- v5_bt()
+    shiny::req(!is.null(r), is.data.frame(r$quarters), nrow(r$quarters) > 0)
+    q <- r$quarters
+    y <- format(as.Date(q$評分日), "%Y")
+    groups <- split(q, y)
+    rows <- lapply(names(groups), function(year) {
+      z <- groups[[year]]
+      a <- as.numeric(z$淨報酬)
+      b <- as.numeric(z$基準0050)
+      ok <- is.finite(a) & is.finite(b)
+      data.frame(
+        year = year,
+        n = nrow(z),
+        ret0010 = if (all(is.finite(a))) prod(1 + a) - 1 else NA_real_,
+        ret0050 = if (all(is.finite(b))) prod(1 + b) - 1 else NA_real_,
+        win = if (any(ok)) sum(a[ok] > b[ok]) else NA_integer_,
+        compared = sum(ok),
+        cost = sum(as.numeric(z$成本合計), na.rm = TRUE),
+        stringsAsFactors = FALSE
+      )
+    })
+    ans <- do.call(rbind, rows)
+    ans[order(ans$year), , drop = FALSE]
+  })
+
+  shiny::observeEvent(v5_bt(), {
+    years <- g18_bt_yearly()$year
+    cur <- shiny::isolate(input$g18_bt_year)
+    if (is.null(cur) || !cur %in% c("all", years)) cur <- "all"
+    shiny::updateSelectInput(session, "g18_bt_year",
+      choices = c("全部年度" = "all", stats::setNames(years, paste0(years, " 年"))),
+      selected = cur)
+  })
+
+  g18_bt_quarters <- shiny::reactive({
+    r <- v5_bt()
+    shiny::req(!is.null(r), is.data.frame(r$quarters), nrow(r$quarters) > 0)
+    q <- r$quarters
+    y <- input$g18_bt_year
+    if (!is.null(y) && y != "all") q <- q[format(as.Date(q$評分日), "%Y") == y, , drop = FALSE]
+    q
+  })
+
+  g18_pct <- function(z, digits = 2L) {
+    if (length(z) != 1L || !is.finite(z)) return("—")
+    sprintf(paste0("%+.", digits, "f%%"), z * 100)
+  }
+  g18_money <- function(z) {
+    if (length(z) != 1L || !is.finite(z)) return("—")
+    paste0("NT$ ", formatC(round(z), format = "d", big.mark = ","))
+  }
+
+  output$g18_bt_summary <- shiny::renderUI({
+    # eventReactive 尚未執行時會 req()，先檢查按鈕次數才能顯示提示。
+    if (is.null(input$v5_run_bt) || input$v5_run_bt < 1) {
+      return(tags$div(class = "g18-placeholder", "按下「執行完整季度回測」後，這裡會顯示所選年份的績效摘要。"))
+    }
+    r <- v5_bt()
+    if (is.null(r)) return(tags$div(class = "g18-placeholder", "本次回測無可用結果。"))
+    q <- g18_bt_quarters()
+    if (!nrow(q)) return(tags$div(class = "g18-placeholder", "該年度沒有已完成的回測季度。"))
+    ra <- as.numeric(q$淨報酬)
+    rb <- as.numeric(q$基準0050)
+    valid <- is.finite(ra) & is.finite(rb)
+    ret_a <- if (all(is.finite(ra))) prod(1 + ra) - 1 else NA_real_
+    ret_b <- if (all(is.finite(rb))) prod(1 + rb) - 1 else NA_real_
+    w <- sum(ra[valid] > rb[valid])
+    n <- sum(valid)
+    y <- input$g18_bt_year
+    label <- if (is.null(y) || identical(y, "all")) "全部評分年度" else paste0(y, " 年評分季度")
+    tags$div(
+      tags$p(class = "g18-hint", paste0("目前查看：", label, "（", nrow(q), " 季）")),
+      tags$div(class = "g18-stat-grid",
+        g18_stat_box("0010 期間報酬（扣成本）", g18_pct(ret_a), "季度淨報酬複利串接"),
+        g18_stat_box("0050 同期報酬", g18_pct(ret_b), "相同回測季度比較"),
+        g18_stat_box("勝過 0050 的季度", if (n) paste0(w, " / ", n) else "—", "以季度淨報酬比較"),
+        g18_stat_box("累計交易成本", g18_money(sum(as.numeric(q$成本合計), na.rm = TRUE)), "所選季度的模擬交易費用")
+      )
+    )
+  })
+
+  output$g18_bt_year_plot <- shiny::renderPlot({
+    y <- g18_bt_yearly()
+    shiny::req(nrow(y) > 0)
+    df <- rbind(
+      data.frame(year = y$year, value = y$ret0010, series = "0010（扣成本）"),
+      data.frame(year = y$year, value = y$ret0050, series = "0050"))
+    df <- df[is.finite(df$value), , drop = FALSE]
+    shiny::req(nrow(df) > 0)
+    df$year <- factor(df$year, levels = y$year)
+    ggplot2::ggplot(df, ggplot2::aes(x = year, y = value, fill = series)) +
+      ggplot2::geom_hline(yintercept = 0, colour = "#a6b2bc", linewidth = 0.4) +
+      ggplot2::geom_col(position = ggplot2::position_dodge(width = .74), width = .64) +
+      ggplot2::scale_fill_manual(values = c("0010（扣成本）" = "#628db3", "0050" = "#c3a68a")) +
+      ggplot2::scale_y_continuous(labels = function(x) sprintf("%+.0f%%", 100*x)) +
+      ggplot2::labs(x = "評分年度", y = "該年度評分季度報酬", fill = NULL) +
+      ggplot2::theme_minimal(base_size = 12) +
+      ggplot2::theme(legend.position = "bottom", panel.grid.major.x = ggplot2::element_blank())
+  })
+
+  output$g18_bt_year_table <- shiny::renderTable({
+    y <- g18_bt_yearly()
+    data.frame(
+      評分年度 = y$year,
+      回測季數 = y$n,
+      `0010淨報酬` = vapply(y$ret0010, g18_pct, character(1)),
+      `0050同期報酬` = vapply(y$ret0050, g18_pct, character(1)),
+      勝過0050 = ifelse(y$compared > 0, paste0(y$win, "/", y$compared), "—"),
+      交易成本 = vapply(y$cost, g18_money, character(1)),
+      check.names = FALSE, stringsAsFactors = FALSE)
+  }, striped = TRUE, bordered = TRUE, hover = TRUE)
+
+  output$g18_bt_quarter_title <- shiny::renderText({
+    y <- input$g18_bt_year
+    if (is.null(y) || identical(y, "all")) "最近八季績效" else paste0(y, " 年評分季度績效")
+  })
+
+  output$g18_bt_quarter_table <- shiny::renderTable({
+    q <- g18_bt_quarters()
+    y <- input$g18_bt_year
+    if (is.null(y) || identical(y, "all")) q <- utils::tail(q, 8)
+    data.frame(
+      評分日 = format(as.Date(q$評分日), "%Y-%m-%d"),
+      成交日 = format(as.Date(q$成交日), "%Y-%m-%d"),
+      出場日 = format(as.Date(q$出場日), "%Y-%m-%d"),
+      `0010淨報酬` = vapply(q$淨報酬, g18_pct, character(1)),
+      `0050同期報酬` = vapply(q$基準0050, g18_pct, character(1)),
+      超額 = vapply(q$淨報酬 - q$基準0050, g18_pct, character(1)),
+      跨年 = ifelse(format(as.Date(q$評分日), "%Y") != format(as.Date(q$出場日), "%Y"), "是", "否"),
+      check.names = FALSE, stringsAsFactors = FALSE)
+  }, striped = TRUE, bordered = TRUE, hover = TRUE)
+
   # ----------------------------------------------------------
   # 3. 0010 組合
   # ----------------------------------------------------------
