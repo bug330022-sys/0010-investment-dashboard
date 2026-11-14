@@ -1768,6 +1768,32 @@ ui <- fluidPage(
         .rank-compare .rank-compare-note { color:#7a8996; font-size:12px; line-height:1.55; margin:12px 0 0; }
         @media(max-width:980px) { .rank-compare .rank-compare-grid { grid-template-columns:1fr; } }
         @media(max-width:570px) { .rank-compare .rank-compare-flow { padding:11px; } .rank-compare .rank-compare-steps { gap:4px; } .rank-compare .rank-compare-step { padding:8px 3px; } .rank-compare .rank-compare-step strong { font-size:12px; } .rank-compare .rank-compare-step small { font-size:10px; } .rank-compare .rank-compare-arrow { font-size:14px; } }
+        /* v10：僅限 0010 組合呈現，所有模型計算維持現況 */
+        .g10-v10-lead { color:#526b82; font-size:15px; line-height:1.6; margin:7px 0 17px; }
+        .g10-v10-flow { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin:0 0 23px; }
+        .g10-v10-flow-step { background:#f6f9fc; border:1px solid #e2eaf2; border-radius:11px; padding:13px 12px; }
+        .g10-v10-flow-step strong { display:block; color:#385b7c; font-size:14px; margin-bottom:5px; }
+        .g10-v10-flow-step small { display:block; font-size:12px; color:#6d8193; line-height:1.45; }
+        .g10-v10-title { font-size:21px; font-weight:800; color:#365471; margin:21px 0 12px; }
+        .g10-v10-metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:11px; margin:8px 0 17px; }
+        .g10-v10-metric { border:1px solid #dce8f1; border-radius:12px; background:#f9fbfe; padding:14px 13px; min-width:0; }
+        .g10-v10-metric .g10-v10-label { display:block; color:#718396; font-size:12px; font-weight:700; }
+        .g10-v10-metric .shiny-text-output { display:block; color:#365c7c; font-size:25px; font-weight:800; margin-top:7px; white-space:nowrap; }
+        .g10-v10-main { display:grid; grid-template-columns:minmax(0,0.92fr) minmax(0,1.28fr); gap:15px; align-items:start; }
+        .g10-v10-panel { border:1px solid #e0e9f1; background:#fff; border-radius:13px; padding:15px 14px; min-width:0; }
+        .g10-v10-panel h4 { color:#405f7b; font-weight:750; font-size:16px; margin:0 0 10px; }
+        .g10-v10-panel .table { font-size:13px; }
+        .g10-v10-panel .table th,.g10-v10-panel .table td { white-space:nowrap; }
+        .g10-v10-panel .table-responsive { overflow-x:auto; }
+        .g10-v10-caption { color:#798a9c; font-size:12px; line-height:1.6; margin:10px 0 14px; }
+        details.g10-v10-expand { border:1px solid #dee8f1; border-radius:11px; background:#fcfdff; margin:12px 0; overflow:hidden; }
+        details.g10-v10-expand > summary { cursor:pointer; color:#446d95; font-weight:750; font-size:14px; padding:13px 16px; }
+        details.g10-v10-expand[open] > summary { border-bottom:1px solid #e3eaf1; }
+        .g10-v10-expand-body { padding:13px 16px 17px; overflow-x:auto; }
+        .g10-v10-note { background:#f5f8fb; border-left:4px solid #88accd; padding:12px 15px; color:#61778b; font-size:13px; line-height:1.65; border-radius:8px; margin:14px 0; }
+        .g10-v10-subtle { color:#72849a; font-size:13px; line-height:1.6; }
+        @media(max-width:1160px) { .g10-v10-main { grid-template-columns:1fr; } }
+        @media(max-width:750px) { .g10-v10-flow { grid-template-columns:1fr; } .g10-v10-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } .g10-v10-metric .shiny-text-output { font-size:21px; } }
         .home-small-note { color:#7b8794; font-size:12px; margin:13px 0 0; }
         .home-legacy { margin-top:4px; }
         @media(max-width:900px) { .home-compare-grid { grid-template-columns:1fr; } .home-center { order:3; } .home-heading { flex-wrap:wrap; } .home-date { white-space:normal; } }
@@ -2052,34 +2078,142 @@ ui <- fluidPage(
     
     tabPanel(
       "0010組合",
-      
       div(
         class = "section-box",
-        h2("0010 組合"),
-        div(class = "warning-note",
-          strong("這一頁在做什麼："),
-          "把 50 檔成分股依「動能 70% ＋ 風險穩定 30%」排名，取前 10 檔，用波動度反比給權重（單檔上限 20%），再模擬每季換股並扣除手續費、證交稅與滑價。"),
-        p(class = "page-description",
-          "閱讀順序：① 先看執行摘要（本季新買幾檔、續抱幾檔）→ ② 看名單與權重（買哪些、各多少）→ ③ 看交易成本（要付多少）→ ④ 看持有追蹤（上次買的現在賺賠多少、是否觸及停損）。"),
+        h2("0010 組合研究"),
+        p(class = "g10-v10-lead",
+          "以統計評分建立十檔股票組合，從選股結果、波動模型到季度回測，逐步檢驗方法的表現。"),
         tags$details(class = "method-details",
-          tags$summary("難字說明"),
+          tags$summary("研究方法與名詞說明"),
           tags$ul(
-            tags$li("權重：每一檔占總資金的比例。波動度反比＝波動越小的股票給越多，單檔最多 20%。"),
-            tags$li("換手率：這一季被替換掉的持股比例。50% 代表一半的持股換人。"),
-            tags$li("滑價：成交價與理想價的差距，本研究假設 0.1%。"),
-            tags$li("停損／停利距離：以「預測 21 日波動 × k 倍」計算，不是固定 5%。"),
-            tags$li("水下時間：淨值低於先前高點的時間比例。")
+            tags$li("動能 70%＋風險穩定 30% 為現行綜合評分比例，並搭配風險門檻與產業分散限制。"),
+            tags$li("權重是股票占組合資金的比例；預設以波動度反比配置，單檔上限 20%。"),
+            tags$li("換手率代表持股配置需要調整的程度；滑價則是理想成交價與實際成交價的差距。"),
+            tags$li("歷史季度回測使用當期資訊進行選股，和本期手動調整資金配置是不同的試算。"),
+            tags$li("GARCH 是風險評分的一項輸入；歷史回測的波動估計採 EWMA，不等於全期 GARCH 回測。")
           )
         ),
-        p(class = "page-description",
-          "0010 由兩個分數組成：動能分 70% ＋ 風險穩定分 30%。GARCH 只作為風險穩定分其中的一項輸入（10%），本頁的 GARCH 區塊是它的計算來源與模型診斷，不是獨立的選股因子。"),
-        
         tabsetPanel(
           id = "g10_tabs",
           type = "pills",
           
           # --------------------------------------------------
-          # 1. 單檔 GARCH 模型
+          # 1. 0010 組合（本期）：先看結果，再按需要展開統計細項
+          # --------------------------------------------------
+          tabPanel(
+            "0010 組合",
+            br(),
+            div(class = "g10-v10-flow",
+              div(class = "g10-v10-flow-step",
+                strong("01｜統計評分"), tags$small("動能 70% ＋ 風險穩定 30%")),
+              div(class = "g10-v10-flow-step",
+                strong("02｜選股與配置"), tags$small("通過風險門檻、產業限制後選取最多 10 檔")),
+              div(class = "g10-v10-flow-step",
+                strong("03｜歷史檢驗"), tags$small("用季度回測比較 0010 與 0050 的結果"))
+            ),
+            h3(class = "g10-v10-title", "本期組合概況"),
+            div(class = "g10-v10-metrics",
+              div(class = "g10-v10-metric",
+                span(class = "g10-v10-label", "本期入選股票"),
+                textOutput("g10_v10_count")),
+              div(class = "g10-v10-metric",
+                span(class = "g10-v10-label", "配置加權動能分"),
+                textOutput("g10_v10_mom")),
+              div(class = "g10-v10-metric",
+                span(class = "g10-v10-label", "配置加權風險分"),
+                textOutput("g10_v10_risk")),
+              div(class = "g10-v10-metric",
+                span(class = "g10-v10-label", "最大單檔權重"),
+                textOutput("g10_v10_maxw"))
+            ),
+            p(class = "g10-v10-caption",
+              "分數為成分股之間的相對評價，不是預測報酬率；加權分數以本期資金配置比例計算。"),
+
+            tags$details(class = "g10-v10-expand",
+              tags$summary("調整本期資金配置與模擬金額（進階）"),
+              div(class = "g10-v10-expand-body",
+                fluidRow(
+                  column(4, selectInput("g10_scheme", "持股權重方式：",
+                    choices = c("波動度反比" = "inv_vol", "等權重" = "equal",
+                                "分數加權" = "score"), selected = "inv_vol")),
+                  column(4, sliderInput("g10_cap", "單檔權重上限：",
+                    min = 0.10, max = 0.30, value = 0.20, step = 0.01)),
+                  column(4, numericInput("g10_capital", "模擬投入金額（元）：",
+                    value = 1000000, min = 100000, step = 100000))
+                ),
+                p(class = "g10-v10-subtle",
+                  "以上設定只調整本期配置、金額和成本試算，不會同步改變另一子頁的季度歷史回測。")
+              )
+            ),
+
+            h3(class = "g10-v10-title", "選出了哪些股票？資金怎麼分配？"),
+            div(class = "g10-v10-main",
+              div(class = "g10-v10-panel",
+                h4("十檔配置比例"),
+                plotOutput("g10_v10_weight_plot", height = "375px")),
+              div(class = "g10-v10-panel",
+                h4("本期持股與統計評分"),
+                div(class = "table-responsive",
+                  tableOutput("g10_v10_simple_table"))
+              )
+            ),
+            p(class = "g10-v10-caption",
+              "本期名單依現有選股規則產生；動能與風險的分數越高，代表在該項評分上相對較有利。"),
+            tags$details(class = "g10-v10-expand",
+              tags$summary("查看完整評分、產業與模擬金額"),
+              div(class = "g10-v10-expand-body",
+                tableOutput("g10_weights"))
+            ),
+
+            tags$details(class = "g10-v10-expand",
+              tags$summary("查看本季換股、預估交易成本與再平衡日期"),
+              div(class = "g10-v10-expand-body",
+                h3("本期換股摘要"),
+                fluidRow(
+                  column(3, div(class = "info-card",
+                    div(class = "info-card-title", "本次新納入"),
+                    h3(class = "info-card-value", textOutput("g10_n_new", inline = TRUE)))),
+                  column(3, div(class = "info-card",
+                    div(class = "info-card-title", "續抱"),
+                    h3(class = "info-card-value", textOutput("g10_n_hold", inline = TRUE)))),
+                  column(3, div(class = "info-card",
+                    div(class = "info-card-title", "本次剔除"),
+                    h3(class = "info-card-value", textOutput("g10_n_drop", inline = TRUE)))),
+                  column(3, div(class = "info-card",
+                    div(class = "info-card-title", "預估換手率"),
+                    h3(class = "info-card-value", textOutput("g10_turnover_est", inline = TRUE))))
+                ),
+                h3("交易成本試算"),
+                tableOutput("g10_cost"),
+                p(class = "g10-v10-subtle",
+                  "手續費 0.1425%（每筆最低 20 元）、證交稅 0.3%（僅賣出）、滑價 0.1%（既有假設）。"),
+                h3("下一次再平衡"),
+                uiOutput("g10_next_date")
+              )
+            ),
+
+            tags$details(class = "g10-v10-expand",
+              tags$summary("查看持有追蹤、停損與停利統計"),
+              div(class = "g10-v10-expand-body",
+                p(class = "g10-v10-subtle",
+                  "以先前季末的持股為基準，觀察目前報酬與波動倍數所對應的參考停損／停利價。"),
+                fluidRow(
+                  column(6, sliderInput("g10_k_stop", "停損倍數 k",
+                    min = 1, max = 3, value = 2, step = 0.1)),
+                  column(6, sliderInput("g10_k_take", "停利倍數 k",
+                    min = 2, max = 5, value = 3, step = 0.1))
+                ),
+                tableOutput("g10_track"),
+                uiOutput("g10_track_note")
+              )
+            ),
+            div(class = "g10-v10-note",
+              strong("研究重點："),
+              "本期分數說明我們如何選股；要知道這個方法是否有效，仍需看「季度再平衡回測」的樣本外時點、交易成本與 0050 比較。")
+          ),
+
+          # --------------------------------------------------
+          # 2. 單檔 GARCH 模型
           # --------------------------------------------------
           tabPanel(
             "GARCH 診斷：單檔",
@@ -2126,7 +2260,7 @@ ui <- fluidPage(
           ),
           
           # --------------------------------------------------
-          # 2. 波動預測總表
+          # 3. 波動預測總表
           # --------------------------------------------------
           tabPanel(
             "GARCH 診斷：全體",
@@ -2138,64 +2272,6 @@ ui <- fluidPage(
             tableOutput("g10_all_table"),
             h3("預測／實現波動比"),
             plotOutput("g10_ratio_bar", height = "700px"),
-          ),
-          
-          # --------------------------------------------------
-          # 3. 0010 組合（本期）
-          # --------------------------------------------------
-          tabPanel(
-            "0010 組合",
-            br(),
-            div(class = "reading-guide", strong("0010 是什麼？"),
-                "從 50 檔成分股中，以動能分 70% ＋ 風險穩定分 30% 選出前 10 檔，預設依波動度反比給權重（單檔上限 20%）。每季重新評分一次。"),
-            
-            fluidRow(
-              column(4, selectInput("g10_scheme", "持股權重方式：",
-                                    choices = c("波動度反比" = "inv_vol",
-                                                "等權重" = "equal",
-                                                "分數加權" = "score"),
-                                    selected = "inv_vol")),
-              column(4, sliderInput("g10_cap", "單檔權重上限：", min = 0.10, max = 0.30, value = 0.20, step = 0.01)),
-              column(4, numericInput("g10_capital", "模擬投入金額（元）：", value = 1000000, min = 100000, step = 100000))
-            ),
-            
-            
-            h3("本期執行摘要"),
-            fluidRow(
-              column(3, div(class = "info-card",
-                            div(class = "info-card-title", "本季新買"),
-                            h3(class = "info-card-value", textOutput("g10_n_new", inline = TRUE)))),
-              column(3, div(class = "info-card",
-                            div(class = "info-card-title", "續抱"),
-                            h3(class = "info-card-value", textOutput("g10_n_hold", inline = TRUE)))),
-              column(3, div(class = "info-card",
-                            div(class = "info-card-title", "下季剔除"),
-                            h3(class = "info-card-value", textOutput("g10_n_drop", inline = TRUE)))),
-              column(3, div(class = "info-card",
-                            div(class = "info-card-title", "預估換手率"),
-                            h3(class = "info-card-value", textOutput("g10_turnover_est", inline = TRUE))))
-            ),
-            
-            h3("本期 0010 名單與權重"),
-            tableOutput("g10_weights"),
-            
-            h3("交易成本試算"),
-            tableOutput("g10_cost"),
-            div(class = "plot-explanation", strong("怎麼算？"),
-                "手續費 0.1425%（每筆最低 20 元，買賣各收一次）、證交稅 0.3%（僅賣出）、滑價 0.1%（可調）。建倉成本 = 買進手續費 + 滑價；換股成本另計換手率。"),
-            
-            h3("下一次再平衡"),
-            uiOutput("g10_next_date"),
-            
-            h3("持有追蹤與風控（以上一期季末名單為基準）"),
-            p(class = "page-description",
-              "停損與停利距離不是固定的 5%，而是用 GARCH 的預測波動決定：距離 = k × 預測 21 日波動。波動大的股票停損自然拉寬，避免被正常震盪洗出場；波動小的股票停損收緊，資金效率較高。"),
-            fluidRow(
-              column(6, sliderInput("g10_k_stop", "停損倍數 k", min = 1, max = 3, value = 2, step = 0.1)),
-              column(6, sliderInput("g10_k_take", "停利倍數 k", min = 2, max = 5, value = 3, step = 0.1))
-            ),
-            tableOutput("g10_track"),
-            uiOutput("g10_track_note"),
           ),
           
           # --------------------------------------------------
@@ -11189,6 +11265,82 @@ server <- function(input, output, session) {
     )
   }, striped = TRUE, bordered = TRUE, hover = TRUE)
   
+  # ============================================================
+  # v10：0010 組合頁呈現用統計摘要與配置圖（只讀 v4_sel/v4_w）
+  # ============================================================
+  output$g10_v10_count <- shiny::renderText({
+    paste0(nrow(v4_sel()), " 檔")
+  })
+
+  g10_v10_display <- shiny::reactive({
+    s <- v4_sel()
+    w <- v4_w()
+    shiny::req(nrow(s) > 0, length(w) > 0)
+    x <- data.frame(
+      symbol = as.character(s$symbol),
+      name = as.character(s$name),
+      mom = as.numeric(s$mom_score),
+      risk = as.numeric(s$risk_score),
+      score = as.numeric(s$p10_smooth),
+      weight = as.numeric(w[s$symbol]),
+      stringsAsFactors = FALSE
+    )
+    shiny::req(all(is.finite(x$weight)))
+    x
+  })
+
+  output$g10_v10_mom <- shiny::renderText({
+    d <- g10_v10_display()
+    sprintf("%.1f / 100", stats::weighted.mean(d$mom, d$weight, na.rm = TRUE))
+  })
+
+  output$g10_v10_risk <- shiny::renderText({
+    d <- g10_v10_display()
+    sprintf("%.1f / 100", stats::weighted.mean(d$risk, d$weight, na.rm = TRUE))
+  })
+
+  output$g10_v10_maxw <- shiny::renderText({
+    sprintf("%.1f%%", 100 * max(g10_v10_display()$weight))
+  })
+
+  output$g10_v10_simple_table <- shiny::renderTable({
+    d <- g10_v10_display()
+    data.frame(
+      股票 = paste0(d$name, "（", d$symbol, "）"),
+      `動能分` = sprintf("%.1f", d$mom),
+      `風險分` = sprintf("%.1f", d$risk),
+      `綜合分` = sprintf("%.1f", d$score),
+      `權重` = sprintf("%.1f%%", d$weight * 100),
+      check.names = FALSE, stringsAsFactors = FALSE
+    )
+  }, striped = TRUE, bordered = TRUE, hover = TRUE)
+
+  output$g10_v10_weight_plot <- shiny::renderPlot({
+    d <- g10_v10_display()
+    d <- d[is.finite(d$weight) & d$weight >= 0, , drop = FALSE]
+    shiny::req(nrow(d) > 0)
+    d$label <- paste0(d$name, "（", d$symbol, "）")
+    d <- d[order(d$weight), , drop = FALSE]
+    d$label <- factor(d$label, levels = unique(d$label))
+    ggplot2::ggplot(d, ggplot2::aes(x = label, y = weight)) +
+      ggplot2::geom_col(fill = "#5d90c4", width = 0.68) +
+      ggplot2::geom_text(ggplot2::aes(label = sprintf("%.1f%%", weight * 100)),
+                         hjust = -0.15, size = 3.5, color = "#3f607b") +
+      ggplot2::coord_flip(clip = "off") +
+      ggplot2::scale_y_continuous(
+        labels = function(v) paste0(round(v * 100), "%"),
+        expand = ggplot2::expansion(mult = c(0, 0.22))) +
+      ggplot2::labs(x = NULL, y = "資金權重") +
+      ggplot2::theme_minimal(base_size = 12) +
+      ggplot2::theme(
+        panel.grid.major.y = ggplot2::element_blank(),
+        panel.grid.minor = ggplot2::element_blank(),
+        axis.text.y = ggplot2::element_text(color = "#45617a", size = 10),
+        axis.text.x = ggplot2::element_text(color = "#8295a8"),
+        axis.title.x = ggplot2::element_text(color = "#72869a"),
+        plot.margin = ggplot2::margin(6, 26, 6, 6))
+  })
+
   # ============================================================
   # v4 覆寫：0010 組合頁改接「動能分 + 風險穩定分」
   # ============================================================
