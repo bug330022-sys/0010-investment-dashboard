@@ -1707,7 +1707,7 @@ ui <- fluidPage(
         @media (max-width:700px) { .home-intro .home-side { min-height:0; } }
         /* v7 首頁：左右對照，只影響總覽新元件 */
         .home-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
-        .home-heading h2 { margin:0; font-size:clamp(28px,3vw,36px); line-height:1.1; letter-spacing:1px; }
+        .home-heading h2 { margin:0; font-size:clamp(26px,2.5vw,32px); line-height:1.1; letter-spacing:1px; }
         .home-date { color:#60758a; font-size:13px; white-space:nowrap; padding-top:6px; }
         .home-qualifier { background:#f6f8fa; padding:12px 15px; border-radius:9px; font-size:13px; line-height:1.7; color:#556779; margin:16px 0 8px; }
         .home-window { font-size:13px; color:#60758a; margin-bottom:14px; }
@@ -1716,15 +1716,16 @@ ui <- fluidPage(
         .home-side-0010 { background:#eef5fc; border-color:#d6e5f3; }
         .home-side-0050 { background:#fff5f1; border-color:#f1e0d9; }
         .home-center { background:#f8fafc; text-align:center; padding-left:11px; padding-right:11px; }
-        .home-side h2 { font-size:54px; font-weight:800; text-align:center; margin:0 0 3px; }
+        .home-side h2 { font-size:43.2px; font-weight:800; text-align:center; margin:0 0 3px; }
         .home-side-subtitle { text-align:center; color:#708092; font-size:12px; min-height:21px; margin:0 0 12px; }
         .home-stat { border-top:1px solid rgba(130,148,168,.20); padding:9px 0; display:flex; justify-content:space-between; align-items:center; gap:8px; }
         .home-stat span { font-size:13px; color:#677789; }
-        .home-stat strong { font-size:19px; color:#34465a; white-space:nowrap; }
+        .home-stat strong { font-size:26px; color:#34465a; white-space:nowrap; line-height:1.25; }
         .home-center h2 { font-size:34px; }
         .home-center .home-stat { display:block; text-align:center; }
         .home-center .home-stat span { display:block; font-size:11px; margin-bottom:4px; }
-        .home-center .home-stat strong { font-size:16px; }
+        .home-center .home-stat strong { font-size:21px; }
+        @media(max-width:1100px) { .home-stat strong { font-size:23px; } .home-center .home-stat strong { font-size:19px; } }
         .home-small-note { color:#7b8794; font-size:12px; margin:13px 0 0; }
         .home-legacy { margin-top:4px; }
         @media(max-width:900px) { .home-compare-grid { grid-template-columns:1fr; } .home-center { order:3; } .home-heading { flex-wrap:wrap; } .home-date { white-space:normal; } }
