@@ -2013,6 +2013,18 @@ ui <- fluidPage(
         .g16-single .g16-graph-card h4 { color:#385b78; font-size:17px; font-weight:800; margin:5px 0 7px; }
         .g16-single .g16-graph-card p { color:#7f91a1; font-size:12px; line-height:1.6; min-height:38px; margin:0 0 5px; }
         .g16-single .g16-graph-card .shiny-plot-output { max-width:100%; }
+        /* v17：每張 GARCH 圖後面的自動讀圖提示；不修改圖表本身 */
+        .g16-single .g17-reading { border:1px solid #d9e6ef; border-left:3px solid #91b0c7; border-radius:9px; background:#f5f9fc; padding:10px 12px; margin:4px 0 11px; }
+        .g16-single .g17-reading.g17-history { background:#faf8f4; border-color:#e8e0d5; border-left-color:#c7ae90; }
+        .g16-single .g17-reading-title { color:#365c77; font-size:12px; font-weight:800; margin:0 0 5px; }
+        .g16-single .g17-reading.g17-history .g17-reading-title { color:#78664d; }
+        .g16-single .g17-reading-line { color:#526f85; font-size:12px; line-height:1.6; margin:2px 0 3px; }
+        .g16-single .g17-reading.g17-history .g17-reading-line { color:#706f66; }
+        .g16-single .g17-reading-note { color:#8494a1; font-size:11px; line-height:1.6; margin:5px 0 0; }
+        .g16-single .g16-graph-card .g17-reading p { min-height:0; margin:0 0 4px; }
+        .g16-single .g16-graph-card .g17-reading .g17-reading-title { color:#365c77; font-weight:800; }
+        .g16-single .g16-graph-card .g17-reading.g17-history .g17-reading-title { color:#78664d; }
+
         .g16-single .g16-foot { background:#fbfaf8; border-left:3px solid #c9b397; border-radius:7px; padding:11px 13px; color:#7a837f; font-size:12px; line-height:1.6; margin:12px 0 22px; }
         .g16-single .g16-more-head { color:#375a77; font-size:19px; font-weight:800; margin:18px 0 5px; }
         .g16-single .g16-more-lead { color:#7e91a0; font-size:12px; margin-bottom:12px; }
@@ -2541,12 +2553,14 @@ ui <- fluidPage(
                   div(class = "g16-graph-tag", "01｜往後看"),
                   h4("未來 63 日波動預測"),
                   p("綠線為預測波動；紅色虛線為近一年歷史波動基準。"),
-                  plotOutput("g10_fan", height = "325px")),
+                  plotOutput("g10_fan", height = "325px"),
+                  uiOutput("g17_forecast_readout")),
                 div(class = "g16-graph-card",
                   div(class = "g16-graph-tag", "02｜往回看"),
                   h4("模型與歷史波動對照"),
                   p("藍線為 GARCH 配適波動，灰線為近 21 日的歷史波動估計。"),
-                  plotOutput("g10_vol_path", height = "325px"))
+                  plotOutput("g10_vol_path", height = "325px"),
+                  uiOutput("g17_history_readout"))
               ),
               div(class = "g16-foot",
                 "波動代表價格起伏程度，不等於未來漲跌方向；本頁為模型估計，不代表投資建議。"
@@ -11347,6 +11361,99 @@ server <- function(input, output, session) {
       tags$p(class = "g16-insight-sub", paste0(fit_status, " ", test_status)),
       tags$p(class = "g16-insight-sub", "這裡預測的是波動大小，而不是未來股價漲跌方向。")
     )
+  })
+
+  # v17 單檔 GARCH 圖表解讀：完全使用現有 g10_one()、garch11_forecast()
+  # 僅生成文字，未重新估計模型、也未更動原本 plotOutput 的資料定義。
+  g17_reading_box <- function(title, main, sub, variant = "forecast") {
+    tags$div(class = paste("g17-reading", if (identical(variant, "history")) "g17-history" else ""),
+      tags$p(class = "g17-reading-title", title),
+      tags$p(class = "g17-reading-line", main),
+      tags$p(class = "g17-reading-line", sub)
+    )
+  }
+
+  output$g17_forecast_readout <- shiny::renderUI({
+    a <- g10_one(); shiny::req(!is.null(a))
+    v <- sqrt(garch11_forecast(a$fit, 63) * GARCH_TD) / 100
+    if (length(v) != 63L || any(!is.finite(v)) || any(v < 0)) {
+      return(g17_reading_box("圖形解讀", "目前沒有足夠的預測數值可解讀。",
+                              "請確認模型是否完成估計。"))
+    }
+    first <- v[1]; last <- v[length(v)]
+    delta_pp <- 100 * (last - first)
+    # 小於 0.5 個百分點視為相近，避免對極小變化過度解讀。
+    if (abs(delta_pp) < 0.5) {
+      trend <- sprintf("綠線從 %.1f%% 到 %.1f%%，63 日內變化不大。", first * 100, last * 100)
+    } else {
+      direction <- if (delta_pp < 0) "逐漸下降" else "逐漸上升"
+      trend <- sprintf("綠線從 %.1f%% %s至 %.1f%%。", first * 100, direction, last * 100)
+      early <- abs(v[11] - v[1])
+      late <- abs(v[63] - v[53])
+      if (is.finite(early) && early > 0 && is.finite(late) && late <= 0.75 * early) {
+        trend <- paste0(trend, "後段變化幅度逐步放緩。")
+      }
+    }
+    benchmark <- a$real_vol
+    if (!is.finite(benchmark) || benchmark <= 0) {
+      against <- "近一年歷史波動基準目前無法比較。"
+    } else if (all(v >= benchmark)) {
+      against <- "整段預測均高於紅色歷史基準線。"
+    } else if (all(v <= benchmark)) {
+      against <- "整段預測均低於紅色歷史基準線。"
+    } else {
+      against <- "預測曲線在這段期間跨越了紅色歷史基準線。"
+    }
+    g17_reading_box("讀圖重點｜預測曲線", trend,
+      paste0(against, "紅虛線不是 GARCH 的長期均衡波動。"))
+  })
+
+  output$g17_history_readout <- shiny::renderUI({
+    a <- g10_one(); shiny::req(!is.null(a))
+    v <- as.numeric(a$fit$sigma2)
+    r <- as.numeric(a$returns)
+    n <- length(v); k <- length(r); window <- 21L
+    if (n < 42L || k < 42L || n != k) {
+      return(g17_reading_box("讀圖重點｜歷史對照", "目前歷史資料不足。",
+        "需有至少 42 個有效交易日資料。", "history"))
+    }
+    idx <- seq.int(max(1L, n - 249L), n)
+    # 與既有 g10_vol_path 使用同一套 21 日 RMS 年化估計，非標準差。
+    actual <- rep(NA_real_, k)
+    for (i in seq.int(window, k)) {
+      actual[i] <- sqrt(mean(r[(i - window + 1L):i]^2) * GARCH_TD) / 100
+    }
+    actual <- actual[idx]
+    fitted <- sqrt(v[idx] * GARCH_TD) / 100
+    valid <- is.finite(actual) & is.finite(fitted) & actual > 0 & fitted > 0
+    if (sum(valid) < 42L) {
+      return(g17_reading_box("讀圖重點｜歷史對照", "可比較的歷史資料不足。",
+        "模型配適與 21 日實現波動的定義不同，須謹慎對照。", "history"))
+    }
+    a0 <- actual[valid]; f0 <- fitted[valid]
+    mid <- stats::median(a0)
+    peak <- max(a0)
+    high_spike <- is.finite(mid) && mid > 0 && peak >= mid * 1.5
+    main <- if (high_spike) {
+      sprintf("灰線曾出現較明顯的波動高峰（最高約 %.1f%%）。", peak * 100)
+    } else {
+      sprintf("灰線的歷史最高波動約 %.1f%%，沒有特別突出的高峰。", peak * 100)
+    }
+    # 比較兩條線最近 21 日與前 21 日的平均變化，避免單日雜訊。
+    d_actual <- mean(tail(a0, 21L)) - mean(tail(a0, 42L)[1:21])
+    d_fitted <- mean(tail(f0, 21L)) - mean(tail(f0, 42L)[1:21])
+    cutoff <- 0.01  # 1 個百分點
+    sub <- if (d_actual >= cutoff && d_fitted >= cutoff) {
+      "最近幾週，灰線與藍線都呈上升趨勢。"
+    } else if (d_actual <= -cutoff && d_fitted <= -cutoff) {
+      "最近幾週，灰線與藍線都呈下降趨勢。"
+    } else if (abs(d_actual) < cutoff && abs(d_fitted) < cutoff) {
+      "最近幾週，兩條線的平均波動變化都不大。"
+    } else {
+      "最近幾週，灰線與藍線的變化沒有完全同步。"
+    }
+    g17_reading_box("讀圖重點｜歷史對照", main,
+      paste0(sub, "這是歷史配適對照，不代表未來預測一定準確。"), "history")
   })
 
   # ----------------------------------------------------------
