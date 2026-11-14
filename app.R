@@ -2077,8 +2077,13 @@ ui <- fluidPage(
         .g18-panel .g18-detail-copy small { display:block; color:#768b9d; line-height:1.6; font-size:12px; margin-top:3px; }
         .g18-panel .g18-detail-action { font-size:12px; color:#527a99; font-weight:750; background:white; border-radius:7px; padding:7px 9px; white-space:nowrap; }
         .g18-panel .g18-detail-content { padding:16px 18px 21px; }
+        /* v19：全體比較圖及五項回測摘要 */
+        .g19-all-garch .g19-all-chart { overflow-y:auto; max-height:880px; border:1px solid #e0e9f0; border-radius:10px; padding:7px 6px; background:#fff; }
+        .g18-panel .g19-bt-stat-grid { grid-template-columns:repeat(5,minmax(0,1fr)); }
+        .g19-all-garch .g18-stat-value { font-size:19px; }
+        @media(max-width:1120px) { .g18-panel .g19-bt-stat-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
         @media(max-width:950px) { .g18-panel .g18-stat-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-        @media(max-width:550px) { .g18-panel .g18-stat-grid { grid-template-columns:1fr; } .g18-panel .g18-stat-value { font-size:18px; } .g18-panel .g18-detail-copy small { font-size:11px; } }
+        @media(max-width:550px) { .g18-panel .g18-stat-grid { grid-template-columns:1fr; } .g18-panel .g19-bt-stat-grid { grid-template-columns:1fr; } .g18-panel .g18-stat-value { font-size:18px; } .g18-panel .g18-detail-copy small { font-size:11px; } }
         .home-small-note { color:#7b8794; font-size:12px; margin:13px 0 0; }
         .home-legacy { margin-top:4px; }
         @media(max-width:900px) { .home-compare-grid { grid-template-columns:1fr; } .home-center { order:3; } .home-heading { flex-wrap:wrap; } .home-date { white-space:normal; } }
@@ -2628,36 +2633,29 @@ ui <- fluidPage(
           ),
 
           # --------------------------------------------------
-          # 3. v18 全體 GARCH：先看分類與波動比，再展開模型參數
+          # 3. v19 全體 GARCH：全部可估計股票直接比較預測與歷史波動
           # --------------------------------------------------
           tabPanel(
             "GARCH 診斷：全體",
-            div(class = "g18-panel",
+            div(class = "g18-panel g19-all-garch",
               h3("0050 成分股｜整體波動分析"),
-              p(class = "g18-intro", "比較各檔股票的未來一季預測波動與近一年歷史波動。先看哪些風險正在變化，完整模型參數可於下方展開。"),
+              p(class = "g18-intro", "一次比較所有可估計股票的未來一季預測年化波動與近一年歷史年化波動，不需先篩選高低類別。"),
               actionButton("g10_run_all", "執行全體 GARCH 估計", class = "btn-primary"),
               p(class = "g18-hint", "首次使用需執行估計；切換頁籤不會重算。估計期間沿用單檔 GARCH 的設定。"),
               uiOutput("g18_g_summary"),
-              div(class = "g18-control-row",
-                selectInput("g18_g_filter", "查看股票範圍",
-                  choices = c("全部估計股票" = "all", "本期 0010 入選股" = "p10",
-                              "波動可能增加（比值 > 1.10）" = "up",
-                              "波動大致接近（0.90～1.10）" = "flat",
-                              "波動可能減少（比值 < 0.90）" = "down"),
-                  selected = "all", width = "100%")
-              ),
-              h4("預測／歷史波動比"),
-              p(class = "g18-hint", "比值高於 1 表示預測波動高於過去一年的基準；低於 1 則相反。這不是預測股價漲跌。"),
+              h4("全部股票｜未來預測與近一年歷史波動"),
+              p(class = "g18-hint", "藍色：未來 63 日整體預測年化波動；米色：近一年實現年化波動。越高表示預期價格起伏越大，不代表股票一定下跌。"),
               uiOutput("g18_g_chart_box"),
+              p(class = "g18-hint", "圖表依預測波動由高至低排列；只納入兩種波動皆有有效數值的股票。個股預測波動的平均值不等於 0010 組合波動。"),
               tags$details(class = "g18-detail",
                 tags$summary(
                   span(class = "g18-detail-icon", "01"),
                   span(class = "g18-detail-copy", tags$strong("完整 GARCH 參數與個股數據"),
-                       tags$small("查看所有已完成估計股票的 ω、α、β、持續性、半衰期及波動比值")),
+                       tags$small("查看所有估計結果的 ω、α、β、持續性、半衰期、預測／歷史波動與比值")),
                   span(class = "g18-detail-action", "展開 ▾")
                 ),
                 div(class = "g18-detail-content",
-                  p(class = "g18-hint", "這張詳細表保留全部有效估計結果，不受上方股票篩選影響；部分股票可能因資料不足無法估計。"),
+                  p(class = "g18-hint", "完整表格保留原本的參數與比值資訊；缺少足夠資料的股票可能顯示空值，這與上方圖表的有效股票數不同。"),
                   div(class = "g18-table-wrap", tableOutput("g10_all_table"))
                 )
               )
@@ -2680,6 +2678,7 @@ ui <- fluidPage(
                   selected = "all", width = "100%")
               ),
               uiOutput("g18_bt_summary"),
+              p(class = "g18-hint", "累積報酬差距＝0010 扣成本累積報酬－0050 同期累積報酬，單位為「百分點」；勝率則代表贏過 0050 的季度比例，兩者可能不同方向。"),
               h4("各評分年度的 0010／0050 報酬"),
               p(class = "g18-hint", "將同一評分年度內的季度報酬複利串接；不是按 1 月 1 日至 12 月 31 日計算。"),
               plotOutput("g18_bt_year_plot", height = "330px"),
@@ -11545,24 +11544,14 @@ server <- function(input, output, session) {
     g10_store(tbl)
   })
   
-  # v18：全體 GARCH 波動分類摘要（只讀快取，不額外估計）
-  g18_g_filtered <- shiny::reactive({
+  # v19：直接展示全部可用成分股的預測／歷史年化波動。
+  # 不再按比值分類；不重新估計，僅讀取 g10_store() 快取。
+  g19_g_valid <- shiny::reactive({
     g <- g10_store()
     shiny::req(!is.null(g), is.data.frame(g))
-    g <- g[is.finite(g$ratio) & g$ratio > 0, , drop = FALSE]
-    f <- input$g18_g_filter
-    if (is.null(f) || !nzchar(f)) f <- "all"
-    if (identical(f, "p10")) {
-      sel <- v4_sel()
-      g <- g[g$symbol %in% as.character(sel$symbol), , drop = FALSE]
-    } else if (identical(f, "up")) {
-      g <- g[g$ratio > 1.10, , drop = FALSE]
-    } else if (identical(f, "flat")) {
-      g <- g[g$ratio >= 0.90 & g$ratio <= 1.10, , drop = FALSE]
-    } else if (identical(f, "down")) {
-      g <- g[g$ratio < 0.90, , drop = FALSE]
-    }
-    g
+    valid <- is.finite(g$forecast_vol) & g$forecast_vol > 0 &
+      is.finite(g$real_vol) & g$real_vol > 0
+    g[valid, , drop = FALSE]
   })
 
   g18_stat_box <- function(label, value, sub = "") {
@@ -11575,24 +11564,26 @@ server <- function(input, output, session) {
   output$g18_g_summary <- shiny::renderUI({
     g <- g10_store()
     if (is.null(g) || !is.data.frame(g) || !nrow(g)) {
-      return(tags$div(class = "g18-placeholder", "按下「執行全體 GARCH 估計」後，這裡會顯示波動分類。"))
+      return(tags$div(class = "g18-placeholder", "按下「執行全體 GARCH 估計」後，這裡會顯示估計結果與波動比較。"))
     }
-    ratio <- suppressWarnings(as.numeric(g$ratio))
-    valid <- is.finite(ratio) & ratio > 0
+    x <- g19_g_valid()
     tags$div(class = "g18-stat-grid",
-      g18_stat_box("波動可能增加", sum(valid & ratio > 1.10), "預測／歷史 > 1.10"),
-      g18_stat_box("波動大致接近", sum(valid & ratio >= .90 & ratio <= 1.10), "比值 0.90～1.10"),
-      g18_stat_box("波動可能減少", sum(valid & ratio < .90), "預測／歷史 < 0.90"),
-      g18_stat_box("有效估計資料", sum(valid), paste0("目標 ", length(stock_info$symbol), " 檔；資料不足者不列入"))
+      g18_stat_box("可比較股票", nrow(x), paste0("共估計 ", nrow(g), " 檔")),
+      g18_stat_box("無有效波動比較", nrow(g) - nrow(x), "包含資料不足或估計未成功"),
+      g18_stat_box("平均預測年化波動", if (nrow(x)) sprintf("%.1f%%", 100 * mean(x$forecast_vol)) else "—", "各檔有效預測波動的算術平均"),
+      g18_stat_box("平均近一年歷史波動", if (nrow(x)) sprintf("%.1f%%", 100 * mean(x$real_vol)) else "—", "同一批可比較股票的算術平均")
     )
   })
 
   output$g18_g_chart_box <- shiny::renderUI({
     g <- g10_store()
-    if (is.null(g)) return(tags$div(class = "g18-placeholder", "估計完成後顯示股票波動比值長條圖。"))
-    x <- g18_g_filtered()
-    if (!nrow(x)) return(tags$div(class = "g18-placeholder", "此篩選條件下沒有可比較的股票。"))
-    plotOutput("g10_ratio_bar", height = paste0(max(290L, min(920L, nrow(x) * 28L)), "px"))
+    if (is.null(g) || !is.data.frame(g)) {
+      return(tags$div(class = "g18-placeholder", "估計完成後將直接顯示全部有效股票的雙色波動長條圖。"))
+    }
+    x <- g19_g_valid()
+    if (!nrow(x)) return(tags$div(class = "g18-placeholder", "目前沒有可同時比較預測與歷史波動的股票。"))
+    tags$div(class = "g19-all-chart",
+      plotOutput("g19_all_vol_bars", height = paste0(max(450L, nrow(x) * 32L), "px")))
   })
 
   output$g10_all_table <- shiny::renderTable({
@@ -11613,25 +11604,29 @@ server <- function(input, output, session) {
     )
     out[order(g$ratio), , drop = FALSE]
   }, striped = TRUE, bordered = TRUE, hover = TRUE)
-  
-  output$g10_ratio_bar <- shiny::renderPlot({
-    x <- g18_g_filtered()
+
+  output$g19_all_vol_bars <- shiny::renderPlot({
+    x <- g19_g_valid()
     shiny::req(nrow(x) > 0)
-    x <- x[order(x$ratio), , drop = FALSE]
-    labs <- paste0(get_stock_name(x$symbol), "(", x$symbol, ")")
-    x$label <- factor(labs, levels = labs)
-    ggplot2::ggplot(x, ggplot2::aes(x = label, y = ratio, fill = ratio)) +
-      ggplot2::geom_col(width = 0.75) +
-      ggplot2::geom_hline(yintercept = 1, linetype = 2) +
+    x <- x[order(x$forecast_vol, decreasing = TRUE), , drop = FALSE]
+    labs <- paste0(get_stock_name(x$symbol), "（", x$symbol, "）")
+    d <- rbind(
+      data.frame(label = labs, value = as.numeric(x$forecast_vol), series = "未來預測波動"),
+      data.frame(label = labs, value = as.numeric(x$real_vol), series = "近一年歷史波動")
+    )
+    d$label <- factor(d$label, levels = rev(labs))
+    d$series <- factor(d$series, levels = c("未來預測波動", "近一年歷史波動"))
+    ggplot2::ggplot(d, ggplot2::aes(x = label, y = value, fill = series)) +
+      ggplot2::geom_col(position = ggplot2::position_dodge(width = .78), width = .7) +
       ggplot2::coord_flip() +
-      ggplot2::scale_fill_gradient2(midpoint = 1, low = "#1565c0", mid = "#ffffff", high = "#c62828") +
-      ggplot2::labs(title = "預測波動 ÷ 近一年實現波動", x = NULL, y = "比值") +
-      ggplot2::theme_minimal() +
-      ggplot2::theme(legend.position = "none",
-                     axis.text.y = ggplot2::element_text(size = 8),
-                     plot.title = ggplot2::element_text(hjust = 0.5, face = "bold"))
+      ggplot2::scale_fill_manual(values = c("未來預測波動" = "#6d96ba", "近一年歷史波動" = "#cbb29b")) +
+      ggplot2::scale_y_continuous(labels = function(z) sprintf("%.0f%%", 100 * z), expand = ggplot2::expansion(mult = c(0, .06))) +
+      ggplot2::labs(x = NULL, y = "年化波動率", fill = NULL) +
+      ggplot2::theme_minimal(base_size = 12) +
+      ggplot2::theme(legend.position = "top", axis.text.y = ggplot2::element_text(size = 9),
+                     panel.grid.major.y = ggplot2::element_blank())
   })
-  
+
   # v18：季度回測「評分年度」整理；讀取 v5_server.R 的 v5_bt()。
   # 日期篩選絕不觸發 v5_backtest_v4 的再次估計。
   g18_bt_yearly <- shiny::reactive({
@@ -11645,11 +11640,14 @@ server <- function(input, output, session) {
       a <- as.numeric(z$淨報酬)
       b <- as.numeric(z$基準0050)
       ok <- is.finite(a) & is.finite(b)
+      c0010 <- if (length(a) && all(is.finite(a))) prod(1 + a) - 1 else NA_real_
+      c0050 <- if (length(b) && all(is.finite(b))) prod(1 + b) - 1 else NA_real_
       data.frame(
         year = year,
         n = nrow(z),
-        ret0010 = if (all(is.finite(a))) prod(1 + a) - 1 else NA_real_,
-        ret0050 = if (all(is.finite(b))) prod(1 + b) - 1 else NA_real_,
+        ret0010 = c0010,
+        ret0050 = c0050,
+        gap = c0010 - c0050,
         win = if (any(ok)) sum(a[ok] > b[ok]) else NA_integer_,
         compared = sum(ok),
         cost = sum(as.numeric(z$成本合計), na.rm = TRUE),
@@ -11682,6 +11680,10 @@ server <- function(input, output, session) {
     if (length(z) != 1L || !is.finite(z)) return("—")
     sprintf(paste0("%+.", digits, "f%%"), z * 100)
   }
+  g19_pp <- function(z) {
+    if (length(z) != 1L || !is.finite(z)) return("—")
+    sprintf("%+.2f 百分點", z * 100)
+  }
   g18_money <- function(z) {
     if (length(z) != 1L || !is.finite(z)) return("—")
     paste0("NT$ ", formatC(round(z), format = "d", big.mark = ","))
@@ -11707,10 +11709,11 @@ server <- function(input, output, session) {
     label <- if (is.null(y) || identical(y, "all")) "全部評分年度" else paste0(y, " 年評分季度")
     tags$div(
       tags$p(class = "g18-hint", paste0("目前查看：", label, "（", nrow(q), " 季）")),
-      tags$div(class = "g18-stat-grid",
+      tags$div(class = "g18-stat-grid g19-bt-stat-grid",
         g18_stat_box("0010 期間報酬（扣成本）", g18_pct(ret_a), "季度淨報酬複利串接"),
         g18_stat_box("0050 同期報酬", g18_pct(ret_b), "相同回測季度比較"),
-        g18_stat_box("勝過 0050 的季度", if (n) paste0(w, " / ", n) else "—", "以季度淨報酬比較"),
+        g18_stat_box("勝過 0050 的季度", if (n) sprintf("%d / %d（%.0f%%）", w, n, 100 * w / n) else "—", "季度勝率，不等於累積報酬"),
+        g18_stat_box("累積報酬差距", g19_pp(ret_a - ret_b), "0010 累積報酬 − 0050 累積報酬"),
         g18_stat_box("累計交易成本", g18_money(sum(as.numeric(q$成本合計), na.rm = TRUE)), "所選季度的模擬交易費用")
       )
     )
@@ -11742,6 +11745,7 @@ server <- function(input, output, session) {
       回測季數 = y$n,
       `0010淨報酬` = vapply(y$ret0010, g18_pct, character(1)),
       `0050同期報酬` = vapply(y$ret0050, g18_pct, character(1)),
+      `累積報酬差距` = vapply(y$gap, g19_pp, character(1)),
       勝過0050 = ifelse(y$compared > 0, paste0(y$win, "/", y$compared), "—"),
       交易成本 = vapply(y$cost, g18_money, character(1)),
       check.names = FALSE, stringsAsFactors = FALSE)
