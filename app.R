@@ -1942,6 +1942,44 @@ ui <- fluidPage(
         .g10-v13 .g10-v14-track-table .table { min-width:1100px; }
         .g10-v13 .g10-v14-track-table .table tbody tr:last-child { background:#eaf3f9 !important; color:#345a78; font-weight:800; border-top:2px solid #9fbfd5; }
         @media(max-width:760px) { .g10-v13 .g10-v14-summary-grid { grid-template-columns:1fr; } }
+        /* v15：模型驗證易讀版，樣式僅作用於 .v15-validation */
+        .v15-validation .v15-lead { color:#526d84; font-size:15px; line-height:1.65; margin:7px 0 18px; }
+        .v15-validation .v15-selector { border:1px solid #dfe9f2; border-radius:12px; padding:13px 16px 2px; background:#f7fafc; margin:0 0 18px; }
+        .v15-validation .v15-selector label { color:#395d79; font-weight:750; }
+        .v15-validation .v15-window-note { color:#698094; font-size:13px; line-height:1.6; padding:7px 0 12px; }
+        .v15-validation .v15-window-note strong { display:block; color:#466884; }
+        .v15-validation .v15-overview { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:15px; margin:8px 0 22px; }
+        .v15-validation .v15-result-card { border:1px solid #dce7ef; border-radius:13px; padding:16px 19px; min-width:0; background:#f9fbfd; }
+        .v15-validation .v15-result-primary { border-top:4px solid #7d9fbf; }
+        .v15-validation .v15-result-secondary { border-top:4px solid #b8a68c; background:#fcfbf9; }
+        .v15-validation .v15-result-kicker { font-size:12px; color:#6f8294; font-weight:800; margin-bottom:8px; }
+        .v15-validation .v15-key-number { display:block; color:#365d7d; font-size:22px; font-weight:800; line-height:1.4; }
+        .v15-validation .v15-key-copy { margin:6px 0 0; font-size:13px; color:#4d667a; line-height:1.65; }
+        .v15-validation .v15-card-foot { font-size:12px; line-height:1.55; color:#8392a0; margin:9px 0 0; }
+        .v15-validation .v15-evidence { border:1px solid #e0e9f0; border-radius:13px; padding:17px 19px; margin:0 0 17px; background:white; }
+        .v15-validation .v15-evidence h3 { margin:1px 0 9px; font-size:19px; }
+        .v15-validation .v15-plain-note { color:#71869a; font-size:13px; line-height:1.6; margin:7px 0 13px; }
+        .v15-validation .v15-footnote { color:#8696a5; font-size:12px; margin:7px 0 0; line-height:1.6; }
+        .v15-validation .v15-more-title { font-size:19px; margin:25px 0 8px; }
+        .v15-validation details.v15-detail { border:1px solid #d9e5ed; border-radius:12px; overflow:hidden; margin:11px 0; background:white; }
+        .v15-validation details.v15-detail > summary { display:flex; align-items:center; gap:14px; cursor:pointer; padding:16px 17px; list-style:none; background:#f6f9fc; }
+        .v15-validation details.v15-detail > summary::-webkit-details-marker { display:none; }
+        .v15-validation details.v15-detail > summary:hover { background:#edf5fa; }
+        .v15-validation details.v15-detail[open] > summary { border-bottom:1px solid #dfe8ef; }
+        .v15-validation .v15-detail-icon { flex:none; padding:9px 11px; font-weight:800; color:#577b9b; background:#e7eff6; border-radius:9px; font-size:13px; }
+        .v15-validation .v15-detail-copy { flex:1; min-width:0; }
+        .v15-validation .v15-detail-copy strong { display:block; color:#345773; font-size:15px; }
+        .v15-validation .v15-detail-copy small { display:block; color:#7a8ea0; font-size:12px; line-height:1.55; margin-top:3px; }
+        .v15-validation .v15-detail-action { flex:none; border:1px solid #c7d9e7; background:white; color:#557c9e; border-radius:8px; font-size:12px; padding:8px; font-weight:750; }
+        .v15-validation details.v15-detail[open] .v15-detail-action { background:#e6f0f6; }
+        .v15-validation details.v15-detail[open] .v15-detail-action::after { content:' ▴'; }
+        .v15-validation details.v15-detail:not([open]) .v15-detail-action::after { content:' ▾'; }
+        .v15-validation .v15-detail-body { padding:18px 20px 21px; }
+        .v15-validation .v15-detail-body h4 { color:#3e6380; margin:10px 0 12px; }
+        .v15-validation .v15-table-scroll { overflow-x:auto; }
+        .v15-validation .v15-scope-note { font-size:12px; color:#6c7e8d; background:#f8fafb; border-left:4px solid #a7bdcd; border-radius:8px; padding:12px 15px; line-height:1.7; margin-top:18px; }
+        @media(max-width:880px) { .v15-validation .v15-overview { grid-template-columns:1fr; } }
+        @media(max-width:560px) { .v15-validation details.v15-detail > summary { gap:9px; padding:13px 11px; } .v15-validation .v15-detail-action { font-size:11px; padding:6px; } .v15-validation .v15-detail-body { padding:13px; } .v15-validation .v15-evidence { padding:13px; } }
         .home-small-note { color:#7b8794; font-size:12px; margin:13px 0 0; }
         .home-legacy { margin-top:4px; }
         @media(max-width:900px) { .home-compare-grid { grid-template-columns:1fr; } .home-center { order:3; } .home-heading { flex-wrap:wrap; } .home-date { white-space:normal; } }
@@ -2491,57 +2529,108 @@ ui <- fluidPage(
     
     
     # ========================================================
-    # 8. 模型驗證：時間序列檢定與 GARCH 診斷
+    # v15 模型驗證：先看預測比較，再看完整診斷
+    # 只重排 UI；原本 v5_goos / v5_gdiag / v4ts 等運算不修改。
     # ========================================================
-    
     tabPanel(
       "模型驗證",
       div(
-        class = "section-box",
-        h2("模型驗證｜時間序列檢定與 GARCH 診斷"),
-        p(
-          class = "page-description",
-          "這一頁檢查三件事：報酬序列是否定態、ARIMA 是否優於白噪音、GARCH 的殘差是否還有結構。所有檢定都是即時計算，不是預先寫好的數字。"
-        ),
-        h3("時間序列檢定"),
-        p(class = "page-description",
-          "所選股票近 5 年日對數報酬的定態性、模型選擇與殘差診斷，以及全體成分股的動能持續性檢定。"),
-        fluidRow(
-          column(4, selectInput("v4ts_stock", "檢定標的：",
-                                choices = stats::setNames(stock_info$symbol,
-                                  paste0(stock_info$name, " (", stock_info$symbol, ")")),
-                                selected = "2330")),
-          column(4, div(class = "time-info", strong("樣本："), textOutput("v4ts_n", inline = TRUE))),
-          column(4, actionButton("v4ts_run_persist", "計算動能持續性（約 3 秒）", class = "btn-primary"))
-        ),
-        h4("定態性與殘差診斷"),
-        tableOutput("v4ts_diag"),
-        h4("ARIMA 模型選擇（依 AIC 排序）"),
-        tableOutput("v4ts_grid"),
-        tableOutput("v4ts_persist"),
-        h3("GARCH 模型診斷與樣本外評估"),
-        p(class = "page-description",
-          "檢查 GARCH(1,1) 的殘差是否仍有結構（含平方殘差與 ARCH 效果）、樣本外預測是否優於 EWMA 與滾動波動，並列出全體成分股的收斂狀況。"),
-        fluidRow(
-          column(4, selectInput("v5_g_stock", "單檔診斷：",
-                                choices = stats::setNames(stock_info$symbol,
-                                  paste0(stock_info$name, " (", stock_info$symbol, ")")),
-                                selected = "2330")),
-          column(4, actionButton("v5_run_gall", "全體收斂檢查（約 20–40 秒）", class = "btn-primary")),
-          column(4, div(class = "time-info", strong("估計視窗："), "與「0010組合」頁的估計樣本相同"))
-        ),
-        h4("殘差診斷（標準化殘差、平方殘差、ARCH 效果）"),
-        tableOutput("v5_gdiag_tab"),
-        h4("樣本外預測評估（後 20% 資料）"),
-        tableOutput("v5_goos_tab"),
-        plotOutput("v5_goos_plot", height = "360px"),
-        tableOutput("v5_gall_summary"),
-        tableOutput("v5_gall_tab"),
+        class = "section-box v15-validation",
+        h2("模型驗證｜GARCH 預測得好嗎？"),
+        p(class = "v15-lead",
+          "先比較三種方法在未參與估計資料上的預測誤差；統計檢定與完整報表可以再展開查看。"),
 
+        div(class = "v15-selector",
+          fluidRow(
+            column(7, selectInput("v5_g_stock", "選擇要驗證的股票：",
+                                  choices = stats::setNames(stock_info$symbol,
+                                    paste0(stock_info$name, " (", stock_info$symbol, ")")),
+                                  selected = "2330")),
+            column(5, div(class = "v15-window-note",
+                          strong("測試方式"),
+                          span("前 80% 估計；後 20% 比較預測")))
+          )
+        ),
+
+        div(class = "v15-overview",
+          div(class = "v15-result-card v15-result-primary",
+              div(class = "v15-result-kicker", "01｜預測比較"),
+              uiOutput("v15_forecast_summary"),
+              p(class = "v15-card-foot", "比較 GARCH、EWMA、21 日滾動波動；誤差越低越好。")),
+          div(class = "v15-result-card v15-result-secondary",
+              div(class = "v15-result-kicker", "02｜模型診斷"),
+              uiOutput("v15_diag_summary"),
+              p(class = "v15-card-foot", "檢查殘差是否仍留有明顯結構，細節可於下方展開。"))
+        ),
+
+        div(class = "v15-evidence",
+          h3("樣本外預測結果"),
+          p(class = "v15-plain-note",
+            "看三種方法的 RMSE、MAE、QLIKE；數字較小表示在此期間的誤差較低。"),
+          tableOutput("v5_goos_tab"),
+          plotOutput("v5_goos_plot", height = "340px"),
+          p(class = "v15-footnote",
+            "比較使用原有的樣本外測試設定。圖上顯示的是實際 |日報酬| 與預測波動；單次誤差比較不代表統計上顯著優於其他方法，也不直接代表交易績效。")
+        ),
+
+        h3(class = "v15-more-title", "完整統計資料"),
+        p(class = "v15-plain-note", "研究細節都保留，需要查看時再展開，不影響上方的快速判讀。"),
+
+        tags$details(class = "v15-detail", 
+          tags$summary(
+            span(class = "v15-detail-icon", "01"),
+            span(class = "v15-detail-copy",
+                 tags$strong("GARCH 殘差診斷與全體收斂"),
+                 tags$small("標準化殘差、平方殘差、ARCH-LM、模型參數與收斂清單")),
+            span(class = "v15-detail-action", "展開詳細資料")),
+          div(class = "v15-detail-body",
+            h4("單檔殘差診斷"),
+            p(class = "v15-plain-note", "以下結果對應上方選擇的股票；p 值大於 0.05 只代表未發現顯著殘留結構，並非保證模型正確。"),
+            tableOutput("v5_gdiag_tab"),
+            h4("全部成分股：GARCH 收斂狀況"),
+            p(class = "v15-plain-note", "此項需要手動執行，完成後才顯示全體結果。"),
+            fluidRow(
+              column(6, actionButton("v5_run_gall", "執行全體收斂檢查", class = "btn-primary")),
+              column(6, div(class = "v15-window-note", "估計視窗與「0010 組合」頁設定相同"))
+            ),
+            tableOutput("v5_gall_summary"),
+            div(class = "v15-table-scroll", tableOutput("v5_gall_tab"))
+          )
+        ),
+
+        tags$details(class = "v15-detail", 
+          tags$summary(
+            span(class = "v15-detail-icon", "02"),
+            span(class = "v15-detail-copy",
+                 tags$strong("時間序列檢定與動能持續性"),
+                 tags$small("ADF、ARIMA、Ljung-Box 與全體成分股動能持續性")),
+            span(class = "v15-detail-action", "展開詳細資料")),
+          div(class = "v15-detail-body",
+            fluidRow(
+              column(4, selectInput("v4ts_stock", "時間序列檢定標的：",
+                                    choices = stats::setNames(stock_info$symbol,
+                                      paste0(stock_info$name, " (", stock_info$symbol, ")")),
+                                    selected = "2330")),
+              column(4, div(class = "v15-window-note", strong("樣本："),
+                            textOutput("v4ts_n", inline = TRUE))),
+              column(4, actionButton("v4ts_run_persist", "計算動能持續性", class = "btn-primary"))
+            ),
+            p(class = "v15-plain-note", "時間序列檢定標的可獨立選擇，不會改動上方 GARCH 預測比較的股票。"),
+            h4("定態性與殘差檢查"),
+            tableOutput("v4ts_diag"),
+            h4("ARIMA 模型選擇（AIC 排序）"),
+            tableOutput("v4ts_grid"),
+            h4("動能持續性檢驗"),
+            tableOutput("v4ts_persist")
+          )
+        ),
+
+        div(class = "v15-scope-note",
+            strong("判讀原則："),
+            "預測誤差與殘差檢定回答的是不同問題。誤差較小不等於差異具有統計顯著性；檢定未發現異常也不代表預測一定準確。")
       )
     ),
-    
-    
+
     # ========================================================
     # 5. 主成分與分群
     # ========================================================
@@ -3066,6 +3155,73 @@ server <- function(input, output, session) {
   
   # v5 新功能（T+1 回測、GARCH 診斷、樣本外評估）
   source("v5_server.R", local = TRUE)
+
+  # v15：模型驗證頁的白話摘要；讀取現有診斷與樣本外計算結果，不改模型。
+  output$v15_forecast_summary <- shiny::renderUI({
+    o <- v5_goos()
+    if (is.null(o) || is.null(o$table) || !nrow(o$table)) {
+      return(tags$div(
+        tags$strong(class = "v15-key-number", "尚無可比較結果"),
+        tags$p(class = "v15-key-copy", "目前樣本不足，或尚未取得可用的模型估計結果。")
+      ))
+    }
+    t <- o$table
+    g_idx <- which(t$模型 == "GARCH(1,1)")
+    if (length(g_idx) != 1L || nrow(t) < 2L) {
+      return(tags$p(class = "v15-key-copy", "此檔股票沒有完整的模型比較結果。"))
+    }
+    metrics <- c("RMSE", "MAE", "QLIKE")
+    complete <- all(vapply(metrics, function(k) {
+      k %in% names(t) && all(is.finite(as.numeric(t[[k]])))
+    }, logical(1)))
+    if (!complete) {
+      return(tags$p(class = "v15-key-copy", "目前有誤差指標尚未取得有效數值，請參考下方完整表格。"))
+    }
+    wins <- vapply(metrics, function(k) {
+      as.numeric(t[[k]][g_idx]) < min(as.numeric(t[[k]][-g_idx]))
+    }, logical(1))
+    n_win <- sum(wins)
+    best_qlike <- as.character(t$模型[which.min(as.numeric(t$QLIKE))])
+    summary <- if (n_win == 3L) {
+      "GARCH 的三項誤差都低於另外兩種方法。"
+    } else if (n_win > 0L) {
+      paste0("GARCH 在 ", n_win, " 項指標表現最佳；不同指標的結論不完全一致。")
+    } else {
+      "GARCH 在這三項指標都沒有明確領先其他兩種方法。"
+    }
+    tags$div(
+      tags$strong(class = "v15-key-number", paste0("GARCH：", n_win, " / 3 項誤差領先")),
+      tags$p(class = "v15-key-copy", summary),
+      tags$p(class = "v15-key-copy", paste0("QLIKE 最低：", best_qlike, "；樣本外交易日 ", o$n_test, " 日。"))
+    )
+  })
+
+  output$v15_diag_summary <- shiny::renderUI({
+    g <- v5_gdiag()
+    if (is.null(g) || is.null(g$table)) {
+      return(tags$div(
+        tags$strong(class = "v15-key-number", "尚無診斷結果"),
+        tags$p(class = "v15-key-copy", "目前未取得可用的 GARCH 殘差檢定。")
+      ))
+    }
+    ps <- as.numeric(g$table$p值)
+    n_valid <- sum(is.finite(ps))
+    if (!n_valid) {
+      return(tags$p(class = "v15-key-copy", "目前檢定 p 值不足，無法進行摘要判讀。"))
+    }
+    flagged <- sum(is.finite(ps) & ps <= 0.05)
+    fit_text <- if (isTRUE(g$fit$converged)) "估計已收斂。" else "估計收斂狀況需留意。"
+    message <- if (flagged == 0L) {
+      "目前檢定未發現顯著殘留相關；仍不代表模型一定正確。"
+    } else {
+      paste0("有 ", flagged, " 項檢定 p 值不大於 0.05，表示可能仍存在未捕捉的結構。")
+    }
+    tags$div(
+      tags$strong(class = "v15-key-number", paste0(flagged, " / ", n_valid, " 項需留意")),
+      tags$p(class = "v15-key-copy", message),
+      tags$p(class = "v15-key-copy", fit_text)
+    )
+  })
   # ============================================================
   # v4 首頁：0010 總覽
   # 貼在 server 內（位置任意，建議最後）
