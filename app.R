@@ -1720,15 +1720,21 @@ ui <- fluidPage(
         .home-side-subtitle { text-align:center; color:#708092; font-size:12px; min-height:21px; margin:0 0 12px; }
         .home-stat { border-top:1px solid rgba(130,148,168,.20); padding:9px 0; display:flex; justify-content:space-between; align-items:center; gap:8px; }
         .home-stat > span { font-size:13px; color:#677789; }
-        .home-stat > strong { font-size:22px !important; color:#34465a; white-space:nowrap; line-height:1.25; }
+        .home-stat > strong { font-size:32px !important; color:#34465a; white-space:nowrap; line-height:1.25; }
         /* Shiny uiOutput() 會產生巢狀 span：顯示數字必須繼承 strong 的字級，而不是被標籤 span 的 13px 覆蓋。 */
         .home-compare-grid .home-stat > strong span { font-size:inherit !important; line-height:inherit; }
         .home-center h2 { font-size:34px; }
         .home-center .home-stat { display:block; text-align:center; }
         .home-center .home-stat > span { display:block; font-size:11px; margin-bottom:4px; }
-        .home-center .home-stat > strong { font-size:18px !important; }
+        .home-center .home-stat > strong { font-size:26px !important; }
         /* 小螢幕才適度縮字，桌面及平板寬度不再強制蓋掉數值字體。 */
         @media(max-width:700px) { .home-stat > strong { font-size:28px !important; } .home-center .home-stat > strong { font-size:24px !important; } }
+        /* v10：只影響「排名與分數／權重實驗」 */
+        .rank-lab .rank-lab-ratio { font-size:28px; font-weight:800; color:#395d80; margin:3px 0 7px; }
+        .rank-lab .rank-lab-hint { font-size:13px; color:#667a8e; line-height:1.7; }
+        .rank-lab .rank-lab-actions .btn { margin-right:6px; margin-bottom:8px; }
+        .rank-lab .rank-lab-formula { padding:12px 14px; border-radius:10px; background:#f2f6fa; margin:12px 0; }
+        .rank-lab .rank-lab-section { margin-top:25px; }
         .home-small-note { color:#7b8794; font-size:12px; margin:13px 0 0; }
         .home-legacy { margin-top:4px; }
         @media(max-width:900px) { .home-compare-grid { grid-template-columns:1fr; } .home-center { order:3; } .home-heading { flex-wrap:wrap; } .home-date { white-space:normal; } }
@@ -1891,7 +1897,7 @@ ui <- fluidPage(
             class = "section-box",
             h2("動能分排名"),
             p(class = "page-description",
-              "動能分＝0.55 × 6 個月報酬百分位 ＋ 0.45 × 12−1 個月報酬百分位，再與上期分數平滑（本期 70%、上期 30%）。分數是同一評分日在 50 檔中的相對位置，不是預期漲幅。"),
+              "動能分＝0.55 × 6 個月報酬百分位 ＋ 0.45 × 12−1 個月報酬百分位。現行排名未啟用跨期分數平滑；分數是同一評分日成分股間的相對位置，不是預期漲幅。"),
             div(class = "time-info", strong("評分日："), textOutput("v6_rank_date", inline = TRUE)),
             h3("動能分前 10 名"),
             plotOutput("v6_mom_chart", height = "520px"),
@@ -1913,6 +1919,54 @@ ui <- fluidPage(
             div(class = "plot-explanation", textOutput("v6_risk_result", inline = TRUE)),
             h3("50 檔完整拆解"),
             tableOutput("v4_risk_decomp")
+          )
+        ),
+
+        # v10：權重敏感度實驗，與正式 0010 持倉完全獨立。
+        tabPanel(
+          "權重比較實驗",
+          div(
+            class = "section-box rank-lab",
+            h2("選股權重比較實驗"),
+            p(class = "page-description",
+              "如果只看動能、只看風險，或兩者各占一部分，選股結果會有什麼差別？這裡調整的是研究用排名，不影響正式 0010 組合。"),
+            div(class = "time-info", strong("目前評分日："), textOutput("rank_lab_date", inline = TRUE),
+                "｜與前兩個排名使用同一批當期分數。"),
+            fluidRow(
+              column(8,
+                     sliderInput("rank_lab_mom_weight", "動能權重（剩餘為風險權重）",
+                                 min = 0, max = 100, value = 70, step = 5, post = "%")),
+              column(4,
+                     p("目前比例", class = "rank-lab-hint"),
+                     div(class = "rank-lab-ratio", textOutput("rank_lab_mix_text", inline = TRUE)))
+            ),
+            div(class = "rank-lab-actions",
+                actionButton("rank_lab_all_mom", "純動能 100／0"),
+                actionButton("rank_lab_all_risk", "純風險 0／100"),
+                actionButton("rank_lab_half", "各半 50／50"),
+                actionButton("rank_lab_default", "現行 70／30")),
+            div(class = "rank-lab-formula", strong("合成評分："),
+                textOutput("rank_lab_formula", inline = TRUE)),
+            p(class = "rank-lab-hint",
+              "沿用既有動能分、風險穩定分、風險門檻及產業上限（每產業最多 3 檔）。僅更換兩種分數的合成比例；GARCH 計分機制維持現況。"),
+            h3("這組權重會選出哪些股票？", class = "rank-lab-section"),
+            plotOutput("rank_lab_top10_plot", height = "390px"),
+            tableOutput("rank_lab_selected_table"),
+            tags$details(class = "method-details",
+                         tags$summary("展開完整排名與篩選理由"),
+                         tableOutput("rank_lab_full_table")),
+            h3("排名的歷史有效性比較", class = "rank-lab-section"),
+            p(class = "page-description",
+              "比較純動能、純風險、各半、現行 70／30，以及目前自訂比例：每季依當時資料評分，下一交易日開始觀察未來 63 個交易日。"),
+            actionButton("rank_lab_run_history", "執行歷史比較", class = "btn-primary"),
+            div(style = "margin-top:12px;", textOutput("rank_lab_history_status")),
+            tableOutput("rank_lab_history_table"),
+            div(class = "plot-explanation",
+                "這是『排名訊號』的比較：Top 10 後續報酬與 Bottom 10 後續報酬都採等權平均，未扣交易成本；不是正式 0010 組合的 T+1 含成本回測。",
+                tags$br(),
+                "IC 為當期分數與未來 63 日報酬的 Spearman 相關；Top10 − Bottom10 依當期評分排序，不使用未來報酬挑選 Bottom10。",
+                tags$br(),
+                "歷史分數在缺少各期 GARCH 預測時沿用既有中性 50 分設定；樣本依目前的 0050 成分股清單回溯，存在成分股存活者偏誤。")
           )
         )
       )
@@ -2747,6 +2801,238 @@ server <- function(input, output, session) {
     v4_weights(s, scheme = "inv_vol", cap = 0.20)
   })
   
+  # ============================================================
+  # v10 第二頁：動能／風險權重實驗（只讀既有分數，不影響 v4_tbl / v4_sel）
+  # ============================================================
+  rank_lab_mix <- function(t, momentum_pct = 70) {
+    if (is.null(t) || !nrow(t)) return(t)
+    x <- t
+    a <- max(0, min(100, as.numeric(momentum_pct))) / 100
+    x$p10_score <- a * x$mom_score + (1 - a) * x$risk_score
+    x$p10_smooth <- x$p10_score  # 現行排名未啟用跨期平滑
+    x <- x[order(-x$p10_score, x$symbol), , drop = FALSE]
+    x$rank <- seq_len(nrow(x))
+    rownames(x) <- NULL
+    x
+  }
+
+  shiny::observeEvent(input$rank_lab_all_mom, {
+    shiny::updateSliderInput(session, "rank_lab_mom_weight", value = 100)
+  })
+  shiny::observeEvent(input$rank_lab_all_risk, {
+    shiny::updateSliderInput(session, "rank_lab_mom_weight", value = 0)
+  })
+  shiny::observeEvent(input$rank_lab_half, {
+    shiny::updateSliderInput(session, "rank_lab_mom_weight", value = 50)
+  })
+  shiny::observeEvent(input$rank_lab_default, {
+    shiny::updateSliderInput(session, "rank_lab_mom_weight", value = 70)
+  })
+
+  output$rank_lab_date <- shiny::renderText({
+    d <- as.Date(rownames(v4_pm()))
+    as.character(max(d, na.rm = TRUE))
+  })
+
+  output$rank_lab_mix_text <- shiny::renderText({
+    w <- input$rank_lab_mom_weight
+    shiny::req(!is.null(w))
+    paste0(w, "% ／ ", 100 - w, "%")
+  })
+  output$rank_lab_formula <- shiny::renderText({
+    w <- input$rank_lab_mom_weight
+    shiny::req(!is.null(w))
+    sprintf("%.2f × 動能分 ＋ %.2f × 風險分", w / 100, (100 - w) / 100)
+  })
+
+  rank_lab_current <- shiny::reactive({
+    shiny::req(!is.null(input$rank_lab_mom_weight))
+    rank_lab_mix(v4_tbl(), input$rank_lab_mom_weight)
+  })
+  rank_lab_selection <- shiny::reactive({
+    x <- rank_lab_current()
+    shiny::req(!is.null(x), nrow(x) > 0)
+    v4_pick(x, n = 10, max_industry = V4_SCREEN$max_industry)
+  })
+
+  output$rank_lab_top10_plot <- shiny::renderPlot({
+    s <- rank_lab_selection()
+    shiny::validate(shiny::need(nrow(s) > 0, "目前沒有符合選股條件的股票。"))
+    d <- data.frame(
+      label = factor(paste0(s$name, "（", s$symbol, "）"),
+                     levels = rev(paste0(s$name, "（", s$symbol, "）"))),
+      score = s$p10_score
+    )
+    ggplot2::ggplot(d, ggplot2::aes(x = label, y = score)) +
+      ggplot2::geom_col(fill = "#7fa9d3", width = 0.7) +
+      ggplot2::coord_flip() +
+      ggplot2::scale_y_continuous(limits = c(0, 100), expand = ggplot2::expansion(mult = c(0, 0.03))) +
+      ggplot2::labs(title = "目前權重下選出的十檔", x = NULL, y = "合成分數（0～100）") +
+      ggplot2::theme_minimal(base_size = 12) +
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5, face = "bold"))
+  })
+
+  output$rank_lab_selected_table <- shiny::renderTable({
+    s <- rank_lab_selection()
+    shiny::req(nrow(s) > 0)
+    data.frame(
+      入選序 = seq_len(nrow(s)),
+      股票 = paste0(s$name, "（", s$symbol, "）"),
+      產業 = s$industry,
+      動能分 = sprintf("%.1f", s$mom_score),
+      風險分 = sprintf("%.1f", s$risk_score),
+      合成分 = sprintf("%.1f", s$p10_score),
+      check.names = FALSE, stringsAsFactors = FALSE
+    )
+  }, striped = TRUE, bordered = TRUE, hover = TRUE)
+
+  output$rank_lab_full_table <- shiny::renderTable({
+    t <- rank_lab_current()
+    s <- rank_lab_selection()
+    shiny::req(!is.null(t))
+    state <- ifelse(!t$pass, t$reason,
+                    ifelse(t$symbol %in% s$symbol, "入選", "未入選（名次或產業上限）"))
+    data.frame(
+      名次 = seq_len(nrow(t)),
+      股票 = paste0(t$name, "（", t$symbol, "）"),
+      動能分 = sprintf("%.1f", t$mom_score),
+      風險分 = sprintf("%.1f", t$risk_score),
+      合成分 = sprintf("%.1f", t$p10_score),
+      篩選狀態 = state,
+      check.names = FALSE, stringsAsFactors = FALSE
+    )
+  }, striped = TRUE, bordered = TRUE, hover = TRUE)
+
+  # 歷史驗證只在按鈕觸發時計算；當期權重滑桿不會觸發重算或修改正式持倉。
+  rank_lab_history <- shiny::eventReactive(input$rank_lab_run_history, {
+    custom_w <- shiny::isolate(input$rank_lab_mom_weight)
+    shiny::req(!is.null(custom_w))
+    cases <- c("純動能 100／0" = 100, "純風險 0／100" = 0,
+               "各半 50／50" = 50, "現行 70／30" = 70,
+               "自訂權重" = as.numeric(custom_w))
+    d <- as.data.frame(data())
+    d$date <- as.Date(d$date)
+    d <- d[d$symbol %in% c("0050", stock_info$symbol) &
+             is.finite(d$adjusted) & d$adjusted > 0 & !is.na(d$date),
+           c("date", "symbol", "adjusted"), drop = FALSE]
+    d <- d[order(d$date, d$symbol), , drop = FALSE]
+    shiny::validate(shiny::need(nrow(d) > 0, "沒有足夠歷史價格資料。"))
+
+    wide <- as.data.frame(tidyr::pivot_wider(d,
+               names_from = symbol, values_from = adjusted))
+    wide <- wide[order(wide$date), , drop = FALSE]
+    dates <- as.Date(wide$date)
+    pm <- as.matrix(wide[, setdiff(names(wide), "date"), drop = FALSE])
+    storage.mode(pm) <- "double"
+    rownames(pm) <- as.character(dates)
+    # 和既有 v5 季度回測共用季末定義；評分日後 T+1 買入、持有 63 交易日。
+    quarters <- v5_quarter_ends(dates)
+    quarters <- quarters[quarters > 300 & quarters + 64 <= length(dates)]
+    shiny::validate(shiny::need(length(quarters) > 0, "尚無可檢驗的完整季度。"))
+
+    hist <- list()
+    shiny::withProgress(message = "比較歷史評分權重…", value = 0, {
+      for (k in seq_along(quarters)) {
+        i <- quarters[k]
+        shiny::setProgress(k / length(quarters),
+          detail = paste0("第 ", k, "／", length(quarters), " 個評分季"))
+        score <- try(v4_score_table(d[d$date <= dates[i], , drop = FALSE]), silent = TRUE)
+        if (inherits(score, "try-error") || is.null(score) || nrow(score) < 20) next
+
+        buy_i <- i + 1L
+        sell_i <- buy_i + 63L
+        if (sell_i > nrow(pm)) next
+        buy_px <- pm[buy_i, ]
+        sell_px <- pm[sell_i, ]
+        fwd <- sell_px / buy_px - 1
+        fwd[!is.finite(buy_px) | buy_px <= 0 | !is.finite(sell_px) |
+              sell_px <= 0 | !is.finite(fwd)] <- NA_real_
+
+        for (case_name in names(cases)) {
+          w <- cases[[case_name]]
+          t <- rank_lab_mix(score, w)
+          selected <- v4_pick(t, n = 10, max_industry = V4_SCREEN$max_industry)
+          if (nrow(selected) < 3) next
+          eligible <- t[t$pass & is.finite(t$p10_score), , drop = FALSE]
+          bottom_pool <- eligible[!eligible$symbol %in% selected$symbol, , drop = FALSE]
+          bottom_syms <- utils::tail(bottom_pool$symbol, 10)
+
+          top_fwd <- fwd[match(selected$symbol, names(fwd))]
+          bottom_fwd <- fwd[match(bottom_syms, names(fwd))]
+          top_mean <- if (sum(is.finite(top_fwd)) >= 3) mean(top_fwd, na.rm = TRUE) else NA_real_
+          bottom_mean <- if (length(bottom_syms) >= 3 && sum(is.finite(bottom_fwd)) >= 3)
+            mean(bottom_fwd, na.rm = TRUE) else NA_real_
+          spread <- if (is.finite(top_mean) && is.finite(bottom_mean))
+            top_mean - bottom_mean else NA_real_
+
+          ranked_syms <- eligible$symbol
+          fut <- fwd[match(ranked_syms, names(fwd))]
+          raw_score <- eligible$p10_score
+          ok <- is.finite(raw_score) & is.finite(fut)
+          ic <- if (sum(ok) >= 5 && stats::sd(raw_score[ok]) > 0 &&
+                    stats::sd(fut[ok]) > 0)
+            suppressWarnings(stats::cor(raw_score[ok], fut[ok], method = "spearman"))
+          else NA_real_
+
+          hist[[length(hist) + 1L]] <- data.frame(
+            scenario = case_name, pct = w, date = dates[i],
+            top = top_mean, spread = spread, ic = ic,
+            stringsAsFactors = FALSE)
+        }
+      }
+    })
+    shiny::validate(shiny::need(length(hist) > 0, "歷史有效樣本不足，無法完成比較。"))
+    raw <- do.call(rbind, hist)
+    # 公平比較：五種方案只使用三項驗證結果皆有效的共同季度。
+    # 不因某策略少了有效價格，而偷偷更換比較期間。
+    common_dates <- unique(as.character(raw$date))
+    common_dates <- common_dates[vapply(common_dates, function(day) {
+      z <- raw[as.character(raw$date) == day, , drop = FALSE]
+      all(names(cases) %in% z$scenario) &&
+        all(is.finite(z$top) & is.finite(z$spread) & is.finite(z$ic))
+    }, logical(1))]
+    shiny::validate(shiny::need(length(common_dates) > 0,
+      "五種方案沒有共同的完整驗證季度；請確認歷史資料足夠。"))
+    raw <- raw[as.character(raw$date) %in% common_dates, , drop = FALSE]
+    summarise_one <- function(label) {
+      z <- raw[raw$scenario == label, , drop = FALSE]
+      safe_mean <- function(x) if (any(is.finite(x))) mean(x[is.finite(x)]) else NA_real_
+      data.frame(scenario = label, weight = cases[[label]],
+                 n = sum(is.finite(z$top)),
+                 top = safe_mean(z$top), spread = safe_mean(z$spread),
+                 ic = safe_mean(z$ic), stringsAsFactors = FALSE)
+    }
+    list(summary = do.call(rbind, lapply(names(cases), summarise_one)),
+         from = min(raw$date), to = max(raw$date), custom = custom_w)
+  })
+
+  output$rank_lab_history_status <- shiny::renderText({
+    if (is.null(input$rank_lab_run_history) || input$rank_lab_run_history == 0)
+      return("尚未執行歷史比較；可先調整滑桿觀察當期排名。")
+    h <- rank_lab_history()
+    shiny::req(!is.null(h))
+    paste0("完成：共同評分日 ", h$from, " ～ ", h$to,
+           "｜自訂權重以按下按鈕時的 ", h$custom, "／", 100-h$custom,
+           " 計算；調整滑桿後請重新按『執行歷史比較』。")
+  })
+  output$rank_lab_history_table <- shiny::renderTable({
+    if (is.null(input$rank_lab_run_history) || input$rank_lab_run_history == 0) return(NULL)
+    h <- rank_lab_history()
+    shiny::req(!is.null(h))
+    t <- h$summary
+    p <- function(v) ifelse(is.finite(v), sprintf("%+.2f%%", 100 * v), "—")
+    fmt_ic <- function(v) ifelse(is.finite(v), sprintf("%+.3f", v), "—")
+    data.frame(
+      評分方案 = ifelse(t$scenario == "自訂權重",
+                      paste0("自訂 ", t$weight, "／", 100-t$weight), t$scenario),
+      有效季數 = t$n,
+      `Top10後續63日平均報酬` = p(t$top),
+      `Top10－Bottom10` = p(t$spread),
+      `平均Spearman IC` = fmt_ic(t$ic),
+      check.names = FALSE, stringsAsFactors = FALSE
+    )
+  }, striped = TRUE, bordered = TRUE, hover = TRUE)
+
   # ---- 上一次再平衡日（最近一個季末）----
   v4_reb <- shiny::reactive({
     m <- v4_pm()
