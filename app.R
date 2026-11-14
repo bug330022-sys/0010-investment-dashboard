@@ -1814,6 +1814,118 @@ ui <- fluidPage(
         .g10-v11-metrics-title { color:#466480; font-size:17px; font-weight:750; margin:19px 0 10px; }
         @media(max-width:1180px) { .g10-v11-layout { grid-template-columns:1fr; } }
         @media(max-width:570px) { .g10-v11-head h3 { font-size:21px; } .g10-v11-pane { padding:12px; } .g10-v11-row { grid-template-columns:minmax(91px,1.1fr) minmax(48px,1.6fr) 47px; gap:5px; } .g10-v11-name,.g10-v11-value { font-size:11px; } }
+        /* v12：0010 子頁精簡排版。柔和藍灰＋暖色點綴，不修改其他頁面 */
+        .g10-v12 { --pf-ink:#344b60; --pf-muted:#697e90; --pf-line:#dce6ed; --pf-blue:#527fa8; --pf-warm:#c4a07c; color:var(--pf-ink); }
+        .g10-v12 .g10-v12-banner { display:flex; gap:16px; justify-content:space-between; align-items:center; padding:19px 22px; border:1px solid #dce7ef; border-radius:15px; background:linear-gradient(110deg,#f0f6fb 0%,#f7fafd 72%,#fbf7f2 100%); margin:0 0 16px; }
+        .g10-v12 .g10-v12-eyebrow { display:inline-block; font-weight:750; font-size:11px; letter-spacing:1px; color:#6f91ac; margin-bottom:6px; }
+        .g10-v12 .g10-v12-banner h3 { color:#2f526e; font-weight:800; font-size:25px; margin:0 0 7px; }
+        .g10-v12 .g10-v12-banner p { color:#6d8191; line-height:1.55; font-size:13px; margin:0; }
+        .g10-v12 .g10-v12-amount { background:#fff; border:1px solid #d9e5ee; border-radius:12px; padding:10px 14px; min-width:225px; width:240px; flex:none; box-shadow:0 2px 8px rgba(59,87,112,.035); }
+        .g10-v12 .g10-v12-amount .form-group { margin:0; }
+        .g10-v12 .g10-v12-amount label { font-size:12px; color:#59758d; font-weight:750; }
+        .g10-v12 .g10-v12-amount input { border-color:#bfd1e0; font-size:18px; font-weight:750; color:#315674; background:#fcfdff; height:39px; }
+        .g10-v12 .g10-v12-amount small { color:#8798a7; font-size:11px; display:block; margin-top:6px; line-height:1.4; }
+        .g10-v12 .g10-v12-top-grid { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,.95fr); gap:14px; align-items:start; }
+        .g10-v12 .g10-v12-card { background:#fff; border:1px solid var(--pf-line); border-radius:14px; padding:17px 18px; min-width:0; }
+        .g10-v12 .g10-v12-card h4 { color:#365770; font-size:17px; font-weight:800; margin:0 0 9px; }
+        .g10-v12 .g10-v12-card-sub { color:#7e90a0; font-size:12px; margin:0 0 12px; line-height:1.6; }
+        .g10-v12 .g10-v12-weight-card { border-top:3px solid #85a7c4; }
+        .g10-v12 .g10-v11-row { grid-template-columns:minmax(120px,1.1fr) minmax(78px,2.1fr) 58px; margin:9px 0; }
+        .g10-v12 .g10-v11-track { background:#ebf1f6; }
+        .g10-v12 .g10-v11-fill { background:linear-gradient(90deg,#82a8c9,#527fa8); }
+        .g10-v12 .g10-v12-side { display:flex; flex-direction:column; gap:13px; min-width:0; }
+        .g10-v12 .g10-v10-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); margin:4px 0 0; gap:10px; }
+        .g10-v12 .g10-v10-metric { background:#f6f9fc; border-color:#e3ebf1; padding:14px 12px; }
+        .g10-v12 .g10-v10-metric:nth-child(3) { background:#f8f9f8; }
+        .g10-v12 .g10-v10-metric:nth-child(4) { background:#fbf8f4; }
+        .g10-v12 .g10-v10-metric .shiny-text-output { font-size:22px; }
+        .g10-v12 .g10-v12-mini-flow { background:#f7fafc; border:1px solid #e2e9ef; padding:13px 14px; border-radius:12px; }
+        .g10-v12 .g10-v12-mini-flow strong { display:block; font-size:12px; color:#54738e; margin-bottom:8px; }
+        .g10-v12 .g10-v12-steps { display:flex; align-items:center; gap:7px; }
+        .g10-v12 .g10-v12-steps span { border:1px solid #dee8ef; background:#fff; color:#547188; border-radius:7px; padding:7px 5px; flex:1; text-align:center; font-weight:700; font-size:12px; white-space:nowrap; }
+        .g10-v12 .g10-v12-steps i { color:#8ca6b7; font-size:14px; font-style:normal; }
+        .g10-v12 .g10-v12-table-card { margin-top:15px; border-top:3px solid #b2bfc9; }
+        .g10-v12 .g10-v12-table-wrap { overflow-x:auto; }
+        .g10-v12 .g10-v12-table-wrap .table { font-size:13px; margin:0; }
+        .g10-v12 .g10-v12-table-wrap .table th,.g10-v12 .g10-v12-table-wrap .table td { white-space:nowrap; padding:9px 11px; }
+        .g10-v12 .g10-v12-table-wrap .table > thead > tr > th { background:#f0f5f8; color:#48647e; border-bottom:2px solid #d5e2e9; }
+        .g10-v12 .g10-v12-table-wrap .table-striped > tbody > tr:nth-of-type(odd) { background:#fbfcfd; }
+        .g10-v12 .g10-v12-table-foot { font-size:12px; color:#8091a0; margin:11px 0 0; line-height:1.6; }
+        .g10-v12 .g10-v12-explore-title { color:#385773; font-weight:800; font-size:19px; margin:23px 0 5px; }
+        .g10-v12 .g10-v12-explore-lead { font-size:12px; color:#8393a0; margin-bottom:12px; }
+        .g10-v12 details.g10-v12-expand { border:1px solid #dce5ed; border-radius:12px; background:#fff; margin:11px 0; overflow:hidden; box-shadow:0 2px 7px rgba(49,76,101,.025); }
+        .g10-v12 details.g10-v12-expand > summary { display:flex; gap:13px; align-items:center; cursor:pointer; padding:15px 17px; list-style:none; background:#f8fafc; transition:background .18s ease; }
+        .g10-v12 details.g10-v12-expand > summary::-webkit-details-marker { display:none; }
+        .g10-v12 details.g10-v12-expand > summary:hover { background:#f0f6fa; }
+        .g10-v12 details.g10-v12-expand > summary:focus-visible { outline:2px solid #8eb3cf; outline-offset:-3px; }
+        .g10-v12 details.g10-v12-expand[open] > summary { background:#f2f7fa; border-bottom:1px solid #e0e9ef; }
+        .g10-v12 .g10-v12-summary-icon { display:flex; align-items:center; justify-content:center; width:35px; height:35px; border-radius:10px; flex:none; background:#e6eff6; color:#48739a; font-size:17px; font-weight:700; }
+        .g10-v12 .g10-v12-summary-icon.warm { background:#f4eee7; color:#a88763; }
+        .g10-v12 .g10-v12-summary-copy { flex:1; min-width:0; }
+        .g10-v12 .g10-v12-summary-copy strong { display:block; font-weight:800; color:#365770; font-size:14px; margin-bottom:3px; }
+        .g10-v12 .g10-v12-summary-copy small { display:block; font-size:12px; line-height:1.5; font-weight:400; color:#8192a2; }
+        .g10-v12 .g10-v12-chevron { color:#718ea5; font-size:20px; transform:rotate(0deg); transition:transform .18s; }
+        .g10-v12 details.g10-v12-expand[open] .g10-v12-chevron { transform:rotate(180deg); }
+        .g10-v12 .g10-v10-expand-body { padding:17px 19px 20px; }
+        .g10-v12 .g10-v10-note { margin-top:20px; }
+        @media(max-width:1080px) { .g10-v12 .g10-v12-top-grid { grid-template-columns:1fr; } }
+        @media(max-width:720px) { .g10-v12 .g10-v12-banner { flex-direction:column; align-items:stretch; padding:16px; } .g10-v12 .g10-v12-amount { width:100%; min-width:0; } .g10-v12 .g10-v12-card { padding:13px; } .g10-v12 .g10-v12-summary-copy small { font-size:11px; } }
+        /* v13：0010 組合資訊順序修正與更清晰的展開卡片；不影響其它頁面 */
+        .g10-v13 { --pf-ink:#344b60; --pf-line:#dce6ed; }
+        .g10-v13 .g10-v13-head { border-radius:14px; padding:19px 22px; margin:0 0 18px; background:linear-gradient(110deg,#edf4f9,#f8fafc 72%,#f8f6f2); border:1px solid #dbe5ed; border-left:5px solid #6d94b5; }
+        .g10-v13 .g10-v13-eyebrow { display:block; font-size:11px; font-weight:800; color:#6d91ac; letter-spacing:.7px; margin:0 0 5px; }
+        .g10-v13 .g10-v13-head h3 { color:#2e506d; font-size:24px; font-weight:800; margin:0 0 5px; }
+        .g10-v13 .g10-v13-head p { color:#6a7e90; font-size:13px; margin:0; line-height:1.6; }
+        .g10-v13 .g10-v13-block { background:#fff; border:1px solid #dce6ee; border-radius:13px; padding:17px 20px; margin:0 0 15px; min-width:0; box-shadow:0 3px 12px rgba(48,82,108,.04); }
+        .g10-v13 .g10-v13-block-top { display:flex; align-items:center; gap:9px; margin:0 0 12px; }
+        .g10-v13 .g10-v13-block-num { border-radius:6px; padding:5px 7px; background:#e7f0f7; color:#426c91; font-size:11px; font-weight:800; }
+        .g10-v13 .g10-v13-block h4 { color:#365a78; font-size:17px; font-weight:800; margin:0; }
+        .g10-v13 .g10-v13-block-sub { color:#7d90a1; font-size:12px; margin:0 0 13px; line-height:1.55; }
+        .g10-v13 .g10-v10-metrics { grid-template-columns:repeat(4,minmax(0,1fr)); gap:11px; margin:0; }
+        .g10-v13 .g10-v10-metric { background:#f4f8fb; border:1px solid #e1eaf1; border-radius:10px; padding:14px 15px; }
+        .g10-v13 .g10-v10-metric:nth-child(2) { background:#f1f6fa; }
+        .g10-v13 .g10-v10-metric:nth-child(3) { background:#f6f8f8; }
+        .g10-v13 .g10-v10-metric:nth-child(4) { background:#faf7f2; }
+        .g10-v13 .g10-v10-metric .shiny-text-output { font-size:25px; font-weight:800; color:#355d7f; }
+        .g10-v13 .g10-v13-config { border-left:4px solid #90b3c9; background:#fafcfe; }
+        .g10-v13 .g10-v13-config-grid { display:grid; grid-template-columns:minmax(175px,.85fr) minmax(195px,1fr) minmax(270px,1.25fr); gap:18px; align-items:start; }
+        .g10-v13 .g10-v13-config-grid .form-group { margin-bottom:4px; }
+        .g10-v13 .g10-v13-config-grid label { color:#45657f; font-size:13px; font-weight:750; }
+        .g10-v13 .g10-v13-config-grid input[type=number], .g10-v13 .g10-v13-config-grid select { border-color:#b7cddb; background:#fff; color:#2e516f; font-weight:750; height:38px; }
+        .g10-v13 .g10-v13-setup-foot { font-size:12px; color:#698195; border-top:1px dashed #d9e5ed; padding-top:11px; margin:10px 0 0; line-height:1.6; }
+        .g10-v13 .g10-v13-table { border-top:3px solid #7da2c0; }
+        .g10-v13 .g10-v13-table .g10-v12-table-wrap { overflow-x:auto; }
+        .g10-v13 .g10-v13-table .table { margin:0; min-width:790px; font-size:13px; }
+        .g10-v13 .g10-v13-table .table th, .g10-v13 .g10-v13-table .table td { white-space:nowrap; padding:10px 12px; vertical-align:middle; }
+        .g10-v13 .g10-v13-table .table thead th { background:#edf4f8; border-bottom:2px solid #bfd0df; color:#385c79; }
+        .g10-v13 .g10-v13-chart { background:#fbfcfe; }
+        .g10-v13 .g10-v11-row { grid-template-columns:minmax(150px,.85fr) minmax(160px,2.5fr) 70px; margin:10px 0; }
+        .g10-v13 .g10-v11-track { height:15px; }
+        .g10-v13 .g10-v11-fill { background:linear-gradient(90deg,#84aac8,#567da4); }
+        .g10-v13 .g10-v13-expand-heading { font-size:18px; color:#365a79; font-weight:800; margin:22px 0 5px; }
+        .g10-v13 .g10-v13-expand-sub { color:#8090a0; font-size:12px; margin:0 0 13px; }
+        .g10-v13 details.g10-v13-expand { margin:12px 0; border:1px solid #d5e2ed; border-left:5px solid #82a7c5; border-radius:13px; background:white; overflow:hidden; box-shadow:0 4px 12px rgba(56,86,110,.06); }
+        .g10-v13 details.g10-v13-expand.warm { border-left-color:#b49b7d; }
+        .g10-v13 details.g10-v13-expand > summary { display:flex; align-items:center; gap:15px; padding:17px 20px; background:#f4f8fb; list-style:none; cursor:pointer; transition:background .2s; }
+        .g10-v13 details.g10-v13-expand.warm > summary { background:#faf7f3; }
+        .g10-v13 details.g10-v13-expand > summary::-webkit-details-marker { display:none; }
+        .g10-v13 details.g10-v13-expand > summary:hover { background:#eaf3f9; }
+        .g10-v13 details.g10-v13-expand.warm > summary:hover { background:#f4ece4; }
+        .g10-v13 details.g10-v13-expand > summary:focus-visible { outline:3px solid #92bad5; outline-offset:-3px; }
+        .g10-v13 .g10-v13-exp-icon { display:flex; justify-content:center; align-items:center; width:43px; height:43px; flex:none; border-radius:12px; background:#dfeef7; color:#3f6f94; font-size:21px; font-weight:750; }
+        .g10-v13 .g10-v13-expand.warm .g10-v13-exp-icon { background:#f1e7da; color:#9d7c5b; }
+        .g10-v13 .g10-v13-exp-copy { min-width:0; flex:1; }
+        .g10-v13 .g10-v13-exp-copy strong { display:block; color:#2f516e; font-size:16px; font-weight:800; margin:0 0 4px; }
+        .g10-v13 .g10-v13-exp-copy small { display:block; color:#6e8294; font-size:12px; line-height:1.5; font-weight:450; }
+        .g10-v13 .g10-v13-exp-action { border:1px solid #a9c6d9; background:#fff; color:#3e7195; border-radius:9px; padding:8px 10px; white-space:nowrap; font-size:12px; font-weight:750; }
+        .g10-v13 .g10-v13-exp-action .when-open { display:none; }
+        .g10-v13 details.g10-v13-expand[open] > summary { border-bottom:1px solid #dce7ef; }
+        .g10-v13 details.g10-v13-expand[open] .g10-v13-exp-action { background:#e7f1f7; }
+        .g10-v13 details.g10-v13-expand[open] .g10-v13-exp-action .when-open { display:inline; }
+        .g10-v13 details.g10-v13-expand[open] .g10-v13-exp-action .when-closed { display:none; }
+        .g10-v13 details.g10-v13-expand .g10-v10-expand-body { padding:18px 21px 23px; }
+        @media(max-width:1000px) { .g10-v13 .g10-v13-config-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .g10-v13 .g10-v13-config-grid > div:last-child { grid-column:1 / -1; } }
+        @media(max-width:740px) { .g10-v13 .g10-v13-block { padding:14px; } .g10-v13 .g10-v10-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } .g10-v13 .g10-v13-config-grid { grid-template-columns:1fr; gap:9px; } .g10-v13 .g10-v13-config-grid > div:last-child { grid-column:auto; } .g10-v13 .g10-v11-row { grid-template-columns:minmax(90px,1fr) minmax(60px,1.6fr) 54px; gap:7px; } .g10-v13 .g10-v13-exp-action { padding:7px 8px; font-size:11px; } .g10-v13 .g10-v13-exp-copy strong { font-size:14px; } }
         .home-small-note { color:#7b8794; font-size:12px; margin:13px 0 0; }
         .home-legacy { margin-top:4px; }
         @media(max-width:900px) { .home-compare-grid { grid-template-columns:1fr; } .home-center { order:3; } .home-heading { flex-wrap:wrap; } .home-date { white-space:normal; } }
@@ -2124,111 +2236,130 @@ ui <- fluidPage(
           tabPanel(
             "0010 組合",
             br(),
-            div(class = "g10-v11-head",
-              h3("本期 0010｜十檔股票配置"),
-              p("先看選了哪些股票、各占多少資金；再看統計分數與進階分析。")),
-            div(class = "g10-v11-layout",
-              div(class = "g10-v11-pane",
-                h4("十檔持股權重｜長條圖"),
-                uiOutput("g10_v11_weight_bars"),
-                p(class = "g10-v11-subnote", "長條越長，代表該檔股票在本期 0010 中配置的資金比例越高。")),
-              div(class = "g10-v11-pane",
-                h4("選股結果與統計分數"),
-                div(class = "table-responsive", tableOutput("g10_v10_simple_table")),
-                p(class = "g10-v11-subnote", "動能分、風險分都是相對分數；它們不是預測漲幅。"))
-            ),
-            p(class = "g10-v11-minor", "這裡顯示本期配置；歷史各季的選股與報酬請切換到「季度再平衡回測」。"),
-
-            h3(class = "g10-v11-metrics-title", "本期統計摘要"),
-            div(class = "g10-v10-metrics",
-              div(class = "g10-v10-metric",
-                span(class = "g10-v10-label", "本期入選股票"),
-                textOutput("g10_v10_count")),
-              div(class = "g10-v10-metric",
-                span(class = "g10-v10-label", "配置加權動能分"),
-                textOutput("g10_v10_mom")),
-              div(class = "g10-v10-metric",
-                span(class = "g10-v10-label", "配置加權風險分"),
-                textOutput("g10_v10_risk")),
-              div(class = "g10-v10-metric",
-                span(class = "g10-v10-label", "最大單檔權重"),
-                textOutput("g10_v10_maxw"))
-            ),
-            tags$details(class = "g10-v10-expand",
-              tags$summary("調整本期資金配置與模擬金額"),
-              div(class = "g10-v10-expand-body",
-                fluidRow(
-                  column(4, selectInput("g10_scheme", "持股權重方式：",
+            div(class = "g10-v12 g10-v13",
+              div(class = "g10-v13-head",
+                span(class = "g10-v13-eyebrow", "0010 / PORTFOLIO"),
+                h3("本期 0010｜持股與統計評分"),
+                p("先看評分和資金配置，再往下看權重圖；進階分析可自由展開。")
+              ),
+              div(class = "g10-v13-block",
+                div(class = "g10-v13-block-top",
+                  span(class = "g10-v13-block-num", "01"),
+                  h4("本期統計摘要")
+                ),
+                div(class = "g10-v10-metrics",
+                  div(class = "g10-v10-metric",
+                    span(class = "g10-v10-label", "本期入選股票"),
+                    textOutput("g10_v10_count")),
+                  div(class = "g10-v10-metric",
+                    span(class = "g10-v10-label", "配置加權動能分"),
+                    textOutput("g10_v10_mom")),
+                  div(class = "g10-v10-metric",
+                    span(class = "g10-v10-label", "配置加權風險分"),
+                    textOutput("g10_v10_risk")),
+                  div(class = "g10-v10-metric",
+                    span(class = "g10-v10-label", "最大單檔權重"),
+                    textOutput("g10_v10_maxw"))
+                )
+              ),
+              div(class = "g10-v13-block g10-v13-config",
+                div(class = "g10-v13-block-top",
+                  span(class = "g10-v13-block-num", "02"),
+                  h4("本期資金配置｜直接調整")
+                ),
+                div(class = "g10-v13-config-grid",
+                  div(numericInput("g10_capital", "模擬投入金額（NT$）",
+                    value = 1000000, min = 100000, step = 100000)),
+                  div(selectInput("g10_scheme", "持股權重方式",
                     choices = c("波動度反比" = "inv_vol", "等權重" = "equal",
                                 "分數加權" = "score"), selected = "inv_vol")),
-                  column(4, sliderInput("g10_cap", "單檔權重上限：",
-                    min = 0.10, max = 0.30, value = 0.20, step = 0.01)),
-                  column(4, numericInput("g10_capital", "模擬投入金額（元）：",
-                    value = 1000000, min = 100000, step = 100000))
+                  div(sliderInput("g10_cap", "單檔權重上限",
+                    min = 0.10, max = 0.30, value = 0.20, step = 0.01))
                 ),
-                p(class = "g10-v10-subtle",
-                  "以上參數只影響本期配置與成本試算；不會直接改變另一子頁的季度歷史回測結果。")
-              )
-            ),
-            div(class = "g10-v10-flow",
-              div(class = "g10-v10-flow-step",
-                strong("01｜評分"), tags$small("動能 70% ＋ 風險 30%")),
-              div(class = "g10-v10-flow-step",
-                strong("02｜選股"), tags$small("風險門檻與產業限制")),
-              div(class = "g10-v10-flow-step",
-                strong("03｜驗證"), tags$small("季度回測與 0050 比較"))
-            ),
-            tags$details(class = "g10-v10-expand",
-              tags$summary("查看完整評分、產業與模擬金額"),
-              div(class = "g10-v10-expand-body",
-                tableOutput("g10_weights"))
-            ),
-
-            tags$details(class = "g10-v10-expand",
-              tags$summary("查看本季換股、預估交易成本與再平衡日期"),
-              div(class = "g10-v10-expand-body",
-                h3("本期換股摘要"),
-                fluidRow(
-                  column(3, div(class = "info-card",
-                    div(class = "info-card-title", "本次新納入"),
-                    h3(class = "info-card-value", textOutput("g10_n_new", inline = TRUE)))),
-                  column(3, div(class = "info-card",
-                    div(class = "info-card-title", "續抱"),
-                    h3(class = "info-card-value", textOutput("g10_n_hold", inline = TRUE)))),
-                  column(3, div(class = "info-card",
-                    div(class = "info-card-title", "本次剔除"),
-                    h3(class = "info-card-value", textOutput("g10_n_drop", inline = TRUE)))),
-                  column(3, div(class = "info-card",
-                    div(class = "info-card-title", "預估換手率"),
-                    h3(class = "info-card-value", textOutput("g10_turnover_est", inline = TRUE))))
+                p(class = "g10-v13-setup-foot",
+                  "變更金額會更新下方模擬持股金額及成本；變更配置方式／上限會更新本期權重，不會重新計算股票評分，也不會改動歷史季度回測。")
+              ),
+              div(class = "g10-v13-block g10-v13-table",
+                div(class = "g10-v13-block-top",
+                  span(class = "g10-v13-block-num", "03"),
+                  h4("本期選股結果｜完整評分")
                 ),
-                h3("交易成本試算"),
-                tableOutput("g10_cost"),
-                p(class = "g10-v10-subtle",
-                  "手續費 0.1425%（每筆最低 20 元）、證交稅 0.3%（僅賣出）、滑價 0.1%（既有假設）。"),
-                h3("下一次再平衡"),
-                uiOutput("g10_next_date")
-              )
-            ),
-
-            tags$details(class = "g10-v10-expand",
-              tags$summary("查看持有追蹤、停損與停利統計"),
-              div(class = "g10-v10-expand-body",
-                p(class = "g10-v10-subtle",
-                  "以先前季末的持股為基準，觀察目前報酬與波動倍數所對應的參考停損／停利價。"),
-                fluidRow(
-                  column(6, sliderInput("g10_k_stop", "停損倍數 k",
-                    min = 1, max = 3, value = 2, step = 0.1)),
-                  column(6, sliderInput("g10_k_take", "停利倍數 k",
-                    min = 2, max = 5, value = 3, step = 0.1))
+                p(class = "g10-v13-block-sub", "只留一張完整表格：排名、股票、產業、0010 分、動能分、風險分、GARCH 比值、配置權重與模擬金額。"),
+                div(class = "g10-v12-table-wrap", tableOutput("g10_weights")),
+                p(class = "g10-v12-table-foot",
+                  "分數代表選股評價，不是預測漲幅。若尚未執行 GARCH 估計，比值可能顯示「—」；投入金額僅供模擬。")
+              ),
+              div(class = "g10-v13-block g10-v13-chart",
+                div(class = "g10-v13-block-top",
+                  span(class = "g10-v13-block-num", "04"),
+                  h4("十檔持股權重｜長條圖")
                 ),
-                tableOutput("g10_track"),
-                uiOutput("g10_track_note")
-              )
-            ),
-            div(class = "g10-v10-note",
-              strong("研究重點："),
-              "本期分數說明我們如何選股；要知道這個方法是否有效，仍需看「季度再平衡回測」的樣本外時點、交易成本與 0050 比較。")
+                p(class = "g10-v13-block-sub", "長條越長，代表該檔股票在本期 0010 配置的資金比例越高。"),
+                uiOutput("g10_v11_weight_bars")
+              ),
+              h4(class = "g10-v13-expand-heading", "延伸研究與操作"),
+              p(class = "g10-v13-expand-sub", "以下兩張卡片可以點擊展開；預設收合，不影響上方資金配置。"),
+              tags$details(class = "g10-v13-expand",
+                tags$summary(
+                  span(class = "g10-v13-exp-icon", "↔"),
+                  span(class = "g10-v13-exp-copy",
+                    strong("本季換股與交易成本"),
+                    tags$small("看本次換了哪些股票、換手率、交易費用，以及下一次再平衡日期")),
+                  span(class = "g10-v13-exp-action",
+                    span(class = "when-closed", "展開查看 ▾"),
+                    span(class = "when-open", "收合內容 ▴"))
+                ),
+                div(class = "g10-v10-expand-body",
+                  h3("本期換股摘要"),
+                  fluidRow(
+                    column(3, div(class = "info-card",
+                      div(class = "info-card-title", "本次新納入"),
+                      h3(class = "info-card-value", textOutput("g10_n_new", inline = TRUE)))),
+                    column(3, div(class = "info-card",
+                      div(class = "info-card-title", "續抱"),
+                      h3(class = "info-card-value", textOutput("g10_n_hold", inline = TRUE)))),
+                    column(3, div(class = "info-card",
+                      div(class = "info-card-title", "本次剔除"),
+                      h3(class = "info-card-value", textOutput("g10_n_drop", inline = TRUE)))),
+                    column(3, div(class = "info-card",
+                      div(class = "info-card-title", "預估換手率"),
+                      h3(class = "info-card-value", textOutput("g10_turnover_est", inline = TRUE))))
+                  ),
+                  h3("交易成本試算"),
+                  tableOutput("g10_cost"),
+                  p(class = "g10-v10-subtle",
+                    "手續費 0.1425%（每筆最低 20 元）、證交稅 0.3%（僅賣出）、滑價 0.1%（既有假設）。"),
+                  h3("下一次再平衡"),
+                  uiOutput("g10_next_date")
+                )
+              ),
+              tags$details(class = "g10-v13-expand warm",
+                tags$summary(
+                  span(class = "g10-v13-exp-icon", "⌁"),
+                  span(class = "g10-v13-exp-copy",
+                    strong("持有追蹤與風險控制"),
+                    tags$small("查看持股變化、報酬、波動倍數，以及停損／停利參考價")),
+                  span(class = "g10-v13-exp-action",
+                    span(class = "when-closed", "展開查看 ▾"),
+                    span(class = "when-open", "收合內容 ▴"))
+                ),
+                div(class = "g10-v10-expand-body",
+                  p(class = "g10-v10-subtle",
+                    "以先前季末的持股為基準，觀察目前報酬與波動倍數所對應的參考停損／停利價。"),
+                  fluidRow(
+                    column(6, sliderInput("g10_k_stop", "停損倍數 k",
+                      min = 1, max = 3, value = 2, step = 0.1)),
+                    column(6, sliderInput("g10_k_take", "停利倍數 k",
+                      min = 2, max = 5, value = 3, step = 0.1))
+                  ),
+                  tableOutput("g10_track"),
+                  uiOutput("g10_track_note")
+                )
+              ),
+              div(class = "g10-v10-note",
+                strong("研究重點："),
+                "本期評分與配置顯示如何選股；是否有效，仍需在季度回測中用歷史資料驗證。")
+            )
           ),
 
           # --------------------------------------------------
