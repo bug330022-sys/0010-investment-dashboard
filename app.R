@@ -2341,7 +2341,6 @@ ui <- fluidPage(
         h4("樣本外預測評估（後 20% 資料）"),
         tableOutput("v5_goos_tab"),
         plotOutput("v5_goos_plot", height = "360px"),
-        h4("全體收斂與失敗清單"),
         tableOutput("v5_gall_summary"),
         tableOutput("v5_gall_tab"),
 
