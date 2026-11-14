@@ -1458,8 +1458,8 @@ portfolio_default_start_date <- max(
 # 共用顏色
 # ============================================================
 
-UP_COLOR <- "#337B65"
-DOWN_COLOR <- "#B45F65"
+UP_COLOR <- "#357D65"
+DOWN_COLOR <- "#A9555B"
 NEUTRAL_COLOR <- "#7b8794"
 
 # ============================================================
@@ -1476,7 +1476,7 @@ other_stock_symbols <-
   )
 
 stock_colors <- c(
-  "0050" = "#879FB1"
+  "0050" = "#8CA3A7"
 )
 
 if (
@@ -2283,145 +2283,196 @@ ui <- fluidPage(
         .dashboard-footer {color:#8292A0;}
         @media(max-width:1000px) {.container-fluid{padding:17px 17px 32px;}}
         @media(max-width:900px) {.home-compare-grid{grid-template-columns:1fr;}.home-center{order:3;}}
-
-        /* =======================================================
-           v36 | Higher-contrast editorial / bento / quant hierarchy
-           Additive visual override. No calculation, data or UI IDs changed.
-           ======================================================= */
+        /* ==============================================================
+           v37 | Graphite x muted sage / neutral editorial dashboard
+           Visual override only: no R calculations or UI identifiers changed.
+           1 structural brand hue + neutral surfaces; data colors are semantic.
+           ============================================================== */
         :root {
-          --g36-deep:#243D53; --g36-main:#3E5870; --g36-mid:#5D7E99;
-          --g36-light:#DEE9F1; --g36-bg:#EFF3F7;
-          --g36-green:#277A65; --g36-red:#B4515D;
-          --g36-ink:#24384A; --g36-muted:#61788D;
-          --g36-border:#C8D7E2;
-          --green:#277A65; --red:#B4515D; --blue:#3E5870;
-          --bg:#EFF3F7; --line:#CEDBE5;
+          --v37-ink:#293E42; --v37-main:#435F60; --v37-dark:#314B4C;
+          --v37-accent:#65867D; --v37-muted:#667773;
+          --v37-bg:#F5F6F4; --v37-soft:#EDF1EE;
+          --v37-white:#FFFFFF; --v37-border:#DDE5E1;
+          --v37-up:#357D65; --v37-down:#A9555B;
+          --v37-bench:#8CA3A7;
+          --blue:#435F60; --blue2:#77928A;
+          --green:#357D65; --red:#A9555B;
+          --ink:#293E42; --muted:#667773;
+          --bg:#F5F6F4; --card:#FFFFFF; --line:#DDE5E1;
         }
-        body {background:linear-gradient(180deg,#E6EDF3 0,#EFF3F7 400px,#F4F6F8 100%);color:var(--g36-ink);}
+        body {
+          background:#F5F6F4; color:var(--v37-ink);
+          -webkit-font-smoothing:antialiased;
+        }
+        .container-fluid {max-width:1500px;}
+        /* Quiet brand header: typography instead of a heavy dark banner. */
         .hero {
-          position:relative;overflow:hidden;
-          background:linear-gradient(115deg,#20394F 0%,#365670 52%,#557891 100%);
-          border:1px solid #294A61;border-left:6px solid #8DB0C8;
-          box-shadow:0 10px 28px rgba(32,57,79,.13);
-          padding:27px 31px;
+          position:relative; background:#F0F3EF; color:#293E42;
+          border:1px solid #D7E2DC; border-left:4px solid #54766D;
+          border-radius:13px; box-shadow:none; padding:25px 29px;
+          margin-bottom:17px;
         }
-        .dashboard-title {color:#FFFFFF;font-weight:800;font-size:32px;letter-spacing:-.55px;position:relative;z-index:1;}
-        .dashboard-subtitle {color:#E1EBF3;font-size:14px;max-width:1030px;position:relative;z-index:1;}
-        .hero-badge {background:rgba(255,255,255,.14);border-color:rgba(229,240,248,.34);color:#F4F8FB;position:relative;z-index:1;}
-        .hero-badge .shiny-text-output {color:#FFFFFF;}
-        .nav-tabs {border-color:#C6D5E0;background:#FFFFFF;box-shadow:0 3px 10px rgba(37,62,82,.055);}
-        .nav-tabs > li > a {color:#3C5870;font-weight:730;}
-        .nav-tabs > li > a:hover {background:#DCE8F1;color:#263F54;}
-        .nav-tabs > li.active > a,.nav-tabs > li.active > a:hover,.nav-tabs > li.active > a:focus {
-          background:#385A75;color:#FFFFFF;box-shadow:0 2px 7px rgba(40,67,87,.18);
+        .dashboard-title {
+          color:#293E42; font-size:29px; line-height:1.24;
+          letter-spacing:-.5px; font-weight:800; margin-bottom:8px;
         }
-        .tabbable > .nav-pills > li > a {background:#E1EAF1;color:#365670;font-weight:700;}
-        .tabbable > .nav-pills > li.active > a,.tabbable > .nav-pills > li.active > a:hover,.tabbable > .nav-pills > li.active > a:focus {background:#3E5870;color:white;}
-        .section-box {border:1px solid var(--g36-border);box-shadow:0 4px 14px rgba(36,61,83,.065);background:#FFFFFF;}
+        .dashboard-subtitle {color:#62746F; font-size:14px; line-height:1.6; max-width:1000px;}
+        .hero-badge {
+          color:#48685F; background:#FFFFFF; border:1px solid #DDE6E0;
+          margin-top:13px; padding:5px 10px; box-shadow:none;
+        }
+        .hero-badge .shiny-text-output {color:#3E6058;}
+        /* A small amount of brand color marks the selected destination. */
+        .nav-tabs {background:#FFFFFF; border:1px solid #DEE5E1; box-shadow:none;
+                   border-radius:12px; padding:7px; margin-bottom:19px;}
+        .nav-tabs > li > a {color:#58706B; font-weight:700; border-radius:8px;}
+        .nav-tabs > li > a:hover {background:#EDF2EE; color:#304B48;}
+        .nav-tabs > li.active > a,
+        .nav-tabs > li.active > a:hover,
+        .nav-tabs > li.active > a:focus {
+          color:#FFFFFF; background:#435F60; box-shadow:none;
+        }
+        .tabbable > .nav-pills > li > a {
+          background:#F0F3F1; color:#4F6963; border-radius:8px; font-weight:650;
+        }
+        .tabbable > .nav-pills > li.active > a,
+        .tabbable > .nav-pills > li.active > a:hover,
+        .tabbable > .nav-pills > li.active > a:focus {background:#55776F;color:#FFFFFF;}
+        /* Article headings are marked by type scale and whitespace, not blocks. */
+        .section-box {
+          background:#FFFFFF; border:1px solid #DFE6E1; border-radius:13px;
+          box-shadow:0 2px 9px rgba(38,61,58,.028); margin-bottom:18px;
+        }
         .section-box > h2 {
-          background:linear-gradient(90deg,#DCE8F1 0%,#ECF3F7 72%,#F8FAFB 100%);
-          border-left:5px solid #3E5870;border-radius:8px;
-          padding:12px 16px;margin:0 0 16px;color:#243D53;font-size:23px;line-height:1.4;
+          background:transparent; border:0; padding:0 0 10px;
+          border-radius:0; border-bottom:1px solid #E6ECE8;
+          margin:0 0 16px; color:#2D4545;
+          font-size:23px; letter-spacing:-.25px; line-height:1.4;
         }
-        .section-box > h3 {color:#30536E;border-bottom:1px solid #CAD9E3;padding-bottom:8px;}
-        .section-box h4 {color:#355D78;}
-        .page-description {color:#536D81;}
+        .section-box h3 {color:#435F60; font-weight:750;}
+        .section-box > h3 {border:0; border-bottom:1px solid #E9EEEA; padding-bottom:8px;}
+        .section-box h4 {color:#3E5B57;}
+        .page-description {color:#697A77; font-size:14px; line-height:1.65;}
         .v25-main-lead {
-          background:linear-gradient(105deg,#D8E5EF,#E8F0F5 75%,#F6F9FB);
-          border:1px solid #C6D8E5;border-left:5px solid #3E5870;
-          box-shadow:none;padding:16px 20px;margin-bottom:18px;border-radius:11px;
+          background:#F0F3EF; border:1px solid #DEE7E0;
+          border-left:4px solid #6C9184; border-radius:12px;
+          box-shadow:none; padding:19px 22px; margin-bottom:17px;
         }
-        .v25-main-lead h2 {color:#24435B;font-size:24px;margin-bottom:6px;}
-        .v25-main-lead p {color:#516C81;font-size:13px;}
-        .reading-guide,.plot-explanation,.v25-method-hint {
-          background:#E8F0F5;border-left:4px solid #6589A5;color:#37586F;
+        .v25-main-lead h2 {color:#2C4745; font-size:23px; margin-bottom:7px;}
+        .v25-main-lead p {color:#657873; font-size:13px;}
+        .reading-guide,.plot-explanation,.v25-method-hint,.home-qualifier {
+          background:#F3F6F3; color:#596F67;
+          border-left:3px solid #9DB6AB; border-radius:7px;
         }
-        .method-note,.warning-note {background:#FBF1E3;border-left:4px solid #B28B5D;border-color:#E6D2B4;color:#785D3F;}
-        .info-card {border:1px solid #CBDAE4;border-left:4px solid #6787A0;background:#F6F9FB;box-shadow:0 2px 6px rgba(36,61,83,.035);}
-        .info-card-title {color:#4D6B81;font-weight:760;}
-        .info-card-value {color:#28465E;font-weight:800;}
-        .info-card.accent-blue {background:#E7F0F7;border-left-color:#5D84A4;border-top-color:#5D84A4;}
-        .info-card.accent-purple {background:#EEEAF6;border-left-color:#8A79AD;border-top-color:#8A79AD;}
-        .info-card.accent-green {background:#E5F1EA;border-left-color:#6B9A83;border-top-color:#6B9A83;}
-        .info-card.accent-amber {background:#FAEEDC;border-left-color:#C3985D;border-top-color:#C3985D;}
-        .info-card.accent-red {background:#F8E7E9;border-left-color:#BD7883;border-top-color:#BD7883;}
-        .btn-primary,.btn-primary:focus {background:#385B77;border-color:#385B77;box-shadow:0 2px 5px rgba(40,70,94,.13);}
-        .btn-primary:hover,.btn-primary:active {background:#27465F;border-color:#27465F;}
-        .quick-button-row .btn {background:#EAF0F5;border:1px solid #BCD0DD;color:#365874;font-weight:650;}
-        .quick-button-row .btn:hover {background:#DCE8F1;color:#243F55;}
-        .form-control,.selectize-input {border-color:#B8CBD9;}
-        .form-control:focus,.selectize-input.focus {border-color:#4E7797;box-shadow:0 0 0 2px rgba(62,88,112,.14);}
-        .table > thead > tr > th {background:#DDE9F1;color:#294A63;border-bottom:2px solid #AFC6D7;font-weight:780;}
-        .table-striped > tbody > tr:nth-of-type(odd) {background:#F4F8FB;}
-        .table-hover > tbody > tr:hover {background:#E8F1F7;}
-        .home-heading {padding:3px 2px 13px;border-bottom:2px solid #D1DEE8;margin-bottom:13px;}
-        .home-heading h2 {color:#243F55;}
-        .home-window {background:#E7EFF5;border-radius:7px;padding:8px 11px;color:#385B75;margin-bottom:13px;}
-        .home-side {border-width:1px;border-color:#C7D7E3;box-shadow:0 3px 8px rgba(36,61,83,.045);}
-        .home-side-0010 {background:#E4EEF5;border:1px solid #B6CCDC;border-top:4px solid #3E5870;}
-        .home-side-0050 {background:#EFF3F6;border:1px solid #CFDAE3;border-top:4px solid #8199AC;}
-        .home-center {background:#F7F9FB;border:1px solid #C5D6E2;border-top:4px solid #597B95;}
-        .home-side-0010 h2 {background:#355671;color:#FFF;border-radius:8px;padding:9px 12px;}
-        .home-side-0050 h2 {background:#7892A6;color:#FFF;border-radius:8px;padding:9px 12px;}
-        .home-center h2 {background:#E0EAF1;color:#34516A;border-radius:8px;padding:9px 12px;}
-        .home-side-subtitle {color:#506A7E;}
-        .home-stat {border-color:rgba(86,122,148,.20);}
-        .home-stat > span {color:#455F72;}
-        .home-qualifier {background:#E8EFF5;color:#486478;border-left:4px solid #7093AC;}
-        .v8-up,.g10-v13 .g10-v14-positive {color:#277A65!important;}
-        .v8-down,.g10-v13 .g10-v14-negative {color:#B4515D!important;}
+        .method-note,.warning-note {background:#F9F7F2;border-color:#E9E3D8;
+                                   border-left:3px solid #B3A48D;color:#766E60;}
+        /* Uniform neutral cards; no decorative purple/yellow/green card backgrounds. */
+        .info-card {background:#FBFCFB;border:1px solid #DFE6E2;border-top:2px solid #8EA9A0;
+                    border-left:1px solid #DFE6E2;box-shadow:none;}
+        .info-card.accent-blue,.info-card.accent-purple,
+        .info-card.accent-green,.info-card.accent-amber,.info-card.accent-red {
+          background:#FBFCFB;border:1px solid #DFE6E2;
+          border-top:2px solid #8EA9A0;
+        }
+        .info-card:hover {box-shadow:0 3px 10px rgba(38,61,58,.045);transform:none;}
+        .info-card-title {color:#637B73; font-weight:720;}
+        .info-card-value {color:#344F4D; font-weight:790;}
+        .btn-primary,.btn-primary:focus {background:#435F60; border-color:#435F60; box-shadow:none;}
+        .btn-primary:hover,.btn-primary:active {background:#314B4C; border-color:#314B4C;}
+        .quick-button-row .btn {background:#FFFFFF;border-color:#D1DED8;color:#4D6A61;box-shadow:none;}
+        .quick-button-row .btn:hover {background:#F0F4F1;border-color:#AFC8BB;color:#344F49;}
+        .form-control,.selectize-input {border-color:#CBD9D1;color:#364D49;}
+        .form-control:focus,.selectize-input.focus {border-color:#658B7C;box-shadow:0 0 0 2px rgba(101,139,124,.13);}
+        .time-info {background:#F2F6F3;border-color:#E0E9E2;border-left:3px solid #96B3A5;color:#4D695D;}
+        /* Quant tables: legible heading, nearly white rows, restrained semantic tones. */
+        .table > thead > tr > th {background:#EAF0EC;color:#385950;border-bottom:1px solid #CDDCD2;font-weight:760;}
+        .table-striped > tbody > tr:nth-of-type(odd) {background:#FCFDFC;}
+        .table-hover > tbody > tr:hover {background:#F2F6F3;}
+        /* Portfolio comparison: subtle accents but one coordinated family. */
+        .home-heading {border-bottom:1px solid #E7ECE9;padding-bottom:12px;margin-bottom:13px;}
+        .home-heading h2 {color:#293E42;}
+        .home-window {background:#F0F4F1;border-radius:7px;padding:8px 11px;color:#56736B;}
+        .home-side {background:#FFFFFF;border:1px solid #DEE6E1;box-shadow:none;}
+        .home-side-0010 {background:#F3F7F4;border-top:3px solid #648D7F;border-color:#DAE6DE;}
+        .home-side-0050 {background:#F9FAF9;border-top:3px solid #91A8A7;border-color:#E0E7E4;}
+        .home-center {background:#FFFFFF;border-top:3px solid #C8D6CE;border-color:#E0E8E3;}
+        .home-side-0010 h2,.home-side-0050 h2,.home-center h2 {
+          background:transparent;color:#2D4746;padding:0;border-radius:0;
+        }
+        .home-side-0050 h2 {color:#617C7E;}
+        .home-center h2 {color:#526D66;}
+        .home-side-subtitle {color:#70817C;}
+        .home-stat {border-color:#E1E9E3;}
+        .home-stat > span {color:#637973;}
+        .home-stat > strong {color:#304B47;}
+        .home-qualifier {background:#F4F6F3;}
+        /* Semantic numbers: red/green mean measured performance, not decoration. */
+        .v8-up,.g10-v13 .g10-v14-positive {color:#357D65!important;}
+        .v8-down,.g10-v13 .g10-v14-negative {color:#A9555B!important;}
+        .v8-flat {color:#60746D!important;}
         .g10-v13 .g10-v13-head,.g10-v12 .g10-v12-banner {
-          background:linear-gradient(100deg,#D8E7F1,#E5EEF5 60%,#F7F9FB);
-          border:1px solid #C1D5E3;border-left:6px solid #486F8E;
+          background:#F2F5F2;border:1px solid #E0E8E0;border-left:4px solid #6C9184;
+          box-shadow:none;
         }
-        .g10-v13 .g10-v13-head h3,.g10-v12 .g10-v12-banner h3 {color:#244860;}
-        .g10-v13 .g10-v13-block,.g10-v12 .g10-v12-card {border-color:#C8D8E3;box-shadow:0 3px 9px rgba(36,61,83,.045);}
-        .g10-v13 .g10-v13-block-top {background:#E0EAF2;border-radius:9px;padding:10px 12px;margin-bottom:14px;}
-        .g10-v13 .g10-v13-block h4 {color:#2F516B;}
-        .g10-v13 .g10-v13-block-num {background:#3E5870;color:#FFFFFF;}
-        .g10-v13 .g10-v10-metric,.g10-v12 .g10-v10-metric {background:#E7EFF6!important;border-color:#C9DCE9;border-top:3px solid #6A91AF;}
-        .g10-v13 .g10-v10-metric:nth-child(2) {background:#E4F0EF!important;border-top-color:#6F9C98;}
-        .g10-v13 .g10-v10-metric:nth-child(3) {background:#EEECF5!important;border-top-color:#9183AE;}
-        .g10-v13 .g10-v10-metric:nth-child(4) {background:#F9F0E4!important;border-top-color:#BA9363;}
-        .g10-v13 .g10-v10-metric .shiny-text-output {color:#294A63;font-weight:800;}
-        .g10-v13 .g10-v13-config {background:#F4F8FB;border-left:4px solid #6F94B0;}
-        .g10-v12 .g10-v11-fill,.g10-v13 .g10-v11-fill {background:linear-gradient(90deg,#6C99B8,#3E6787);}
-        .g10-v13 details.g10-v13-expand {border-left-width:5px;border-left-color:#7194AD;}
-        .g10-v13 details.g10-v13-expand > summary {background:#E5EEF5;}
-        .g10-v13 details.g10-v13-expand.warm {border-left-color:#B5946F;}
-        .g10-v13 details.g10-v13-expand.warm > summary {background:#F7EEDF;}
-        .rank-compare .rank-compare-card.momentum {background:#E7F0F7;border:1px solid #C4D8E6;border-top:5px solid #557FA1;}
-        .rank-compare .rank-compare-card.risk {background:#F9F0E5;border:1px solid #E7D6BE;border-top:5px solid #B98B53;}
-        .rank-compare .rank-compare-card h3 {color:#294C67;}
-        .g18-panel .g18-stat {background:#E8F0F6!important;border:1px solid #C4D7E5;border-top:4px solid #6288A5;border-radius:11px;}
-        .g18-panel .g18-stat:nth-child(even) {background:#EAF1F5!important;border-top-color:#7997AD;}
-        .g18-panel .g18-stat-label {color:#4C687D;font-weight:760;}
-        .g18-panel .g18-stat-value {color:#28475F;font-weight:800;}
-        .g18-panel .g18-stat.g35-tone-positive {background:#E4F2EB!important;border-color:#B9D9C9;border-top:4px solid #36816A;}
-        .g18-panel .g18-stat.g35-tone-positive .g18-stat-value {color:#277A65;}
-        .g18-panel .g18-stat.g35-tone-negative {background:#F8E8EB!important;border-color:#E8C5CC;border-top:4px solid #BD6571;}
-        .g18-panel .g18-stat.g35-tone-negative .g18-stat-value {color:#B4515D;}
-        .g18-panel .g18-table-wrap {border-color:#BFCFDC;box-shadow:0 2px 8px rgba(36,61,83,.035);}
-        .g18-panel .g35-colored-table th {background:#D8E6EF;color:#284A62;border-bottom:2px solid #AFC6D7;font-weight:780;}
-        .g18-panel .g35-colored-table td.g35-positive {color:#277A65;background:#E4F3EB;}
-        .g18-panel .g35-colored-table td.g35-negative {color:#B4515D;background:#FAE9EC;}
-        .g18-panel .g35-colored-table td.g35-neutral {color:#435E73;}
-        .g18-panel .g18-control-row {background:#E8F0F6;border:1px solid #C6D9E6;}
-        .g16-single .g16-head {background:linear-gradient(100deg,#DCEAF4,#EDF3F7);border-left-color:#628CA8;}
-        .g21-all-garch .g21-setup,.v15-validation .v22-top {background:#EBF2F7;border-color:#C9DBE7;}
-        .v15-validation .v22-kpi {background:#E6F0F6;border-color:#C3D7E5;}
-        .v15-validation .v15-result-primary {background:#E9F1F8;border-top-color:#648CAC;}
-        .v15-validation .v15-result-secondary {background:#F8EFE5;border-top-color:#B89B75;}
-        details.method-details {border-color:#CBDCE8;background:#F0F5F8;}
-        details.method-details summary {color:#315976;font-weight:750;}
+        .g10-v13 .g10-v13-head h3,.g10-v12 .g10-v12-banner h3 {color:#2C4D46;}
+        .g10-v13 .g10-v13-block,.g10-v12 .g10-v12-card {border-color:#E0E7E2;box-shadow:none;}
+        .g10-v13 .g10-v13-block-top {background:#F0F4F1;border-radius:8px;padding:10px 12px;margin-bottom:12px;}
+        .g10-v13 .g10-v13-block h4 {color:#365650;}
+        .g10-v13 .g10-v13-block-num {background:#DFEAE3;color:#4A7161;}
+        .g10-v13 .g10-v10-metric,.g10-v12 .g10-v10-metric,
+        .g10-v13 .g10-v10-metric:nth-child(2),.g10-v13 .g10-v10-metric:nth-child(3),
+        .g10-v13 .g10-v10-metric:nth-child(4) {
+          background:#FAFCFA!important;border:1px solid #E0E8E1;
+          border-top:2px solid #9CB7A7;
+        }
+        .g10-v13 .g10-v10-metric .shiny-text-output {color:#354F49;}
+        .g10-v13 .g10-v13-config {background:#FDFEFD;border-left:3px solid #A0B8A9;}
+        .g10-v12 .g10-v11-fill,.g10-v13 .g10-v11-fill {background:#668D7D;}
+        .g10-v13 details.g10-v13-expand {box-shadow:none;border-color:#DFE7E2;border-left:3px solid #95B0A1;}
+        .g10-v13 details.g10-v13-expand > summary {background:#F3F6F3;}
+        .g10-v13 details.g10-v13-expand.warm {border-left-color:#A9B8AD;}
+        .g10-v13 details.g10-v13-expand.warm > summary {background:#F7F8F5;}
+        .rank-compare .rank-compare-card.momentum,
+        .rank-compare .rank-compare-card.risk {
+          background:#FBFCFB;border:1px solid #DFE7E2;border-top:3px solid #87A89B;
+        }
+        .rank-compare .rank-compare-card.risk {border-top-color:#9EACA8;}
+        .rank-compare .rank-compare-card h3 {color:#355C53;}
+        /* Backtest: return signs stay readable; every other number stays neutral. */
+        .g18-panel .g18-stat,.g18-panel .g18-stat:nth-child(even) {
+          background:#FBFCFB!important;border:1px solid #DEE6E0;
+          border-top:2px solid #A6BAAC;border-radius:10px;
+        }
+        .g18-panel .g18-stat-label {color:#637A72;font-weight:700;}
+        .g18-panel .g18-stat-value {color:#344C48;font-weight:780;}
+        .g18-panel .g18-stat.g35-tone-positive {background:#FBFCFB!important;border-top:2px solid #78A892;}
+        .g18-panel .g18-stat.g35-tone-positive .g18-stat-value {color:#357D65;}
+        .g18-panel .g18-stat.g35-tone-negative {background:#FBFCFB!important;border-top:2px solid #CC9599;}
+        .g18-panel .g18-stat.g35-tone-negative .g18-stat-value {color:#A9555B;}
+        .g18-panel .g18-table-wrap {border-color:#DAE5DD;box-shadow:none;}
+        .g18-panel .g35-colored-table th {background:#EAF0EC;color:#35584E;border-bottom:1px solid #C8DAD0;}
+        .g18-panel .g35-colored-table td.g35-positive {color:#357D65;background:#F1F8F2;}
+        .g18-panel .g35-colored-table td.g35-negative {color:#A9555B;background:#FBF2F2;}
+        .g18-panel .g35-colored-table td.g35-neutral {color:#586D67;background:transparent;}
+        .g18-panel .g18-control-row {background:#F4F7F4;border-color:#E0E9E1;}
+        .g16-single .g16-head {background:#F1F5F2;border-left-color:#91ADA1;border-color:#E0E8E0;}
+        .g21-all-garch .g21-setup,.v15-validation .v22-top {background:#F5F7F4;border-color:#E0E7E2;}
+        .v15-validation .v22-kpi {background:#FAFCFA;border-color:#DFE7E1;}
+        .v15-validation .v15-result-primary,.v15-validation .v15-result-secondary {
+          background:#FBFCFA;border-top-color:#91ACA0;
+        }
+        .v15-validation .v15-result-secondary {border-top-color:#B0BEB2;}
+        details.method-details {border-color:#E0E7E1;background:#F8FAF8;}
+        details.method-details summary {color:#42695A;}
         details.method-details[open] {background:#FFFFFF;}
-        .dashboard-footer {color:#607A8F;}
-        @media(max-width:900px) {.home-compare-grid {grid-template-columns:1fr;}.home-center{order:3;}}
+        .dashboard-footer {color:#70817C;}
+        /* Responsive rhythm matches existing page layout. */
+        @media(max-width:900px) {.home-compare-grid {grid-template-columns:1fr;}.home-center {order:3;}}
         @media(max-width:600px) {
-          .hero {padding:20px 17px;border-radius:11px;}
-          .dashboard-title {font-size:25px;}
-          .v25-main-lead {padding:14px 15px;}
-          .section-box > h2 {font-size:20px;padding:11px 12px;}
+          .hero {padding:19px 16px;}
+          .dashboard-title {font-size:24px;}
+          .section-box > h2 {font-size:20px;}
+          .v25-main-lead {padding:15px;}
           .g10-v13 .g10-v13-block-top {padding:9px 10px;}
         }
         @media(max-width:600px) {
@@ -4680,7 +4731,7 @@ server <- function(input, output, session) {
     ggplot2::ggplot(d, ggplot2::aes(x=date, y=pct, colour=label)) +
       ggplot2::geom_hline(yintercept=0, linetype="dashed", colour="gray75") +
       ggplot2::geom_line(linewidth=1.2, na.rm=TRUE) +
-      ggplot2::scale_colour_manual(values=c("0010"="#397db8", "0050"="#d75c57")) +
+      ggplot2::scale_colour_manual(values=c("0010"="#547E75", "0050"="#8CA3A7")) +
       ggplot2::scale_y_continuous(labels=function(x) sprintf("%+.1f%%",x)) +
       ggplot2::labs(x=NULL, y="累積報酬率", colour=NULL) +
       ggplot2::theme_minimal(base_size=13) +
@@ -9368,7 +9419,7 @@ server <- function(input, output, session) {
           "Top5" = "#6f9fd0",
           "Top10" = "#a28bd2",
           "Bottom5" = "#dfb46f",
-          "0050" = "#879FB1"
+          "0050" = "#8CA3A7"
         )
       ) +
       scale_y_continuous(
@@ -12544,7 +12595,7 @@ server <- function(input, output, session) {
     ggplot2::ggplot(df, ggplot2::aes(x = year, y = value, fill = series)) +
       ggplot2::geom_hline(yintercept = 0, colour = "#a6b2bc", linewidth = 0.4) +
       ggplot2::geom_col(position = ggplot2::position_dodge(width = .74), width = .64) +
-      ggplot2::scale_fill_manual(values = c("0010（扣成本）" = "#3E5870", "0050" = "#8AA4B6")) +
+      ggplot2::scale_fill_manual(values = c("0010（扣成本）" = "#547E75", "0050" = "#8CA3A7")) +
       ggplot2::scale_y_continuous(labels = function(x) sprintf("%+.0f%%", 100*x)) +
       ggplot2::labs(x = "評分年度", y = "該年度評分季度報酬", fill = NULL) +
       ggplot2::theme_minimal(base_size = 12) +
