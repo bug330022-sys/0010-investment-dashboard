@@ -2320,11 +2320,7 @@ ui <- fluidPage(
         tableOutput("v4ts_diag"),
         h4("ARIMA 模型選擇（依 AIC 排序）"),
         tableOutput("v4ts_grid"),
-        h4("動能持續性（panel AR(1)）"),
         tableOutput("v4ts_persist"),
-        hr(),
-
-        hr(),
         h3("GARCH 模型診斷與樣本外評估"),
         p(class = "page-description",
           "檢查 GARCH(1,1) 的殘差是否仍有結構（含平方殘差與 ARCH 效果）、樣本外預測是否優於 EWMA 與滾動波動，並列出全體成分股的收斂狀況。"),
