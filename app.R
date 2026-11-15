@@ -2826,6 +2826,8 @@ ui <- fluidPage(
     tags$link(id = "c41-dark-css", rel = "stylesheet", type = "text/css", href = "c40_dark_theme.css", media = "all"),
     tags$link(id = "c41-light-css", rel = "stylesheet", type = "text/css", href = "c41_light_theme.css", media = "not all"),
     tags$link(rel = "stylesheet", type = "text/css", href = "c41_theme_switch.css"),
+    # C42 final override: responsive metrics and clear action buttons in both themes.
+    tags$link(rel = "stylesheet", type = "text/css", href = "c42_readability_fix.css"),
     tags$script(src = "c41_theme_switch.js")
   ),
   
@@ -2913,7 +2915,7 @@ div(class = "section-box",
             column(6, h3("0010｜日對數報酬率"), plotOutput("v8_p10_daily_log", height = "290px")),
             column(6, h3("0050｜日對數報酬率"), plotOutput("v8_0050_daily_log", height = "290px"))
           ))),
-      div(class = "section-box",
+      div(class = "section-box c42-market",
           h2("0050 近期市場概況"),
           fluidRow(
             column(4, div(class = "info-card accent-blue", div(class = "info-card-title", "均線趨勢"), h3(class = "info-card-value", textOutput("market_0050_trend", inline = TRUE)))),
