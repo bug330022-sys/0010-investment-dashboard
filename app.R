@@ -2828,6 +2828,7 @@ ui <- fluidPage(
     tags$link(rel = "stylesheet", type = "text/css", href = "c41_theme_switch.css"),
     # C42 final override: responsive metrics and clear action buttons in both themes.
     tags$link(rel = "stylesheet", type = "text/css", href = "c42_readability_fix.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "c43_home_layout.css"),
     tags$script(src = "c41_theme_switch.js")
   ),
   
@@ -2895,6 +2896,9 @@ tabPanel(
               "比較口徑：0010 為目前十檔名單及權重的本期回溯持有試算，非歷史各期實際選股績效；",
               "未扣交易成本。完整的下一交易日進場、含成本季度策略回測請見「模型驗證 → 季度策略回測」。")
       ),
+      # C43: two independent home columns; no more cross-row height reservations.
+      div(class = "c43-home-grid",
+        div(class = "c43-home-main",
       div(class = "section-box",
           h2("0010 與 0050 累積報酬走勢"),
           p(class = "page-description", "選擇任意日期範圍，兩者都從選定區間的首個共同交易日 0% 開始。0010 採目前持股與權重回溯試算，非歷史逐期回測。"),
@@ -2914,25 +2918,41 @@ div(class = "section-box",
           fluidRow(
             column(6, h3("0010｜日對數報酬率"), plotOutput("v8_p10_daily_log", height = "290px")),
             column(6, h3("0050｜日對數報酬率"), plotOutput("v8_0050_daily_log", height = "290px"))
-          ))),
+          )))
+        ),
+        div(class = "c43-home-side",
       div(class = "section-box c42-market",
           h2("0050 近期市場概況"),
-          fluidRow(
-            column(4, div(class = "info-card accent-blue", div(class = "info-card-title", "均線趨勢"), h3(class = "info-card-value", textOutput("market_0050_trend", inline = TRUE)))),
-            column(4, div(class = "info-card accent-purple", div(class = "info-card-title", "14 日 RSI"), h3(class = "info-card-value", textOutput("market_0050_rsi", inline = TRUE)))),
-            column(4, div(class = "info-card accent-amber", div(class = "info-card-title", "近期波動狀態"), h3(class = "info-card-value", textOutput("market_0050_vol_state", inline = TRUE))))
-          ),
-          fluidRow(
-            column(3, div(class = "info-card", div(class = "info-card-title", "0050 調整後價格"), h3(class = "info-card-value", textOutput("market_0050_price", inline = TRUE)))),
-            column(3, div(class = "info-card", div(class = "info-card-title", "0050 最新日對數報酬"), h3(class = "info-card-value", uiOutput("v8_market_log_return", inline = TRUE)))),
-            column(3, div(class = "info-card", div(class = "info-card-title", "年初至今報酬"), h3(class = "info-card-value", uiOutput("v8_market_ytd", inline = TRUE)))),
-            column(3, div(class = "info-card", div(class = "info-card-title", "50 檔漲跌家數"), h3(class = "info-card-value", textOutput("market_breadth", inline = TRUE))))
+          div(class = "c43-market-grid",
+              div(class = "info-card accent-blue",
+                  div(class = "info-card-title", "均線趨勢"),
+                  h3(class = "info-card-value", textOutput("market_0050_trend", inline = TRUE))),
+              div(class = "info-card accent-purple",
+                  div(class = "info-card-title", "14 日 RSI"),
+                  h3(class = "info-card-value", textOutput("market_0050_rsi", inline = TRUE))),
+              div(class = "info-card accent-amber",
+                  div(class = "info-card-title", "近期波動狀態"),
+                  h3(class = "info-card-value", textOutput("market_0050_vol_state", inline = TRUE))),
+              div(class = "info-card",
+                  div(class = "info-card-title", "0050 調整後價格"),
+                  h3(class = "info-card-value", textOutput("market_0050_price", inline = TRUE))),
+              div(class = "info-card",
+                  div(class = "info-card-title", "0050 最新日對數報酬"),
+                  h3(class = "info-card-value", uiOutput("v8_market_log_return", inline = TRUE))),
+              div(class = "info-card",
+                  div(class = "info-card-title", "年初至今報酬"),
+                  h3(class = "info-card-value", uiOutput("v8_market_ytd", inline = TRUE))),
+              div(class = "info-card",
+                  div(class = "info-card-title", "50 檔漲跌家數"),
+                  h3(class = "info-card-value", textOutput("market_breadth", inline = TRUE)))
           ),
           tags$details(class = "method-details",
                        tags$summary("變更市場觀察日期"),
                        dateInput("market_observation_date", "市場觀察日期", value=data_max_date,
                                  min=data_min_date, max=data_max_date, format="yyyy-mm-dd", language="zh-TW", weekstart=1)),
           p(class = "home-small-note", "均線、RSI、波動狀態僅供描述市場，不是買賣訊號。")
+      )
+        )
       ),
       tags$details(class = "method-details v25-home-expand", tags$summary("展開成分股近 30 日漲跌排名"),
 div(class = "section-box",
