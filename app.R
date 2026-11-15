@@ -1,4 +1,4 @@
-# v39｜經典金融藍（低調版）：視覺、圖表身份色、台股紅漲綠跌；沿用 v38 無 T+1 導覽。
+# v40｜經典金融藍＋淺青色標題框：沿用 v38 功能分頁、台股紅漲綠跌；0050 以橘色實線呈現。
 # v34｜移除隔日 T+1 預測模組、歷史訊號驗證與讀取快取。
 # 保留原有 0010 選股、季度再平衡回測與 GARCH 波動研究；本版不改模型或美編。
 # 0010 Investment Research v3.6：Growth 主排名＋防守資訊分離＋白話研究說明＋模型比較驗證
@@ -2641,6 +2641,136 @@ ui <- fluidPage(
           .home-compare-grid{grid-template-columns:1fr;}
         }
 
+
+        /* ================================================================
+           v40 | Classic blue + light-cyan editorial section headings.
+           Influenced by user-supplied illustrated stock-market report:
+           blue typography, clear label framing, turquoise underline motifs.
+           Purposefully avoids heavy full-width dark panels or multi-hue cards.
+           No changes to forecast, selection, or backtest calculations.
+           ================================================================ */
+        :root {
+          --v40-blue:#35658F;
+          --v40-blue-strong:#25537E;
+          --v40-cyan:#C7EDF0;
+          --v40-cyan-pale:#EAF7FA;
+          --v40-line:#CDDFE9;
+          --v40-bg:#F7FAFC;
+        }
+        body {background:#F7FAFC; color:#283C50;}
+        .hero {
+          background:linear-gradient(105deg,#FFFFFF 0%,#F3FAFD 76%,#EAF6FA 100%);
+          border:1px solid #CEE1EC; border-left:5px solid #3484B6;
+          border-radius:15px; padding:22px 25px;
+          box-shadow:0 4px 15px rgba(35,79,115,.045);
+        }
+        .dashboard-title {
+          display:table; max-width:100%; font-size:30px; font-weight:800;
+          letter-spacing:-.35px; line-height:1.38; color:#24517E;
+          padding:0 4px 2px;
+          background:linear-gradient(to top,#BDECF0 0%,#BDECF0 25%,transparent 25%);
+        }
+        .dashboard-subtitle {color:#556D82; font-size:14px; margin-top:7px;}
+        .hero-badge {background:#FFFFFF; border:1px solid #D6E7EF; color:#58738A;}
+        .nav-tabs {background:#E9F2F9; border:1px solid #D6E5EF; border-radius:13px; padding:6px;}
+        .nav-tabs>li>a {color:#315D85; border-radius:9px;}
+        .nav-tabs>li>a:hover {background:#DDEEF7; color:#24537B;}
+        .nav-tabs>li.active>a,.nav-tabs>li.active>a:hover,.nav-tabs>li.active>a:focus {
+          background:linear-gradient(135deg,#3D83BD,#2D6599); color:#FFFFFF;
+          box-shadow:0 2px 7px rgba(41,101,154,.16);
+        }
+        .section-box {
+          background:#FFFFFF; border:1px solid #DDE8F0; border-radius:13px;
+          box-shadow:0 3px 12px rgba(35,79,115,.035);
+        }
+        /* First-level page section: framed but not a heavy filled banner. */
+        .section-box>h2 {
+          display:block; font-size:22px; font-weight:800; color:#255985;
+          padding:11px 15px; margin:0 0 17px;
+          border:1px solid #CCE6ED; border-left:5px solid #3286B8;
+          border-radius:8px; background:linear-gradient(100deg,#E2F5F8,#F6FBFD 72%);
+        }
+        /* Smaller content headings: distinguish with a gentle cyan label. */
+        .section-box>h3,.g18-panel>h3,.g18-panel>h4,
+        .v38-weight-section>h3,.v25-validate-extra>h3 {
+          display:table; max-width:100%; font-weight:780; line-height:1.4;
+          color:#2D608A; background:#E9F6F9;
+          border-left:3px solid #56A9C8; border-radius:5px;
+          padding:7px 12px; margin-top:20px; margin-bottom:12px;
+        }
+        .section-box h4 {color:#365E7C;}
+        .v25-main-lead {
+          border:1px solid #D5E8F0; border-left:5px solid #3E8FB9;
+          background:linear-gradient(105deg,#F0F9FC,#FFFFFF);
+          border-radius:11px; box-shadow:none; padding:18px 21px;
+        }
+        .v25-main-lead>h2 {
+          display:table; background:linear-gradient(to top,#BDECF0 0%,#BDECF0 28%,transparent 28%);
+          border:0; padding:0 3px 2px; margin:0 0 8px; color:#255984;
+        }
+        .home-heading {border-bottom:0; padding-bottom:9px;}
+        .home-heading h2 {
+          display:table; font-size:30px; font-weight:800; color:#245782;
+          padding:0 3px 3px;
+          background:linear-gradient(to top,#C7F0F2 0%,#C7F0F2 27%,transparent 27%);
+        }
+        .home-compare-grid {gap:12px;}
+        .home-side-0010 {background:#F4F9FD; border-color:#CFE4F2; border-top:4px solid #356994;}
+        .home-side-0050 {background:#FFFBF5; border-color:#F0E3CC; border-top:4px solid #D49C4F;}
+        .home-center {border-color:#DAE6EE; border-top:4px solid #8DB9CF;}
+        .home-side {box-shadow:0 2px 9px rgba(35,79,115,.028);}
+        .info-card {border:1px solid #DEE8F0; border-top:3px solid #82B3D2;}
+        .info-card-title {color:#53738D;}
+        .info-card-value {color:#244F75;}
+        .g10-v13 .g10-v13-head,.g10-v12 .g10-v12-banner {
+          border:1px solid #CFE5EE; border-left:5px solid #3889B5;
+          background:linear-gradient(105deg,#EDF8FB,#FFFFFF);
+        }
+        .g10-v13 .g10-v13-block-top {
+          background:#E6F5F9; border-left:3px solid #459EC1;
+          border-radius:6px; padding:10px 11px;
+        }
+        .g10-v13 .g10-v13-block-num {background:#CCEAF4;color:#285B83;}
+        .g10-v13 .g10-v13-block h4 {color:#265B83;}
+        .rank-compare .rank-compare-card h3 {
+          display:table; max-width:100%;
+          background:linear-gradient(to top,#D1F0F3 0%,#D1F0F3 25%,transparent 25%);
+          color:#285A83; padding-right:6px;
+        }
+        .g18-panel .g18-table-wrap {border:1px solid #D4E5EE;border-radius:9px;}
+        .table>thead>tr>th,.g18-panel .g35-colored-table th {
+          background:#DFF0F6;color:#2B5B80;border-bottom:2px solid #BCD7E6;
+        }
+        .table-hover>tbody>tr:hover {background:#EFF8FB;}
+        .g18-panel .g18-stat,.g18-panel .g18-stat:nth-child(even) {
+          border:1px solid #D8E7EF; border-top:3px solid #84B3D0;
+          background:#FFFFFF!important;
+        }
+        .g18-panel .g18-stat.g35-tone-positive {border-top-color:#C97379;}
+        .g18-panel .g18-stat.g35-tone-negative {border-top-color:#6DA994;}
+        /* Keep Taiwanese sign semantics: red positive, green negative. */
+        .g18-panel .g35-colored-table td.g35-positive {color:#BC4653;background:#FDF3F4;}
+        .g18-panel .g35-colored-table td.g35-negative {color:#247E65;background:#F1F8F4;}
+        .v15-validation .v22-title,.g16-single .g16-head h3,
+        .v26-garch-intro h3,.rank-compare .rank-compare-flow h3 {
+          display:table; max-width:100%; color:#2E628B;
+          background:linear-gradient(to top,#CCEDF1 0%,#CCEDF1 28%,transparent 28%);
+          padding-right:4px;
+        }
+        details.method-details {background:#FAFDFE;border-color:#D9E8F0;}
+        details.method-details summary {color:#2F6D99;}
+        .btn-primary,.btn-primary:focus {background:#326E9E;border-color:#326E9E;}
+        .btn-primary:hover,.btn-primary:active {background:#235780;border-color:#235780;}
+        .form-control:focus,.selectize-input.focus {border-color:#60A2C5;}
+        @media(max-width:700px) {
+          .hero {padding:17px 15px;}
+          .dashboard-title {font-size:24px;}
+          .section-box>h2 {font-size:19px;padding:9px 10px;}
+          .section-box>h3,.g18-panel>h3,.g18-panel>h4 {display:block;font-size:17px;}
+          .home-heading h2 {font-size:26px;}
+          .g10-v13 .g10-v13-block-top {padding:8px;}
+        }
+
         "
         
       )
@@ -4885,11 +5015,10 @@ server <- function(input, output, session) {
     z <- v9_curve_pair()
     d <- rbind(data.frame(date=z$date, pct=(z$p10-1)*100, label="0010"),
                data.frame(date=z$date, pct=(z$etf-1)*100, label="0050"))
-    ggplot2::ggplot(d, ggplot2::aes(x=date, y=pct, colour=label, linetype=label)) +
+    ggplot2::ggplot(d, ggplot2::aes(x=date, y=pct, colour=label)) +
       ggplot2::geom_hline(yintercept=0, linetype="dashed", colour="gray75") +
       ggplot2::geom_line(linewidth=1.2, na.rm=TRUE) +
       ggplot2::scale_colour_manual(values=c("0010"="#365F87", "0050"="#CF9448")) +
-      ggplot2::scale_linetype_manual(values=c("0010"="solid", "0050"="dashed")) +
       ggplot2::scale_y_continuous(labels=function(x) sprintf("%+.1f%%",x)) +
       ggplot2::labs(x=NULL, y="累積報酬率", colour=NULL) +
       ggplot2::theme_minimal(base_size=13) +
@@ -10009,9 +10138,8 @@ server <- function(input, output, session) {
           x = date,
           y = cumulative
         ),
-        color = "red",
-        linewidth = 1,
-        linetype = "dashed"
+        color = "#CF9448",
+        linewidth = 1
       ) +
       
       labs(
@@ -12049,8 +12177,7 @@ server <- function(input, output, session) {
           y = benchmark_return,
           color = "0050"
         ),
-        linewidth = 1,
-        linetype = "dashed"
+        linewidth = 1
       ) +
       
       scale_color_manual(
