@@ -1,3 +1,4 @@
+# v39｜經典金融藍（低調版）：視覺、圖表身份色、台股紅漲綠跌；沿用 v38 無 T+1 導覽。
 # v34｜移除隔日 T+1 預測模組、歷史訊號驗證與讀取快取。
 # 保留原有 0010 選股、季度再平衡回測與 GARCH 波動研究；本版不改模型或美編。
 # 0010 Investment Research v3.6：Growth 主排名＋防守資訊分離＋白話研究說明＋模型比較驗證
@@ -1458,15 +1459,15 @@ portfolio_default_start_date <- max(
 # 共用顏色
 # ============================================================
 
-UP_COLOR <- "#357D65"
-DOWN_COLOR <- "#A9555B"
+UP_COLOR <- "#C04F58"   # 台股慣例：漲紅
+DOWN_COLOR <- "#278066" # 台股慣例：跌綠
 NEUTRAL_COLOR <- "#7b8794"
 
 # ============================================================
 # 代表色系統
 # ============================================================
 
-# 0050 固定使用中等藍色，其餘股票依固定順序產生代表色。
+# 0050 固定使用暖橘色，個股使用各自代表色；0010 組合比較固定用深藍色。
 # 因此只要股票代號相同，同一檔股票在所有圖形都會維持相同顏色。
 
 other_stock_symbols <-
@@ -1476,7 +1477,7 @@ other_stock_symbols <-
   )
 
 stock_colors <- c(
-  "0050" = "#8CA3A7"
+  "0050" = "#CF9448"
 )
 
 if (
@@ -2490,6 +2491,154 @@ ui <- fluidPage(
           .home-compare-grid .home-center .home-stat>strong{font-size:19px!important;}
           .g18-panel .g18-stat-grid{gap:8px;}
           .g18-panel .g18-stat{padding:12px 13px;}
+        }
+
+
+        /* ================================================================
+           v39 | Classic financial blue: conservative real-dashboard styling.
+           Semantic colors are reserved for Taiwan market returns:
+           positive = muted red; negative = muted green.
+           Blue/orange identify 0010/0050, regardless of the return sign.
+           No changes to R calculations or the Shiny navigation structure.
+           ================================================================ */
+        :root {
+          --blue:#365F87; --blue2:#688BA9; --purple:#7086A6;
+          --ink:#283C50; --muted:#617587; --bg:#F4F7FA;
+          --card:#FFFFFF; --line:#DFE7EF;
+          --red:#C04F58; --green:#278066; --amber:#CF9448;
+          --v39-primary:#365F87; --v39-dark:#264460;
+          --v39-soft:#E6EEF5; --v39-bg:#F4F7FA;
+          --v39-0010:#365F87; --v39-0050:#CF9448;
+          --v39-positive:#C04F58; --v39-negative:#278066;
+        }
+        body {background:#F4F7FA; color:#283C50; line-height:1.6;}
+        .container-fluid {max-width:1500px;padding:21px 28px 44px;}
+        .hero {
+          background:linear-gradient(110deg,#EAF1F7 0%,#F7F9FB 72%,#FFFFFF 100%);
+          border:1px solid #D8E3ED; border-left:4px solid #365F87;
+          border-radius:13px; box-shadow:none; padding:22px 26px;
+        }
+        .dashboard-title {font-size:29px;font-weight:780;color:#223C56;letter-spacing:-.35px;}
+        .dashboard-subtitle {color:#5F758A;font-size:14px;max-width:1030px;}
+        .hero-badge {background:#FFFFFF;color:#637C90;border:1px solid #D7E2EB;}
+        /* Main nav is a calm white strip; only the active tab is blue. */
+        .nav-tabs {background:#FFFFFF;border:1px solid #DEE7EF;box-shadow:none;border-radius:11px;padding:5px;}
+        .nav-tabs>li>a {color:#567087;font-weight:690;border-radius:8px;}
+        .nav-tabs>li>a:hover {background:#EFF4F8;color:#315E87;}
+        .nav-tabs>li.active>a,.nav-tabs>li.active>a:hover,.nav-tabs>li.active>a:focus {
+          background:#365F87;color:#FFFFFF;box-shadow:none;
+        }
+        .tabbable>.nav-pills>li>a {background:#EDF3F8;color:#526E86;}
+        .tabbable>.nav-pills>li.active>a,.tabbable>.nav-pills>li.active>a:hover,.tabbable>.nav-pills>li.active>a:focus {
+          background:#365F87;color:#FFFFFF;
+        }
+        .section-box {background:#FFFFFF;border:1px solid #DFE7EF;border-radius:13px;
+                      box-shadow:0 2px 9px rgba(34,65,94,.04);margin-bottom:18px;}
+        .section-box>h2 {font-size:22px;color:#254764;border-bottom:1px solid #E1EAF1;
+                         margin:0 0 16px;padding:0 0 10px;}
+        .section-box h3,.section-box>h3,.section-box h4 {color:#365F87;border-color:#E4EBF2;}
+        .page-description {color:#687D8D;}
+        .v25-main-lead {background:#EFF4F8;border:1px solid #DCE7F0;border-left:4px solid #6B90AD;
+                        padding:18px 21px;border-radius:11px;margin-bottom:17px;}
+        .v25-main-lead h2 {color:#254764;}
+        .v25-main-lead p {color:#667D90;}
+        .reading-guide,.plot-explanation,.v25-method-hint,.home-qualifier {
+          background:#F2F6FA;color:#5B7389;border-left:3px solid #90ADC4;
+        }
+        .method-note,.warning-note {background:#FBF9F4;border-color:#EAE0D1;
+                                    border-left:3px solid #C0A681;color:#746A58;}
+        .info-card,.info-card.accent-blue,.info-card.accent-purple,
+        .info-card.accent-green,.info-card.accent-amber,.info-card.accent-red {
+          background:#FFFFFF;border:1px solid #DFE7EF;border-top:2px solid #86A4BC;box-shadow:none;
+        }
+        .info-card:hover {box-shadow:0 3px 11px rgba(34,65,94,.06);transform:none;}
+        .info-card-title {color:#6E8092;}
+        .info-card-value {color:#294963;}
+        .btn-primary,.btn-primary:focus {background:#365F87;border-color:#365F87;color:#FFFFFF;}
+        .btn-primary:hover,.btn-primary:active {background:#264460;border-color:#264460;color:#FFFFFF;}
+        .quick-button-row .btn {background:#FFFFFF;border-color:#D2DEE8;color:#4B6C86;}
+        .quick-button-row .btn:hover {background:#EDF4FA;border-color:#9DB6CB;color:#365F87;}
+        .form-control,.selectize-input {border-color:#CBD9E6;color:#2B4356;}
+        .form-control:focus,.selectize-input.focus {border-color:#6A95B6;box-shadow:0 0 0 2px rgba(54,95,135,.13);}
+        .time-info {background:#EFF5FA;border-color:#DCE8F1;border-left:3px solid #8AABC4;color:#496C87;}
+        .table>thead>tr>th {background:#EAF1F7;color:#315570;border-bottom:1px solid #C9D9E6;}
+        .table-striped>tbody>tr:nth-of-type(odd) {background:#FCFDFE;}
+        .table-hover>tbody>tr:hover {background:#F1F6FA;}
+        .home-heading {border-bottom:1px solid #E4ECF2;}
+        .home-heading h2 {color:#264763;}
+        .home-window {background:#EFF4F8;color:#57748B;}
+        .home-side {background:#FFFFFF;border:1px solid #DDE7EF;}
+        .home-side-0010 {background:#F3F8FC;border-top:3px solid #365F87;border-color:#D9E6F0;}
+        .home-side-0050 {background:#FFF9F2;border-top:3px solid #CF9448;border-color:#EDE1D1;}
+        .home-center {background:#FFFFFF;border-top:3px solid #A6BACB;border-color:#DFE7EF;}
+        .home-side-0010 h2,.home-side-0050 h2,.home-center h2 {color:#294B68;}
+        .home-side-0050 h2 {color:#9D702E;}
+        .home-stat {border-color:#E2E9EF;}
+        .home-stat>span {color:#64788B;}
+        .home-stat>strong {color:#29465E;}
+        /* One consistent Taiwan stock-market convention. */
+        .v8-up,.g10-v13 .g10-v14-positive {color:#C04F58!important;}
+        .v8-down,.g10-v13 .g10-v14-negative {color:#278066!important;}
+        .v8-flat {color:#566C7F!important;}
+        .g10-v13 .g10-v13-head,.g10-v12 .g10-v12-banner {
+          background:#F0F5FA;border:1px solid #DBE7F1;border-left:4px solid #7397B3;
+        }
+        .g10-v13 .g10-v13-head h3,.g10-v12 .g10-v12-banner h3 {color:#2A5274;}
+        .g10-v13 .g10-v13-block,.g10-v12 .g10-v12-card {border-color:#DFE8F0;}
+        .g10-v13 .g10-v13-block-top {background:#F1F6FA;}
+        .g10-v13 .g10-v13-block h4 {color:#315A7B;}
+        .g10-v13 .g10-v13-block-num {background:#E2EEF7;color:#365F87;}
+        .g10-v13 .g10-v10-metric,.g10-v12 .g10-v10-metric,
+        .g10-v13 .g10-v10-metric:nth-child(2),.g10-v13 .g10-v10-metric:nth-child(3),
+        .g10-v13 .g10-v10-metric:nth-child(4) {
+          background:#FAFCFE!important;border:1px solid #E0E8EF;border-top:2px solid #8EAFC8;
+        }
+        .g10-v13 .g10-v10-metric .shiny-text-output {color:#2B567A;}
+        .g10-v13 .g10-v13-config {background:#FDFEFF;border-left:3px solid #98B7CE;}
+        .g10-v12 .g10-v11-fill,.g10-v13 .g10-v11-fill {background:#537FA3;}
+        .g10-v13 details.g10-v13-expand {border-color:#DCE6EE;border-left:3px solid #88ABC5;}
+        .g10-v13 details.g10-v13-expand>summary {background:#F3F7FA;}
+        .g10-v13 details.g10-v13-expand.warm {border-left-color:#B7A18D;}
+        .g10-v13 details.g10-v13-expand.warm>summary {background:#FCF9F5;}
+        .rank-compare .rank-compare-card.momentum {background:#F6F9FC;border:1px solid #DEE8F0;border-top:3px solid #527FA2;}
+        .rank-compare .rank-compare-card.risk {background:#FCFAF7;border:1px solid #E9E2D8;border-top:3px solid #BE9B65;}
+        .rank-compare .rank-compare-card h3 {color:#315A79;}
+        .v38-weight-section {background:#F7FAFD;border-color:#DEE8F1;}
+        /* Use red/green only on numeric result cells, never for fixed identity series. */
+        .g18-panel .g18-stat,.g18-panel .g18-stat:nth-child(even) {
+          background:#FFFFFF!important;border:1px solid #DEE8F0;border-top:2px solid #8BAAC3;
+        }
+        .g18-panel .g18-stat-label {color:#64798D;}
+        .g18-panel .g18-stat-value {color:#2C4E69;}
+        .g18-panel .g18-stat.g35-tone-positive {border-top-color:#C97379;}
+        .g18-panel .g18-stat.g35-tone-positive .g18-stat-value {color:#C04F58;}
+        .g18-panel .g18-stat.g35-tone-negative {border-top-color:#6DA994;}
+        .g18-panel .g18-stat.g35-tone-negative .g18-stat-value {color:#278066;}
+        .g18-panel .g18-table-wrap {border-color:#D9E5EF;}
+        .g18-panel .g35-colored-table th {background:#EAF1F7;color:#335772;border-bottom:1px solid #CDDCE9;}
+        .g18-panel .g35-colored-table td.g35-positive {color:#BA4852;background:#FDF3F4;}
+        .g18-panel .g35-colored-table td.g35-negative {color:#25775F;background:#F1F8F4;}
+        .g18-panel .g35-colored-table td.g35-neutral {color:#506677;background:transparent;}
+        .g18-panel .g18-control-row {background:#F3F7FA;border-color:#DEE8F0;}
+        .g16-single .g16-head {background:#F0F5F9;border-left-color:#87A8C1;border-color:#DBE7EF;}
+        .g21-all-garch .g21-setup,.v15-validation .v22-top {background:#F4F8FB;border-color:#DFE9F1;}
+        .v15-validation .v22-kpi {background:#F9FBFD;border-color:#E0E8EF;}
+        .v15-validation .v15-result-primary {background:#F9FBFD;border-top-color:#7299B6;}
+        .v15-validation .v15-result-secondary {background:#FCFBF9;border-top-color:#BDA07B;}
+        .v26-garch-switch>.tabbable>ul.nav-pills {background:#E7EFF6;}
+        .v26-garch-switch>.tabbable>ul.nav-pills>li>a {color:#476C88;}
+        .v26-garch-switch>.tabbable>ul.nav-pills>li.active>a,
+        .v26-garch-switch>.tabbable>ul.nav-pills>li.active>a:hover {background:#365F87;color:#FFFFFF;}
+        details.method-details {background:#F8FAFC;border-color:#DBE6EF;}
+        details.method-details summary {color:#365F87;}
+        details.method-details[open] {background:#FFFFFF;}
+        .dashboard-footer {color:#728495;}
+        @media(max-width:650px) {
+          .container-fluid{padding:12px 10px 28px;}
+          .hero{padding:18px 16px;}
+          .dashboard-title{font-size:24px;}
+          .section-box{padding:15px 13px;}
+          .home-compare-grid{grid-template-columns:1fr;}
         }
 
         "
@@ -4736,10 +4885,11 @@ server <- function(input, output, session) {
     z <- v9_curve_pair()
     d <- rbind(data.frame(date=z$date, pct=(z$p10-1)*100, label="0010"),
                data.frame(date=z$date, pct=(z$etf-1)*100, label="0050"))
-    ggplot2::ggplot(d, ggplot2::aes(x=date, y=pct, colour=label)) +
+    ggplot2::ggplot(d, ggplot2::aes(x=date, y=pct, colour=label, linetype=label)) +
       ggplot2::geom_hline(yintercept=0, linetype="dashed", colour="gray75") +
       ggplot2::geom_line(linewidth=1.2, na.rm=TRUE) +
-      ggplot2::scale_colour_manual(values=c("0010"="#547E75", "0050"="#8CA3A7")) +
+      ggplot2::scale_colour_manual(values=c("0010"="#365F87", "0050"="#CF9448")) +
+      ggplot2::scale_linetype_manual(values=c("0010"="solid", "0050"="dashed")) +
       ggplot2::scale_y_continuous(labels=function(x) sprintf("%+.1f%%",x)) +
       ggplot2::labs(x=NULL, y="累積報酬率", colour=NULL) +
       ggplot2::theme_minimal(base_size=13) +
@@ -4764,7 +4914,7 @@ server <- function(input, output, session) {
     ggplot2::ggplot(d, ggplot2::aes(x=date,y=pct)) +
       ggplot2::geom_hline(yintercept=0, colour="gray65") +
       ggplot2::geom_col(ggplot2::aes(fill=pct>=0), width=.85, show.legend=FALSE) +
-      ggplot2::scale_fill_manual(values=c("TRUE"="#337B65", "FALSE"="#B45F65")) +
+      ggplot2::scale_fill_manual(values=c("TRUE"="#C04F58", "FALSE"="#278066")) +
       ggplot2::scale_y_continuous(limits=v8_daily_limits(),labels=function(x) paste0(round(x,1),"%")) +
       ggplot2::labs(x=NULL,y="日對數報酬率") +
       ggplot2::theme_minimal(base_size=11) +
@@ -9424,10 +9574,10 @@ server <- function(input, output, session) {
       ) +
       scale_color_manual(
         values = c(
-          "Top5" = "#6f9fd0",
-          "Top10" = "#a28bd2",
-          "Bottom5" = "#dfb46f",
-          "0050" = "#8CA3A7"
+          "Top5" = "#365F87",
+          "Top10" = "#7D92BD",
+          "Bottom5" = "#8B7395",
+          "0050" = "#CF9448"
         )
       ) +
       scale_y_continuous(
@@ -11905,8 +12055,8 @@ server <- function(input, output, session) {
       
       scale_color_manual(
         values = c(
-          "投資組合" = "steelblue",
-          "0050" = "red"
+          "投資組合" = "#365F87",
+          "0050" = "#CF9448"
         )
       ) +
       
@@ -12603,7 +12753,7 @@ server <- function(input, output, session) {
     ggplot2::ggplot(df, ggplot2::aes(x = year, y = value, fill = series)) +
       ggplot2::geom_hline(yintercept = 0, colour = "#a6b2bc", linewidth = 0.4) +
       ggplot2::geom_col(position = ggplot2::position_dodge(width = .74), width = .64) +
-      ggplot2::scale_fill_manual(values = c("0010（扣成本）" = "#547E75", "0050" = "#8CA3A7")) +
+      ggplot2::scale_fill_manual(values = c("0010（扣成本）" = "#365F87", "0050" = "#CF9448")) +
       ggplot2::scale_y_continuous(labels = function(x) sprintf("%+.0f%%", 100*x)) +
       ggplot2::labs(x = "評分年度", y = "該年度評分季度報酬", fill = NULL) +
       ggplot2::theme_minimal(base_size = 12) +
