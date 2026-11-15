@@ -1,8 +1,5 @@
-# v32｜T+1 預算快取：預設分析可直接讀檔，避免每位訪客重估模型。
-# 每日預算從此完整 app.R 取得 T+1 函數；自訂參數可手動重新估計。
-# 日更預算是回溯樣本外與最新訊號快照，不等於不可覆寫的事前預測紀錄。
-# 單一執行按鈕共用全體／單檔結果，預測區間預設 95%，驗證預設 63 日。
-# 尚未建立不可覆寫的逐日事前預測紀錄；每日預先計算的是當日快照與歷史模擬結果。
+# v34｜移除隔日 T+1 預測模組、歷史訊號驗證與讀取快取。
+# 保留原有 0010 選股、季度再平衡回測與 GARCH 波動研究；本版不改模型或美編。
 # 0010 Investment Research v3.6：Growth 主排名＋防守資訊分離＋白話研究說明＋模型比較驗證
 # Connect Cloud auto-publish test
 # ============================================================
@@ -1461,8 +1458,8 @@ portfolio_default_start_date <- max(
 # 共用顏色
 # ============================================================
 
-UP_COLOR <- "#d95b5b"
-DOWN_COLOR <- "#4fa66a"
+UP_COLOR <- "#357D65"
+DOWN_COLOR <- "#A9555B"
 NEUTRAL_COLOR <- "#7b8794"
 
 # ============================================================
@@ -1479,7 +1476,7 @@ other_stock_symbols <-
   )
 
 stock_colors <- c(
-  "0050" = "#5b8ecb"
+  "0050" = "#8CA3A7"
 )
 
 if (
@@ -1704,8 +1701,8 @@ ui <- fluidPage(
         .dashboard-footer { text-align:center; color:#8b99a8; font-size:13px; padding-top:22px; }
 
         /* v8：首頁視覺微調，所有其他分頁樣式維持原樣 */
-        .v8-up { color:#d94b4b !important; font-weight:800; }
-        .v8-down { color:#238a58 !important; font-weight:800; }
+        .v8-up { color:#337B65 !important; font-weight:800; }
+        .v8-down { color:#B45F65 !important; font-weight:800; }
         .v8-flat { color:#5e7185 !important; }
         .home-data-foot p { margin-bottom:5px; }
         .home-intro .home-side { min-height:385px; }
@@ -1938,8 +1935,8 @@ ui <- fluidPage(
         .g10-v13 .g10-v14-summary-card:nth-child(3) { background:#faf8f5; }
         .g10-v13 .g10-v14-summary-card > span { display:block; font-size:12px; font-weight:700; color:#6a8294; margin-bottom:8px; }
         .g10-v13 .g10-v14-summary-card .shiny-html-output { font-size:23px; font-weight:800; color:#395f7c; line-height:1.3; }
-        .g10-v13 .g10-v14-positive { color:#b54d51 !important; }
-        .g10-v13 .g10-v14-negative { color:#2e8163 !important; }
+        .g10-v13 .g10-v14-positive { color:#337B65 !important; }
+        .g10-v13 .g10-v14-negative { color:#B45F65 !important; }
         .g10-v13 .g10-v14-title { margin:22px 0 8px; font-size:17px; font-weight:800; color:#375d7b; }
         .g10-v13 .g10-v14-explain { margin:0 0 12px; font-size:12px; color:#718496; line-height:1.6; }
         .g10-v13 .g10-v14-period { background:#f1f6fa; border:1px solid #e1e9ef; border-radius:8px; padding:10px 13px; color:#53738b; font-size:12px; line-height:1.6; }
@@ -2139,46 +2136,6 @@ ui <- fluidPage(
         .home-compare-grid .home-side h2 {font-size:34px;}
         @media(max-width:700px){.home-compare-grid .home-stat > strong{font-size:24px !important;}.home-compare-grid .home-center .home-stat > strong{font-size:19px !important;}}
 
-        /* v28 T+1 模組：一頁分預測／驗證；保留原單檔圖表樣式 */
-        .v28-panel>.v27-controls{margin-top:16px;}
-        .v28-run-actions{display:flex;gap:7px;flex-direction:column;padding-top:22px;}
-        .v28-run-actions .btn{white-space:normal;font-size:12px;padding:7px 9px;}
-        .v28-advanced{margin-top:4px;padding:9px 0;font-size:12px;color:#536c7d;}
-        .v28-advanced summary{cursor:pointer;font-weight:600;}
-        .v28-advanced .form-group{max-width:350px;margin-top:10px;}
-        .v28-primary-tabs{margin-top:18px;}
-        .v28-primary-tabs>.tabbable>.nav-pills{border-bottom:2px solid #d5e3eb;padding-bottom:8px;}
-        .v28-primary-tabs>.tabbable>.nav-pills>li>a{font-size:15px;font-weight:650;padding:10px 24px;}
-        .v28-primary-tabs .tab-content .nav-pills{background:#f3f7fa;border-radius:9px;padding:6px;margin-top:12px;}
-        .v28-part{padding:12px 2px 0;}
-        .v28-signals{border:1px solid #e1e9ef;background:#f8fafb;border-radius:9px;padding:11px;margin-bottom:12px;}
-        .v28-signals h4{font-size:15px;margin:5px 0 11px;}
-        .v28-up h4{color:#397d6d;}.v28-down h4{color:#a36c5c;}
-        .v28-signals table{font-size:11px;width:100%;}
-        .v28-signals th,.v28-signals td{padding:6px 5px!important;overflow-wrap:anywhere;}
-        .v28-panel .table{font-size:12px;}
-        @media(max-width:800px){.v28-run-actions{padding-top:0;flex-direction:row;}.v28-primary-tabs>.tabbable>.nav-pills>li>a{padding:8px 14px;}}
-        /* v27: T+1 預測/驗證介面，不影響既有網站頁面 */
-        .v27-panel {margin-top:14px;}
-        .v27-panel h2{font-size:21px;letter-spacing:.1px;}
-        .v27-controls{background:#f6f9fb;border:1px solid #e1e9ef;border-radius:10px;padding:14px 12px 4px;margin:12px 0;}
-        .v27-button-wrap{padding-top:25px;}
-        .v27-button-wrap .btn{white-space:normal;font-size:12px;padding:9px 11px;}
-        .v27-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0;}
-        .v27-kpi{background:#f4f8fa;border:1px solid #e0e9ef;border-radius:9px;padding:13px 11px;display:flex;flex-direction:column;gap:7px;min-width:0;}
-        .v27-kpi small{font-size:11px;color:#647987;line-height:1.5;}
-        .v27-kpi strong{font-size:19px;color:#355e79;overflow-wrap:anywhere;line-height:1.4;}
-        .v27-hint{font-size:12px;color:#647986;line-height:1.75;margin:8px 0 11px;}
-        .v27-status{font-size:12px;color:#496c83;background:#f2f7fa;padding:10px 12px;border-radius:8px;line-height:1.65;}
-        .v27-error{font-size:12px;color:#985446;background:#fcf3f0;padding:10px 12px;border-radius:8px;line-height:1.65;}
-        .v27-chart-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:16px;}
-        .v27-chart-controls h3{margin:0;font-size:18px;}
-        .v27-chart-controls .form-group{margin:0;}
-        .v27-chart-controls .control-label{margin-right:9px;font-size:12px;}
-        .v27-foot{padding:11px 12px;border-left:3px solid #93acbf;background:#f6f8fa;margin-top:13px;font-size:12px;line-height:1.7;color:#687b88;}
-        .v27-overflow{max-width:100%;overflow-x:auto;max-height:520px;overflow-y:auto;}
-        @media(max-width:800px){.v27-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}.v27-button-wrap{padding-top:0;}}
-        @media(max-width:520px){.v27-kpis{grid-template-columns:1fr;}.v27-chart-controls{display:block;}}
         /* v26｜GARCH 第二層切換：放入獨立淺色區域，與市場分析主頁籤區隔 */
         .v26-garch-panel {background:#f8fafc;border:1px solid #dce5ec;border-radius:12px;padding:17px 18px;margin:14px 0 20px;}
         .v26-garch-intro {margin:0 0 14px;}
@@ -2206,9 +2163,334 @@ ui <- fluidPage(
         .v25-validate-extra > div{margin-top:12px;}
         .v25-home-expand{margin:10px 0 20px;}
         @media(max-width:750px){.v25-rank-grid{grid-template-columns:1fr;}}
+         /* v38：研究功能重組。只標示驗證頁研究章節，不更動任何預測或回測計算。 */
+         .v38-weight-section { margin:20px 0; padding:17px 20px; background:#fbfcfe; border:1px solid #dee6ed; border-radius:13px; }
+         .v38-weight-section > h3 { margin-top:2px; font-size:20px; }
+         .v38-weight-section > .rank-lab { background:transparent; padding:0; margin:0; box-shadow:none; border:0; }
+         .v25-validate-extra > h3 { margin:9px 0 13px; font-size:20px; }
         .home-small-note { color:#7b8794; font-size:12px; margin:13px 0 0; }
         .home-legacy { margin-top:4px; }
         @media(max-width:900px) { .home-compare-grid { grid-template-columns:1fr; } .home-center { order:3; } .home-heading { flex-wrap:wrap; } .home-date { white-space:normal; } }
+
+        /* =======================================================
+           v35 VISUAL ONLY | E editorial + F bento + G quant tables
+           Mist blue-gray / muted green-red / consistent typography
+           ======================================================= */
+        :root {
+          --blue:#3E5870; --blue2:#7894AB; --purple:#8E92AC;
+          --green:#337B65; --red:#B45F65; --amber:#A88A63;
+          --ink:#253746; --muted:#6B7C8C; --bg:#F7F9FB;
+          --card:#FFFFFF; --line:#D8E0E7;
+          --g35-up-bg:#EAF4EE; --g35-down-bg:#F9EEEE;
+          --g35-shadow:0 3px 14px rgba(32,52,69,.045);
+        }
+        body {
+          background:#F7F9FB;
+          color:var(--ink); line-height:1.62;
+          font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft JhengHei','Noto Sans TC',sans-serif;
+          font-variant-numeric:tabular-nums;
+        }
+        .container-fluid {max-width:1500px;padding:23px 30px 48px;}
+        .hero {
+          background:linear-gradient(112deg,#F0F4F7 0%,#F6F8FA 68%,#FFFFFF 100%);
+          color:var(--ink); border:1px solid #D8E2E9;
+          border-left:5px solid #3E5870; border-radius:14px;
+          padding:25px 29px; margin-bottom:16px; box-shadow:none;
+        }
+        .dashboard-title {font-size:30px;font-weight:760;letter-spacing:-.45px;color:#253746;}
+        .dashboard-subtitle {font-size:14px;line-height:1.8;color:#637789;max-width:960px;}
+        .hero-badge {font-size:12px;font-weight:600;background:#FFFFFF;border:1px solid #DCE4EB;color:#6B7C8C;}
+        .nav-tabs {background:#FFFFFF;border:1px solid #E1E7EC;box-shadow:none;padding:5px;border-radius:11px;margin-bottom:18px;}
+        .nav-tabs > li > a {color:#617587;font-weight:650;padding:11px 17px;border-radius:8px;transition:background .15s ease;}
+        .nav-tabs > li > a:hover {background:#F0F4F7;color:#3E5870;}
+        .nav-tabs > li.active > a,.nav-tabs > li.active > a:hover,.nav-tabs > li.active > a:focus {
+          background:#3E5870;color:#FFFFFF;box-shadow:none;border-radius:8px;
+        }
+        .tabbable > .nav-pills {display:flex;flex-wrap:wrap;gap:5px;margin-bottom:17px;}
+        .tabbable > .nav-pills > li {float:none;margin:0;}
+        .tabbable > .nav-pills > li > a {background:#EDF2F5;color:#60798B;font-weight:620;border-radius:8px;padding:9px 16px;}
+        .tabbable > .nav-pills > li.active > a,.tabbable > .nav-pills > li.active > a:hover,.tabbable > .nav-pills > li.active > a:focus {
+          background:#3E5870;color:#FFFFFF;
+        }
+        .section-box {background:#FFFFFF;border:1px solid var(--line);border-radius:14px;padding:23px 25px;margin-bottom:17px;box-shadow:var(--g35-shadow);}
+        .section-box h2 {color:#2F4658;font-size:23px;letter-spacing:-.3px;font-weight:760;}
+        .section-box h3,.section-box h4 {color:#3E5870;}
+        .page-description {font-size:14px;color:#6B7C8C;line-height:1.75;}
+        .v25-main-lead {background:transparent;border:none;box-shadow:none;padding:3px 2px 12px;margin-bottom:6px;}
+        .v25-main-lead h2 {color:#253746;font-size:24px;}
+        .v25-main-lead p {color:#6B7C8C;font-size:13px;}
+        .reading-guide,.plot-explanation,.v25-method-hint {background:#F3F6F8;border-left-color:#91A9BA;color:#536D7F;}
+        .method-note,.warning-note {background:#FCFAF5;border-color:#E6DCCB;border-left-color:#B7A083;color:#766950;}
+        .info-card {background:#FFFFFF;border:1px solid #E1E7EC;border-radius:12px;box-shadow:none;min-height:102px;padding:15px 17px;}
+        .info-card:hover {transform:none;box-shadow:0 3px 11px rgba(43,65,83,.05);}
+        .info-card-title {color:#718292;font-size:12px;font-weight:650;}
+        .info-card-value {color:#354E61;font-size:23px;font-weight:760;}
+        .accent-blue {border-top:3px solid #6E8AA1;}
+        .accent-purple {border-top:3px solid #9295A9;}
+        .accent-green {border-top:3px solid #79A38D;}
+        .accent-amber {border-top:3px solid #B6A180;}
+        .accent-red {border-top:3px solid #C7898B;}
+        .btn-primary,.btn-primary:focus {background:#3E5870;border-color:#3E5870;color:#fff;box-shadow:none;border-radius:8px;font-weight:650;}
+        .btn-primary:hover,.btn-primary:active {background:#304A60;border-color:#304A60;color:#fff;}
+        .quick-button-row .btn {border:1px solid #D5DFE7;background:#FFFFFF;color:#587188;border-radius:8px;}
+        .quick-button-row .btn:hover {background:#EDF3F7;border-color:#9CB2C3;color:#3E5870;}
+        .form-control,.selectize-input {border-color:#CCD9E2;border-radius:8px;box-shadow:none;}
+        .form-control:focus,.selectize-input.focus {border-color:#7798B1;box-shadow:0 0 0 2px rgba(62,88,112,.10);}
+        .table > thead > tr > th {background:#F1F5F7;color:#4D677B;border-bottom:1px solid #D8E2E9;font-weight:720;}
+        .table > tbody > tr > td {border-top-color:#E7EDF1;vertical-align:middle;}
+        .table-striped > tbody > tr:nth-of-type(odd) {background:#FBFCFD;}
+        .table-hover > tbody > tr:hover {background:#F1F6F9;}
+        .home-intro .home-side {min-height:0!important;}
+        .home-compare-grid {grid-template-columns:minmax(0,1fr) minmax(160px,.66fr) minmax(0,1fr);gap:12px;}
+        .home-side {background:#FFFFFF;border:1px solid #DDE6ED;border-radius:12px;padding:15px 19px;box-shadow:none;}
+        .home-side-0010 {background:#F2F6F9;border-color:#D8E3EA;border-top:3px solid #3E5870;}
+        .home-side-0050 {background:#F7F9FA;border-color:#E1E7EC;border-top:3px solid #91A6B5;}
+        .home-center {background:#FFFFFF;border-top:3px solid #C4D1DB;}
+        .home-heading h2 {color:#263D50;letter-spacing:-.5px;}
+        .home-stat {border-top:1px solid #E4EBF0;padding:10px 0;}
+        .home-stat > span {color:#667B8C;font-size:12px;}
+        .home-compare-grid .home-stat > strong {font-size:clamp(17px,1.65vw,24px)!important;letter-spacing:-.15px;}
+        .home-compare-grid .home-center .home-stat > strong {font-size:clamp(16px,1.45vw,21px)!important;}
+        .home-stat > strong span {font-weight:750;}
+        .home-qualifier {background:#F4F7F9;color:#627788;border-left:3px solid #9EB3C3;border-radius:7px;}
+        .v8-up,.g10-v13 .g10-v14-positive {color:#337B65!important;}
+        .v8-down,.g10-v13 .g10-v14-negative {color:#B45F65!important;}
+        .v8-flat {color:#3D5366!important;}
+        .g10-v13 .g10-v13-head,.g10-v12 .g10-v12-banner {background:linear-gradient(110deg,#EFF4F7,#FAFCFD);border-color:#DAE4EB;border-left-color:#6B889F;}
+        .g10-v13 .g10-v13-block,.g10-v12 .g10-v12-card {border-color:#DCE5EC;border-radius:12px;box-shadow:none;}
+        .g10-v13 .g10-v10-metric,.g10-v12 .g10-v10-metric {background:#F5F8FA!important;border-color:#E1E8ED;}
+        .g10-v13 .g10-v10-metric .shiny-text-output {color:#3E5870;}
+        .g10-v12 .g10-v11-fill,.g10-v13 .g10-v11-fill {background:#6587A0;}
+        .g10-v13 .g10-v13-block-num,.g10-v12 .g10-v12-summary-icon {background:#E7EEF3;color:#527087;}
+        .g10-v13 details.g10-v13-expand {box-shadow:none;border-color:#D9E3E9;border-left-color:#91A9BA;}
+        .rank-compare .rank-compare-card {border-color:#DDE6ED;background:#FFFFFF;}
+        .rank-compare .rank-compare-card.momentum {background:#F6F9FB;border-top-color:#6689A4;}
+        .rank-compare .rank-compare-card.risk {background:#FBFAF7;border-top-color:#B2A087;}
+        .g18-panel .g18-stat {background:#F7F9FA!important;border:1px solid #DDE6EC;border-top:3px solid #A5B6C2;border-radius:11px;}
+        .g18-panel .g18-stat:nth-child(even) {background:#F7F9FA!important;border-top-color:#A5B6C2;}
+        .g18-panel .g18-stat-label {color:#697F90;}
+        .g18-panel .g18-stat-value {color:#354E61;}
+        .g18-panel .g18-stat.g35-tone-positive {border-top-color:#70A58E;}
+        .g18-panel .g18-stat.g35-tone-positive .g18-stat-value {color:#337B65;}
+        .g18-panel .g18-stat.g35-tone-negative {border-top-color:#C78B8D;}
+        .g18-panel .g18-stat.g35-tone-negative .g18-stat-value {color:#B45F65;}
+        .g18-panel .g18-table-wrap {border:1px solid #E1E8ED;border-radius:10px;overflow-x:auto;}
+        .g18-panel .g18-table-wrap table {margin:0;min-width:710px;}
+        .g18-panel .g18-colored-table td,.g18-panel .g35-colored-table td {font-variant-numeric:tabular-nums;}
+        .g18-panel .g35-colored-table td.g35-number {font-weight:720;white-space:nowrap;}
+        .g18-panel .g35-colored-table td.g35-positive {color:#337B65;background:rgba(234,244,238,.35);}
+        .g18-panel .g35-colored-table td.g35-negative {color:#B45F65;background:rgba(249,238,238,.38);}
+        .g18-panel .g35-colored-table td.g35-neutral {color:#647789;}
+        .g18-panel .g35-colored-table th,.g18-panel .g35-colored-table td {padding:10px 12px;white-space:nowrap;}
+        .g18-panel .g35-colored-table th {font-size:12px;}
+        details.method-details {border-color:#E0E7ED;background:#FAFCFD;}
+        details.method-details summary {color:#496B83;}
+        .dashboard-footer {color:#8292A0;}
+        @media(max-width:1000px) {.container-fluid{padding:17px 17px 32px;}}
+        @media(max-width:900px) {.home-compare-grid{grid-template-columns:1fr;}.home-center{order:3;}}
+        /* ==============================================================
+           v37 | Graphite x muted sage / neutral editorial dashboard
+           Visual override only: no R calculations or UI identifiers changed.
+           1 structural brand hue + neutral surfaces; data colors are semantic.
+           ============================================================== */
+        :root {
+          --v37-ink:#293E42; --v37-main:#435F60; --v37-dark:#314B4C;
+          --v37-accent:#65867D; --v37-muted:#667773;
+          --v37-bg:#F5F6F4; --v37-soft:#EDF1EE;
+          --v37-white:#FFFFFF; --v37-border:#DDE5E1;
+          --v37-up:#357D65; --v37-down:#A9555B;
+          --v37-bench:#8CA3A7;
+          --blue:#435F60; --blue2:#77928A;
+          --green:#357D65; --red:#A9555B;
+          --ink:#293E42; --muted:#667773;
+          --bg:#F5F6F4; --card:#FFFFFF; --line:#DDE5E1;
+        }
+        body {
+          background:#F5F6F4; color:var(--v37-ink);
+          -webkit-font-smoothing:antialiased;
+        }
+        .container-fluid {max-width:1500px;}
+        /* Quiet brand header: typography instead of a heavy dark banner. */
+        .hero {
+          position:relative; background:#F0F3EF; color:#293E42;
+          border:1px solid #D7E2DC; border-left:4px solid #54766D;
+          border-radius:13px; box-shadow:none; padding:25px 29px;
+          margin-bottom:17px;
+        }
+        .dashboard-title {
+          color:#293E42; font-size:29px; line-height:1.24;
+          letter-spacing:-.5px; font-weight:800; margin-bottom:8px;
+        }
+        .dashboard-subtitle {color:#62746F; font-size:14px; line-height:1.6; max-width:1000px;}
+        .hero-badge {
+          color:#48685F; background:#FFFFFF; border:1px solid #DDE6E0;
+          margin-top:13px; padding:5px 10px; box-shadow:none;
+        }
+        .hero-badge .shiny-text-output {color:#3E6058;}
+        /* A small amount of brand color marks the selected destination. */
+        .nav-tabs {background:#FFFFFF; border:1px solid #DEE5E1; box-shadow:none;
+                   border-radius:12px; padding:7px; margin-bottom:19px;}
+        .nav-tabs > li > a {color:#58706B; font-weight:700; border-radius:8px;}
+        .nav-tabs > li > a:hover {background:#EDF2EE; color:#304B48;}
+        .nav-tabs > li.active > a,
+        .nav-tabs > li.active > a:hover,
+        .nav-tabs > li.active > a:focus {
+          color:#FFFFFF; background:#435F60; box-shadow:none;
+        }
+        .tabbable > .nav-pills > li > a {
+          background:#F0F3F1; color:#4F6963; border-radius:8px; font-weight:650;
+        }
+        .tabbable > .nav-pills > li.active > a,
+        .tabbable > .nav-pills > li.active > a:hover,
+        .tabbable > .nav-pills > li.active > a:focus {background:#55776F;color:#FFFFFF;}
+        /* Article headings are marked by type scale and whitespace, not blocks. */
+        .section-box {
+          background:#FFFFFF; border:1px solid #DFE6E1; border-radius:13px;
+          box-shadow:0 2px 9px rgba(38,61,58,.028); margin-bottom:18px;
+        }
+        .section-box > h2 {
+          background:transparent; border:0; padding:0 0 10px;
+          border-radius:0; border-bottom:1px solid #E6ECE8;
+          margin:0 0 16px; color:#2D4545;
+          font-size:23px; letter-spacing:-.25px; line-height:1.4;
+        }
+        .section-box h3 {color:#435F60; font-weight:750;}
+        .section-box > h3 {border:0; border-bottom:1px solid #E9EEEA; padding-bottom:8px;}
+        .section-box h4 {color:#3E5B57;}
+        .page-description {color:#697A77; font-size:14px; line-height:1.65;}
+        .v25-main-lead {
+          background:#F0F3EF; border:1px solid #DEE7E0;
+          border-left:4px solid #6C9184; border-radius:12px;
+          box-shadow:none; padding:19px 22px; margin-bottom:17px;
+        }
+        .v25-main-lead h2 {color:#2C4745; font-size:23px; margin-bottom:7px;}
+        .v25-main-lead p {color:#657873; font-size:13px;}
+        .reading-guide,.plot-explanation,.v25-method-hint,.home-qualifier {
+          background:#F3F6F3; color:#596F67;
+          border-left:3px solid #9DB6AB; border-radius:7px;
+        }
+        .method-note,.warning-note {background:#F9F7F2;border-color:#E9E3D8;
+                                   border-left:3px solid #B3A48D;color:#766E60;}
+        /* Uniform neutral cards; no decorative purple/yellow/green card backgrounds. */
+        .info-card {background:#FBFCFB;border:1px solid #DFE6E2;border-top:2px solid #8EA9A0;
+                    border-left:1px solid #DFE6E2;box-shadow:none;}
+        .info-card.accent-blue,.info-card.accent-purple,
+        .info-card.accent-green,.info-card.accent-amber,.info-card.accent-red {
+          background:#FBFCFB;border:1px solid #DFE6E2;
+          border-top:2px solid #8EA9A0;
+        }
+        .info-card:hover {box-shadow:0 3px 10px rgba(38,61,58,.045);transform:none;}
+        .info-card-title {color:#637B73; font-weight:720;}
+        .info-card-value {color:#344F4D; font-weight:790;}
+        .btn-primary,.btn-primary:focus {background:#435F60; border-color:#435F60; box-shadow:none;}
+        .btn-primary:hover,.btn-primary:active {background:#314B4C; border-color:#314B4C;}
+        .quick-button-row .btn {background:#FFFFFF;border-color:#D1DED8;color:#4D6A61;box-shadow:none;}
+        .quick-button-row .btn:hover {background:#F0F4F1;border-color:#AFC8BB;color:#344F49;}
+        .form-control,.selectize-input {border-color:#CBD9D1;color:#364D49;}
+        .form-control:focus,.selectize-input.focus {border-color:#658B7C;box-shadow:0 0 0 2px rgba(101,139,124,.13);}
+        .time-info {background:#F2F6F3;border-color:#E0E9E2;border-left:3px solid #96B3A5;color:#4D695D;}
+        /* Quant tables: legible heading, nearly white rows, restrained semantic tones. */
+        .table > thead > tr > th {background:#EAF0EC;color:#385950;border-bottom:1px solid #CDDCD2;font-weight:760;}
+        .table-striped > tbody > tr:nth-of-type(odd) {background:#FCFDFC;}
+        .table-hover > tbody > tr:hover {background:#F2F6F3;}
+        /* Portfolio comparison: subtle accents but one coordinated family. */
+        .home-heading {border-bottom:1px solid #E7ECE9;padding-bottom:12px;margin-bottom:13px;}
+        .home-heading h2 {color:#293E42;}
+        .home-window {background:#F0F4F1;border-radius:7px;padding:8px 11px;color:#56736B;}
+        .home-side {background:#FFFFFF;border:1px solid #DEE6E1;box-shadow:none;}
+        .home-side-0010 {background:#F3F7F4;border-top:3px solid #648D7F;border-color:#DAE6DE;}
+        .home-side-0050 {background:#F9FAF9;border-top:3px solid #91A8A7;border-color:#E0E7E4;}
+        .home-center {background:#FFFFFF;border-top:3px solid #C8D6CE;border-color:#E0E8E3;}
+        .home-side-0010 h2,.home-side-0050 h2,.home-center h2 {
+          background:transparent;color:#2D4746;padding:0;border-radius:0;
+        }
+        .home-side-0050 h2 {color:#617C7E;}
+        .home-center h2 {color:#526D66;}
+        .home-side-subtitle {color:#70817C;}
+        .home-stat {border-color:#E1E9E3;}
+        .home-stat > span {color:#637973;}
+        .home-stat > strong {color:#304B47;}
+        .home-qualifier {background:#F4F6F3;}
+        /* Semantic numbers: red/green mean measured performance, not decoration. */
+        .v8-up,.g10-v13 .g10-v14-positive {color:#357D65!important;}
+        .v8-down,.g10-v13 .g10-v14-negative {color:#A9555B!important;}
+        .v8-flat {color:#60746D!important;}
+        .g10-v13 .g10-v13-head,.g10-v12 .g10-v12-banner {
+          background:#F2F5F2;border:1px solid #E0E8E0;border-left:4px solid #6C9184;
+          box-shadow:none;
+        }
+        .g10-v13 .g10-v13-head h3,.g10-v12 .g10-v12-banner h3 {color:#2C4D46;}
+        .g10-v13 .g10-v13-block,.g10-v12 .g10-v12-card {border-color:#E0E7E2;box-shadow:none;}
+        .g10-v13 .g10-v13-block-top {background:#F0F4F1;border-radius:8px;padding:10px 12px;margin-bottom:12px;}
+        .g10-v13 .g10-v13-block h4 {color:#365650;}
+        .g10-v13 .g10-v13-block-num {background:#DFEAE3;color:#4A7161;}
+        .g10-v13 .g10-v10-metric,.g10-v12 .g10-v10-metric,
+        .g10-v13 .g10-v10-metric:nth-child(2),.g10-v13 .g10-v10-metric:nth-child(3),
+        .g10-v13 .g10-v10-metric:nth-child(4) {
+          background:#FAFCFA!important;border:1px solid #E0E8E1;
+          border-top:2px solid #9CB7A7;
+        }
+        .g10-v13 .g10-v10-metric .shiny-text-output {color:#354F49;}
+        .g10-v13 .g10-v13-config {background:#FDFEFD;border-left:3px solid #A0B8A9;}
+        .g10-v12 .g10-v11-fill,.g10-v13 .g10-v11-fill {background:#668D7D;}
+        .g10-v13 details.g10-v13-expand {box-shadow:none;border-color:#DFE7E2;border-left:3px solid #95B0A1;}
+        .g10-v13 details.g10-v13-expand > summary {background:#F3F6F3;}
+        .g10-v13 details.g10-v13-expand.warm {border-left-color:#A9B8AD;}
+        .g10-v13 details.g10-v13-expand.warm > summary {background:#F7F8F5;}
+        .rank-compare .rank-compare-card.momentum,
+        .rank-compare .rank-compare-card.risk {
+          background:#FBFCFB;border:1px solid #DFE7E2;border-top:3px solid #87A89B;
+        }
+        .rank-compare .rank-compare-card.risk {border-top-color:#9EACA8;}
+        .rank-compare .rank-compare-card h3 {color:#355C53;}
+        /* Backtest: return signs stay readable; every other number stays neutral. */
+        .g18-panel .g18-stat,.g18-panel .g18-stat:nth-child(even) {
+          background:#FBFCFB!important;border:1px solid #DEE6E0;
+          border-top:2px solid #A6BAAC;border-radius:10px;
+        }
+        .g18-panel .g18-stat-label {color:#637A72;font-weight:700;}
+        .g18-panel .g18-stat-value {color:#344C48;font-weight:780;}
+        .g18-panel .g18-stat.g35-tone-positive {background:#FBFCFB!important;border-top:2px solid #78A892;}
+        .g18-panel .g18-stat.g35-tone-positive .g18-stat-value {color:#357D65;}
+        .g18-panel .g18-stat.g35-tone-negative {background:#FBFCFB!important;border-top:2px solid #CC9599;}
+        .g18-panel .g18-stat.g35-tone-negative .g18-stat-value {color:#A9555B;}
+        .g18-panel .g18-table-wrap {border-color:#DAE5DD;box-shadow:none;}
+        .g18-panel .g35-colored-table th {background:#EAF0EC;color:#35584E;border-bottom:1px solid #C8DAD0;}
+        .g18-panel .g35-colored-table td.g35-positive {color:#357D65;background:#F1F8F2;}
+        .g18-panel .g35-colored-table td.g35-negative {color:#A9555B;background:#FBF2F2;}
+        .g18-panel .g35-colored-table td.g35-neutral {color:#586D67;background:transparent;}
+        .g18-panel .g18-control-row {background:#F4F7F4;border-color:#E0E9E1;}
+        .g16-single .g16-head {background:#F1F5F2;border-left-color:#91ADA1;border-color:#E0E8E0;}
+        .g21-all-garch .g21-setup,.v15-validation .v22-top {background:#F5F7F4;border-color:#E0E7E2;}
+        .v15-validation .v22-kpi {background:#FAFCFA;border-color:#DFE7E1;}
+        .v15-validation .v15-result-primary,.v15-validation .v15-result-secondary {
+          background:#FBFCFA;border-top-color:#91ACA0;
+        }
+        .v15-validation .v15-result-secondary {border-top-color:#B0BEB2;}
+        details.method-details {border-color:#E0E7E1;background:#F8FAF8;}
+        details.method-details summary {color:#42695A;}
+        details.method-details[open] {background:#FFFFFF;}
+        .dashboard-footer {color:#70817C;}
+        /* Responsive rhythm matches existing page layout. */
+        @media(max-width:900px) {.home-compare-grid {grid-template-columns:1fr;}.home-center {order:3;}}
+        @media(max-width:600px) {
+          .hero {padding:19px 16px;}
+          .dashboard-title {font-size:24px;}
+          .section-box > h2 {font-size:20px;}
+          .v25-main-lead {padding:15px;}
+          .g10-v13 .g10-v13-block-top {padding:9px 10px;}
+        }
+        @media(max-width:600px) {
+          .container-fluid{padding:12px 10px 28px;}
+          .hero{padding:19px 17px;border-radius:11px;}
+          .dashboard-title{font-size:24px;}
+          .section-box{padding:16px 14px;border-radius:11px;}
+          .nav-tabs>li>a{padding:9px 11px;font-size:12px;}
+          .home-compare-grid .home-stat>strong{font-size:21px!important;}
+          .home-compare-grid .home-center .home-stat>strong{font-size:19px!important;}
+          .g18-panel .g18-stat-grid{gap:8px;}
+          .g18-panel .g18-stat{padding:12px 13px;}
+        }
 
         "
         
@@ -2270,10 +2552,10 @@ tabPanel(
                   div(class = "home-stat", span("年化波動"), strong(uiOutput("v7_50_vol", inline = TRUE))),
                   div(class = "home-stat", span("Sharpe 比率"), strong(uiOutput("v7_50_sharpe", inline = TRUE))))
           ),
-          p(class = "home-small-note", "漲跌數字：漲紅、跌綠。差額以百分點（pp）表示；風險指標不以正負代表好壞。"),
+          p(class = "home-small-note", "報酬數字：正向柔綠、負向柔紅。差額以百分點（pp）表示；風險指標不以正負代表好壞。"),
           div(class = "home-qualifier",
               "比較口徑：0010 為目前十檔名單及權重的本期回溯持有試算，非歷史各期實際選股績效；",
-              "未扣交易成本。完整 T+1、含成本的季度策略回測請見「模型驗證 → 季度策略回測」。")
+              "未扣交易成本。完整的下一交易日進場、含成本季度策略回測請見「模型驗證 → 季度策略回測」。")
       ),
       div(class = "section-box",
           h2("0010 與 0050 累積報酬走勢"),
@@ -2561,14 +2843,85 @@ tabPanel(
             p(class = "rank-compare-note",
               "兩張榜單獨立排名，左右相同名次不一定是同一檔股票。排名是研究依據，不代表未來報酬保證。")
           )
-        ),
+        )
+)
+    ),
+
+tabPanel("模型驗證",
+      div(class="section-box v25-main-lead",
+        h2("0010｜研究驗證"),
+        p("季度績效、選股與權重敏感度、GARCH 波動預測及樣本外誤差集中在這裡；先看預測，再看可靠性。"),
+        p(class="v25-method-hint","季度勝率、選股排名命中率、GARCH 模型領先比例是不同指標，不能視為同一種準確率。")),
+      tabsetPanel(id="v25_validation_tabs",type="pills",
 tabPanel(
-          "權重設定實驗",
-          div(
+            "季度策略回測",
+            div(class = "g18-panel",
+              h3("0010 季度再平衡回測"),
+              p(class = "g18-intro", "每季依當時資料選股、於次一交易日進場，觀察扣除成本後是否優於 0050。可按評分年度查看季度結果。"),
+              div(class = "g18-warning", "年份依「評分日」分組，不是日曆年度報酬；部分季度的成交至出場期間可能跨年。"),
+              actionButton("v5_run_bt", "執行完整季度回測", class = "btn-primary"),
+              p(class = "g18-hint", "只在按下按鈕時執行回測；後續切換年份直接篩選結果，不會重新運算。歷史波動風險依既有模型使用 EWMA（λ = 0.94），並非每季完整 GARCH 估計。"),
+              div(class = "g18-control-row",
+                selectInput("g18_bt_year", "查看評分年度", choices = c("全部年度" = "all"),
+                  selected = "all", width = "100%")
+              ),
+              uiOutput("g18_bt_summary"),
+              p(class = "g18-hint", "累積報酬差距＝0010 扣成本累積報酬－0050 同期累積報酬，單位為「百分點」；勝率則代表贏過 0050 的季度比例，兩者可能不同方向。"),
+              h4("各評分年度的 0010／0050 報酬"),
+              p(class = "g18-hint", "將同一評分年度內的季度報酬複利串接；不是按 1 月 1 日至 12 月 31 日計算。"),
+              plotOutput("g18_bt_year_plot", height = "330px"),
+              div(class = "g18-table-wrap", uiOutput("g18_bt_year_table")),
+              h4(textOutput("g18_bt_quarter_title", inline = TRUE)),
+              p(class = "g18-hint", "選定年度可查看該年度所有已完成回測季度；選「全部年度」時先顯示最近八季。"),
+              div(class = "g18-table-wrap", uiOutput("g18_bt_quarter_table")),
+              tags$details(class = "g18-detail",
+                tags$summary(
+                  span(class = "g18-detail-icon", "02"),
+                  span(class = "g18-detail-copy", tags$strong("完整績效、排名有效性與淨值曲線"),
+                       tags$small("Spearman IC、命中率、Sharpe、最大回撤、扣成本淨值與全部交易明細")),
+                  span(class = "g18-detail-action", "展開 ▾")
+                ),
+                div(class = "g18-detail-content",
+                  p(class = "g18-hint", "以下是原本的「全回測期間」指標與淨值，不隨年份選單改變；避免把局部年度與完整期間混淆。"),
+                  h4("原版排名指標（Spread 尚待修正）"),
+                  p(class="v25-rank-warning", "原版 Spread 的分組使用事後實際報酬，不能據此宣稱高分股票勝過低分股票。本版保留原回測結果不改公式；評估選股時請改看『選股有效性』的歷史實際名次與獨立排名比較。"),
+                  tableOutput("v5_bt_acc"),
+                  div(class = "plot-explanation", textOutput("v5_bt_result", inline = TRUE)),
+                  h4("全期間績效摘要"), tableOutput("v5_bt_stats"),
+                  h4("全期間淨值走勢（已扣成本）"), plotOutput("v5_bt_curve", height = "420px"),
+                  h4("完整交易明細"),
+                  div(class = "g18-table-wrap", tableOutput("v5_bt_log")),
+                  downloadButton("v5_bt_csv", "下載完整交易明細 CSV")
+                )
+              )
+            )
+          ),
+tabPanel(
+  "選股與權重驗證",
+  div(class="section-box v25-valid-rank",
+      h2("01｜歷史選股有效性｜選出來的股票，後來真的表現比較好嗎？"),
+      p(class="page-description", "比較歷史評分日選出的 0010 股票，與同一期其他可比較成分股的未來實際報酬名次。這不是拿已知漲幅回頭選股。"),
+      div(class="v25-method-hint", "先在『季度策略回測』按下執行；再回到這裡選擇歷史季度。評分只使用該評分日之前的資料，報酬從下一交易日的成交價算至該季出場日。"),
+      selectInput("v25_rank_quarter", "選擇要驗證的歷史評分季度", choices=c("請先執行季度策略回測"=""), width="100%"),
+      uiOutput("v25_rank_status"),
+      uiOutput("v25_rank_summary"),
+      h3("本季入選股票｜實際報酬相對排名"),
+      div(class="g18-table-wrap",tableOutput("v25_rank_selected")),
+      p(class="v25-method-hint", "『實際報酬排名』是按同一持有期間的調整後價格報酬由高到低排列；不含個別股票交易成本。選股評分排名與事後實際報酬名次是不同概念。"),
+      tags$details(class="method-details",
+        tags$summary("查看全部可比較成分股的未來報酬排名"),
+        div(class="g18-table-wrap",tableOutput("v25_rank_all")),
+        downloadButton("v25_rank_csv", "下載該季完整排名 CSV")),
+      p(class="v25-rank-warning", "研究限制：可比較範圍是目前 0050 成分股名單在該評分日具有效評分資料、且進出場日均有有效價格者，並非當年的歷史 0050 正式成分股名單；存在存活者偏誤。單季排名也不能直接代表長期選股能力。")
+  ),
+  div(class="v38-weight-section",
+    h3("02｜權重設定實驗｜目前選股會如何改變？"),
+    p(class="page-description", "此處僅調整研究用動能／風險比例，不會修改正式 0010 的權重或歷史回測。"),
+div(
             class = "section-box rank-lab",
-            h2("選股權重比較實驗"),
+            h4("權重設定與當期選股名單"),
             p(class = "page-description",
-              "調整研究用動能／風險權重，觀察本期會選出哪些股票；歷史有效性統一在「模型驗證」查看，不影響正式 0010。"),
+              "調整研究用動能／風險權重，觀察本期入選股票的變化；下方可接著檢查不同權重設定的歷史排名有效性。不影響正式 0010。"),
             div(class = "time-info", strong("目前評分日："), textOutput("rank_lab_date", inline = TRUE),
                 "｜與前兩個排名使用同一批當期分數。"),
             fluidRow(
@@ -2595,78 +2948,9 @@ tabPanel(
                          tags$summary("展開完整排名與篩選理由"),
                          tableOutput("rank_lab_full_table"))
           )
-        ))
-    ),
-
-tabPanel("模型驗證",
-      div(class="section-box v25-main-lead",
-        h2("0010｜研究驗證"),
-        p("先檢查整套 0010 策略與選股評分是否有效，再確認 GARCH 波動預測的樣本外誤差；T+1 預測與驗證已整合到『市場分析 → T+1』。"),
-        p(class="v25-method-hint","季度勝率、選股排名命中率、GARCH 模型領先比例是不同指標，不能視為同一種準確率。")),
-      tabsetPanel(id="v25_validation_tabs",type="pills",
-tabPanel(
-            "季度策略回測",
-            div(class = "g18-panel",
-              h3("0010 季度再平衡回測"),
-              p(class = "g18-intro", "每季依當時資料選股、於次一交易日進場，觀察扣除成本後是否優於 0050。可按評分年度查看季度結果。"),
-              div(class = "g18-warning", "年份依「評分日」分組，不是日曆年度報酬；部分季度的成交至出場期間可能跨年。"),
-              actionButton("v5_run_bt", "執行完整季度回測", class = "btn-primary"),
-              p(class = "g18-hint", "只在按下按鈕時執行回測；後續切換年份直接篩選結果，不會重新運算。歷史波動風險依既有模型使用 EWMA（λ = 0.94），並非每季完整 GARCH 估計。"),
-              div(class = "g18-control-row",
-                selectInput("g18_bt_year", "查看評分年度", choices = c("全部年度" = "all"),
-                  selected = "all", width = "100%")
-              ),
-              uiOutput("g18_bt_summary"),
-              p(class = "g18-hint", "累積報酬差距＝0010 扣成本累積報酬－0050 同期累積報酬，單位為「百分點」；勝率則代表贏過 0050 的季度比例，兩者可能不同方向。"),
-              h4("各評分年度的 0010／0050 報酬"),
-              p(class = "g18-hint", "將同一評分年度內的季度報酬複利串接；不是按 1 月 1 日至 12 月 31 日計算。"),
-              plotOutput("g18_bt_year_plot", height = "330px"),
-              div(class = "g18-table-wrap", tableOutput("g18_bt_year_table")),
-              h4(textOutput("g18_bt_quarter_title", inline = TRUE)),
-              p(class = "g18-hint", "選定年度可查看該年度所有已完成回測季度；選「全部年度」時先顯示最近八季。"),
-              div(class = "g18-table-wrap", tableOutput("g18_bt_quarter_table")),
-              tags$details(class = "g18-detail",
-                tags$summary(
-                  span(class = "g18-detail-icon", "02"),
-                  span(class = "g18-detail-copy", tags$strong("完整績效、排名有效性與淨值曲線"),
-                       tags$small("Spearman IC、命中率、Sharpe、最大回撤、扣成本淨值與全部交易明細")),
-                  span(class = "g18-detail-action", "展開 ▾")
-                ),
-                div(class = "g18-detail-content",
-                  p(class = "g18-hint", "以下是原本的「全回測期間」指標與淨值，不隨年份選單改變；避免把局部年度與完整期間混淆。"),
-                  h4("原版排名指標（Spread 尚待修正）"),
-                  p(class="v25-rank-warning", "原版 Spread 的分組使用事後實際報酬，不能據此宣稱高分股票勝過低分股票。本版保留原回測結果不改公式；評估選股時請改看『選股有效性』的歷史實際名次與獨立排名比較。"),
-                  tableOutput("v5_bt_acc"),
-                  div(class = "plot-explanation", textOutput("v5_bt_result", inline = TRUE)),
-                  h4("全期間績效摘要"), tableOutput("v5_bt_stats"),
-                  h4("全期間淨值走勢（已扣成本）"), plotOutput("v5_bt_curve", height = "420px"),
-                  h4("完整交易明細"),
-                  div(class = "g18-table-wrap", tableOutput("v5_bt_log")),
-                  downloadButton("v5_bt_csv", "下載完整交易明細 CSV")
-                )
-              )
-            )
-          ),
-tabPanel(
-  "選股有效性",
-  div(class="section-box v25-valid-rank",
-      h2("選股有效性｜選出來的股票，後來真的表現比較好嗎？"),
-      p(class="page-description", "比較歷史評分日選出的 0010 股票，與同一期其他可比較成分股的未來實際報酬名次。這不是拿已知漲幅回頭選股。"),
-      div(class="v25-method-hint", "先在『季度策略回測』按下執行；再回到這裡選擇歷史季度。評分只使用該評分日之前的資料，報酬從下一交易日的成交價算至該季出場日。"),
-      selectInput("v25_rank_quarter", "選擇要驗證的歷史評分季度", choices=c("請先執行季度策略回測"=""), width="100%"),
-      uiOutput("v25_rank_status"),
-      uiOutput("v25_rank_summary"),
-      h3("本季入選股票｜實際報酬相對排名"),
-      div(class="g18-table-wrap",tableOutput("v25_rank_selected")),
-      p(class="v25-method-hint", "『實際報酬排名』是按同一持有期間的調整後價格報酬由高到低排列；不含個別股票交易成本。選股評分排名與事後實際報酬名次是不同概念。"),
-      tags$details(class="method-details",
-        tags$summary("查看全部可比較成分股的未來報酬排名"),
-        div(class="g18-table-wrap",tableOutput("v25_rank_all")),
-        downloadButton("v25_rank_csv", "下載該季完整排名 CSV")),
-      p(class="v25-rank-warning", "研究限制：可比較範圍是目前 0050 成分股名單在該評分日具有效評分資料、且進出場日均有有效價格者，並非當年的歷史 0050 正式成分股名單；存在存活者偏誤。單季排名也不能直接代表長期選股能力。")
   ),
-  tags$details(class="method-details v25-validate-extra",
-    tags$summary("展開歷史排名訊號與權重敏感度比較（Spearman IC）"),
+  div(class="v25-validate-extra",
+    h3("03｜歷史訊號與權重敏感度（Spearman IC）"),
     div(class="section-box rank-lab",
       h3("多期選股排名有效性"),
       p(class="page-description","以歷史評分而非事後報酬定義高低分組；這是選股訊號測試，不等於含交易成本的 0010 策略回測。"),
@@ -2677,7 +2961,7 @@ tabPanel(
             div(style = "margin-top:12px;", textOutput("rank_lab_history_status")),
             tableOutput("rank_lab_history_table"),
             div(class = "plot-explanation",
-                "這是『排名訊號』的比較：Top 10 後續報酬與 Bottom 10 後續報酬都採等權平均，未扣交易成本；不是正式 0010 組合的 T+1 含成本回測。",
+                "這是『排名訊號』的比較：Top 10 後續報酬與 Bottom 10 後續報酬都採等權平均，未扣交易成本；不是正式 0010 組合下一交易日進場、含成本的季度策略回測。",
                 tags$br(),
                 "IC 為當期分數與未來 63 日報酬的 Spearman 相關；Top10 − Bottom10 依當期評分排序，不使用未來報酬挑選 Bottom10。",
                 tags$br(),
@@ -2686,6 +2970,156 @@ tabPanel(
   )
 ),
 
+tabPanel("GARCH 波動預測",
+          div(class="v26-garch-panel",
+            div(class="v26-garch-intro",
+              h3("GARCH｜未來波動預測"),
+              p("選擇單一股票查看預測走勢，或比較 0050 全體成分股的預測波動排名。")),
+            div(class="v26-garch-switch",
+tabsetPanel(id="v25_garch_tabs",type="pills",
+tabPanel(
+            "單檔預測",
+            div(class = "g16-single",
+              div(class = "g16-head",
+                span(class = "g16-eyebrow", "GARCH(1,1) · 單檔分析"),
+                h3("這檔股票，未來一季的波動可能怎麼變？"),
+                p("先比較預測與歷史波動，再查看走勢；統計參數與檢定結果可於下方展開。")
+              ),
+              div(class = "g16-controls",
+                fluidRow(
+                  column(5, selectInput("g10_stock", "選擇股票",
+                    choices = setNames(stock_info$symbol,
+                      paste0(stock_info$name, " (", stock_info$symbol, ")")),
+                    selected = "2330")),
+                  column(4, selectInput("g10_window", "估計資料期間",
+                    choices = c("近 2 年" = 500, "近 4 年" = 1000, "近 6 年" = 1500),
+                    selected = 1000)),
+                  column(3, div(class = "g16-horizon",
+                    span("預測範圍"),
+                    strong("未來 63 個交易日"),
+                    tags$small("約一季；非價格漲跌預測")))
+                )
+              ),
+              div(class = "g16-kpis",
+                div(class = "g16-kpi",
+                  span("未來一季預測年化波動"),
+                  strong(textOutput("g10_kpi_fvol", inline = TRUE)),
+                  tags$small("GARCH 模型預測")),
+                div(class = "g16-kpi",
+                  span("近一年歷史年化波動"),
+                  strong(textOutput("g10_kpi_rvol", inline = TRUE)),
+                  tags$small("作為比較基準")),
+                div(class = "g16-kpi",
+                  span("預測／歷史比值"),
+                  strong(textOutput("g10_kpi_ratio", inline = TRUE)),
+                  tags$small("大於 1 表示預測波動較高")),
+                div(class = "g16-kpi g16-kpi-state",
+                  span("波動狀態"),
+                  strong(textOutput("g10_kpi_regime", inline = TRUE)),
+                  tags$small("依現有 0.90／1.10 門檻判定"))
+              ),
+              div(class = "g16-insight",
+                div(class = "g16-insight-head", "這次的預測要怎麼看？"),
+                uiOutput("g16_one_summary")
+              ),
+              div(class = "g16-graph-grid",
+                div(class = "g16-graph-card",
+                  div(class = "g16-graph-tag", "01｜往後看"),
+                  h4("未來 63 日波動預測"),
+                  p("綠線為預測波動；紅色虛線為近一年歷史波動基準。"),
+                  plotOutput("g10_fan", height = "325px"),
+                  uiOutput("g17_forecast_readout")),
+                div(class = "g16-graph-card",
+                  div(class = "g16-graph-tag", "02｜往回看"),
+                  h4("模型與歷史波動對照"),
+                  p("藍線為 GARCH 配適波動，灰線為近 21 日的歷史波動估計。"),
+                  plotOutput("g10_vol_path", height = "325px"),
+                  uiOutput("g17_history_readout"))
+              ),
+              div(class = "g16-foot",
+                "波動代表價格起伏程度，不等於未來漲跌方向；本頁為模型估計，不代表投資建議。"
+              ),
+              h4(class = "g16-more-head", "完整統計資料"),
+              p(class = "g16-more-lead", "保留最大概似估計與診斷表。需要研究細節時，直接點開對應項目。"),
+              tags$details(class = "g16-details",
+                tags$summary(
+                  span(class = "g16-details-num", "01"),
+                  span(class = "g16-details-copy",
+                    tags$strong("查看模型參數｜ω、α、β 與波動持續性"),
+                    tags$small("最大概似估計值、標準誤、t 值與半衰期")),
+                  span(class = "g16-details-action", "展開")
+                ),
+                div(class = "g16-details-body",
+                  p("這一區說明模型如何描述波動的衝擊與延續；數值用來檢查估計結果，不是股票的預測報酬。"),
+                  div(class = "g16-table-scroll", tableOutput("g10_param_table"))
+                )
+              ),
+              tags$details(class = "g16-details",
+                tags$summary(
+                  span(class = "g16-details-num", "02"),
+                  span(class = "g16-details-copy",
+                    tags$strong("查看模型診斷｜殘差、收斂與風險值"),
+                    tags$small("Ljung-Box p 值、AIC／BIC、VaR／CVaR 等完整指標")),
+                  span(class = "g16-details-action", "展開")
+                ),
+                div(class = "g16-details-body",
+                  p("Ljung-Box 用來檢查標準化殘差是否仍有自相關；p 值大於 0.05 只代表沒有足夠證據拒絕無自相關假設，並非保證模型正確。"),
+                  div(class = "g16-table-scroll", tableOutput("g10_diag"))
+                )
+              )
+            )
+          ),
+tabPanel(
+            "全體波動排名",
+            div(class = "g18-panel g19-all-garch g20-all-garch g21-all-garch",
+              h3("0050 成分股｜未來一季波動預測"),
+              p(class = "g18-intro", "用過去的股價資料估計 GARCH，觀察未來一季哪些成分股的價格起伏可能較大。這裡比較的是風險，不是預測股價漲跌。"),
+              div(class = "g21-setup",
+                div(class = "g21-run-row",
+                  div(class = "g21-window-control",
+                    selectInput("g21_all_window", "歷史估計期間",
+                      choices = c("近 2 年（500 個交易日）" = 500,
+                                  "近 4 年（1,000 個交易日）" = 1000,
+                                  "近 6 年（1,500 個交易日）" = 1500),
+                      selected = 1000, width = "100%")),
+                  div(class = "g21-run-action",
+                    actionButton("g10_run_all", "執行全體 GARCH 估計", class = "btn-primary"))
+                ),
+                div(class = "g21-setup-cards",
+                  div(class = "g21-setup-card",
+                    span("準備使用的歷史資料"),
+                    strong(textOutput("g21_window_label", inline = TRUE)),
+                    tags$small("最多取所選交易日數的報酬；資料不足者使用可取得期間")),
+                  div(class = "g21-setup-card",
+                    span("預測未來"), strong("63 個交易日"),
+                    tags$small("約一季；波動以年化 % 表示，不是預測一年"))
+                )
+              ),
+              uiOutput("g21_all_status"),
+              uiOutput("g18_g_summary"),
+              h4("全體股票｜預測年化波動排名"),
+              div(class = "g21-reading",
+                tags$strong("這張圖怎麼看？"),
+                span("長條越長，代表模型預測未來一季的價格波動可能越劇烈；不是未來報酬排名，也不代表一定下跌。")),
+              uiOutput("g18_g_chart_box"),
+              p(class = "g18-hint", "圖表列出全部有效預測股票；歷史波動、比值及 GARCH 模型參數保留在下方展開區。個股波動不等於 0010 整體組合波動。"),
+              tags$details(class = "g18-detail",
+                tags$summary(
+                  span(class = "g18-detail-icon", "01"),
+                  span(class = "g18-detail-copy", tags$strong("完整 GARCH 參數與個股數據"),
+                       tags$small("查看所有估計結果的 ω、α、β、持續性、半衰期、預測／歷史波動與比值")),
+                  span(class = "g18-detail-action", "展開 ▾")
+                ),
+                div(class = "g18-detail-content",
+                  p(class = "g18-hint", "完整表格保留原本的參數與比值資訊；缺少足夠資料的股票可能顯示空值，這與上方圖表的有效股票數不同。"),
+                  div(class = "g18-table-wrap", tableOutput("g10_all_table"))
+                )
+              )
+            )
+          ))
+            )
+          )
+        ),
 tabPanel(
       "波動預測誤差",
       div(
@@ -2783,7 +3217,7 @@ tabPanel(
 tabPanel("市場分析",
       div(class="section-box v25-main-lead",
         h2("市場分析與股票資訊"),
-        p("查看股票資訊、T+1 隔日預測與驗證、產業比較及 GARCH 波動；T+1 預測報酬，GARCH 預測波動，兩者不要混淆。")),
+        p("查看股票價格、報酬、風險與產業比較；GARCH 波動預測及樣本外驗證統一放在「模型驗證」。")),
       tabsetPanel(id="v25_market_tabs",type="pills",
 tabPanel(
       
@@ -3009,129 +3443,6 @@ h3("日對數報酬分布"),
       )
     ),
 
-      # v28｜T+1：在同一個市場分析子頁提供「預測／驗證」兩個入口。
-      tabPanel("T+1 預測與驗證",
-        div(class="section-box v27-panel v28-panel",
-          h2("T+1｜隔日預測與歷史驗證"),
-          p(class="page-description",
-            "使用當時已知的資料，每次預測下一交易日；先看預測訊號，再用歷史樣本外資料核對準確度。"),
-          div(class="v27-controls",
-            fluidRow(
-              column(5,selectInput("v27_m_stock","單檔預測股票",
-                choices=setNames(stock_info$symbol[stock_info$symbol %in% dashboard_symbols],
-                  paste0(stock_info$name[stock_info$symbol %in% dashboard_symbols],
-                         "（",stock_info$symbol[stock_info$symbol %in% dashboard_symbols],"）")),
-                selected="2330")),
-              column(4,selectInput("v28_train","每次建模使用的歷史日報酬",
-                choices=c("近 1 年（252 日）"=252,"近 2 年（504 日）"=504,
-                          "近 3 年（756 日）"=756),selected=252)),
-              column(3,div(class="v28-run-actions",
-                actionButton("v30_run","執行 T+1 全體＋單檔分析",class="btn-primary")))
-            ),
-            tags$details(class="v28-advanced",
-              tags$summary("進階設定｜樣本外測試期間"),
-              selectInput("v27_m_test","歷史樣本外驗證天數",
-                choices=c("近 20 個交易日（觀察）"=20,"近 63 個交易日（預設）"=63,
-                          "近 126 個交易日（對照）"=126),selected=63),
-              selectInput("v29_level","名目預測區間涵蓋率",
-                choices=c("95%（預設）"=0.95,"90%（較窄）"=0.90),selected=0.95),
-              p(class="v27-hint","建模期間＝每個預測日用多少筆過去報酬估計；驗證期間＝評估最近多少個交易日。95% 比 90% 的區間通常更寬；涵蓋率仍需樣本外驗證。"))
-          ),
-          p(class="v27-hint","v33 實驗方向模型：Ridge Logistic（原 5 項特徵＋大盤近 5 日動能＋相對 0050 五日強弱；固定 L2 懲罰 10），舊 Logistic 只作同期間基準。上漲機率尚未校準，不代表真實勝率。隔日報酬／價格區間仍由 AR(1)＋GARCH(1,1) 估計。歷史驗證每 21 日重新估計 GARCH 參數，其間每日更新條件波動。新版快取每檔的歷史特徵，避免逐日重算；一次執行全體後，單檔切換直接查看相同結果。"),
-          div(class="v28-primary-tabs",
-            tabsetPanel(id="v28_main_tabs",type="pills",
-              tabPanel("預測",
-                tabsetPanel(id="v28_prediction_tabs",type="pills",
-                  tabPanel("全體偏多／偏空訊號",
-                    div(class="v28-part",
-                      h3("0050 成分股｜隔日方向訊號"),
-                      p(class="v27-hint","使用同一資料基準日：依 Ridge Logistic 的實驗性上漲機率排序，偏多取機率超過 50% 的前 5 檔；偏空取低於 50% 的後 5 檔。機率尚未校準，只是研究訊號，不代表實際勝率或買賣建議。"),
-                      uiOutput("v28_all_status"),
-                      uiOutput("v28_snapshot_kpis"),
-                      fluidRow(
-                        column(6,div(class="v28-signals v28-up",
-                          h4("偏多關注｜最多 5 檔"),
-                          tableOutput("v28_positive_table"))),
-                        column(6,div(class="v28-signals v28-down",
-                          h4("偏空觀察｜最多 5 檔"),
-                          tableOutput("v28_negative_table")))
-                      ),
-                      p(class="v27-hint","上漲機率來自 Ridge Logistic；報酬預測及價格區間來自 AR＋GARCH，兩種模型可能給出不同方向。即使預估機率較高，也需要和歷史命中率一起看。"),
-                      tags$details(class="method-details",
-                        tags$summary("查看全部股票的隔日預測報酬與區間"),
-                        div(class="v27-overflow",tableOutput("v28_full_snapshot")),
-                        downloadButton("v28_snapshot_csv","下載全體預測 CSV"))
-                    )
-                  ),
-                  tabPanel("單檔預測",
-                    div(class="v28-part",
-                      h3("單檔 T+1｜預測與實際價格"),
-                      uiOutput("v27_market_status"),
-                      uiOutput("v27_next_summary"),
-                      div(class="v27-chart-controls",
-                        h3("最近的逐日預測"),
-                        radioButtons("v27_show_days","畫面顯示範圍",
-                          choices=c("近 5 日"=5,"近 10 日"=10),selected=10,inline=TRUE)),
-                      plotOutput("v27_price_plot",height="390px"),
-                      p(class="v27-hint","藍線＝AR(1) 預測調整後價格；橘線＝實際調整後價格；陰影＝95%（或所選涵蓋率）的 GARCH 預測區間。方向訊號另外由 Ridge Logistic 估計，兩者不保證一致。"),
-                      tags$details(class="method-details",
-                        tags$summary("查看最近的預測誤差"),
-                        tableOutput("v27_recent_table")),
-                      div(class="v27-foot","歷史曲線是用過去資料逐日模擬的樣本外預測；目前最新一期尚未以每日不可覆寫紀錄保存，不能把它當成已公開預告並經實際追蹤的預測。")
-                    )
-                  )
-                )
-              ),
-              tabPanel("驗證",
-                tabsetPanel(id="v28_validation_tabs",type="pills",
-                  tabPanel("全體訊號驗證",
-                    div(class="v28-part",
-                      h3("偏多／偏空 Top 5｜歷史樣本外驗證"),
-                      p(class="v27-hint","所有股票對齊同一批 0050 交易日；每天只用當時已知資料，依 Ridge Logistic 預估上漲機率挑選偏多／偏空各最多 5 檔，隔日核對實際方向。"),
-                      uiOutput("v28_all_status_validation"),
-                      uiOutput("v28_validation_kpis"),
-                      h4("歷史訊號命中率與後續實際報酬"),
-                      tableOutput("v28_signal_summary"),
-                      p(class="v27-hint","偏多命中＝隔日實際上漲；偏空命中＝隔日實際下跌。『全體股票同期方向比例』作為簡單基準，檢查挑選 Top 5 是否有額外價值。平均隔日報酬是觀察性數據，不含交易成本，不能當作可交易的投資淨績效。"),
-                      h4("方向模型比較｜相同樣本外日期"),
-                      tableOutput("v33_all_compare"),
-                      p(class="v27-hint","Ridge Logistic 和原 Logistic 使用相同股票、相同測試日，比較方向準確率、Balanced Accuracy 與 Brier（越低越好）；只報告結果，不把測試期當成調參依據。固定 lambda=10，尚未經獨立校準。"),
-                      h4("全體股票｜預測誤差摘要"),
-                      tableOutput("v28_all_error_summary"),
-                      p(class="v27-hint","AR＋GARCH 的 MAE／RMSE 衡量報酬點預測；Ridge Logistic 的方向命中率與 Brier 分數衡量漲跌機率。95% 區間涵蓋率必須搭配平均寬度一起看，各檔股票先計算再等權平均。"),
-                      p(class="v27-hint","解讀提醒：95% 預測區間本來就較寬，落在區間內的次數多，不代表明日漲跌猜得準；Ridge 的方向結果必須同時與原 Logistic、永遠猜漲的同期基準比較。若兩者差不多，暫時不宜當成交易建議。"),
-                      tags$details(class="method-details",
-                        tags$summary("查看每天的 Top 5 訊號驗證明細"),
-                        div(class="v27-overflow",tableOutput("v28_daily_signal_table")),
-                        downloadButton("v28_signal_csv","下載歷史訊號明細 CSV")),
-                      div(class="v27-foot","目前僅驗證『前日收盤後訊號 → 次日收盤結果』的方向與報酬描述。若要研究真實交易獲利，必須使用可成交的 T+1 價格、計入交易成本及換手；本版不虛構扣成本淨績效。使用現行 0050 成分股回推歷史，亦存在存活者偏誤。")
-                    )
-                  ),
-                  tabPanel("單檔誤差驗證",
-                    div(class="v28-part",
-                      h3("單檔 T+1｜樣本外準確度"),
-                      uiOutput("v27_validation_status"),
-                      uiOutput("v27_validation_cards"),
-                      h4("單檔方向模型｜相同測試日比較"),
-                      tableOutput("v33_single_compare"),
-                      h4("每日預測誤差（實際－預測）"),
-                      plotOutput("v27_error_plot",height="290px"),
-                      p(class="v27-hint","誤差＝實際隔日報酬－AR 預測報酬，正值代表實際報酬較高。下方同時顯示 Ridge Logistic 方向表現與 AR＋GARCH 的區間品質。"),
-                      h4("預測區間品質｜歷史樣本外"),
-                      tableOutput("v30_interval_summary"),
-                      p(class="v27-hint","涵蓋率應與 95% 名目水準及區間寬度一同解讀。95% 區間比 90% 更寬，不等於預測方向更準；若區間已非常寬，應同時檢查平均寬度與區間損失。"),
-                      tags$details(class="method-details",
-                        tags$summary("查看完整逐日預測、區間與誤差"),
-                        div(class="v27-overflow",tableOutput("v27_validation_table"))),
-                      downloadButton("v27_csv","下載單檔樣本外 CSV")
-                    )
-                  )
-                )
-              )
-            )
-          )
-        )
-      ),
 tabPanel(
       
       "產業比較",
@@ -3224,157 +3535,8 @@ tabPanel(
         
       )
       
-    ),
-        tabPanel("GARCH 波動預測",
-          div(class="v26-garch-panel",
-            div(class="v26-garch-intro",
-              h3("GARCH｜未來波動預測"),
-              p("選擇單一股票查看預測走勢，或比較 0050 全體成分股的預測波動排名。")),
-            div(class="v26-garch-switch",
-tabsetPanel(id="v25_garch_tabs",type="pills",
-tabPanel(
-            "單檔預測",
-            div(class = "g16-single",
-              div(class = "g16-head",
-                span(class = "g16-eyebrow", "GARCH(1,1) · 單檔分析"),
-                h3("這檔股票，未來一季的波動可能怎麼變？"),
-                p("先比較預測與歷史波動，再查看走勢；統計參數與檢定結果可於下方展開。")
-              ),
-              div(class = "g16-controls",
-                fluidRow(
-                  column(5, selectInput("g10_stock", "選擇股票",
-                    choices = setNames(stock_info$symbol,
-                      paste0(stock_info$name, " (", stock_info$symbol, ")")),
-                    selected = "2330")),
-                  column(4, selectInput("g10_window", "估計資料期間",
-                    choices = c("近 2 年" = 500, "近 4 年" = 1000, "近 6 年" = 1500),
-                    selected = 1000)),
-                  column(3, div(class = "g16-horizon",
-                    span("預測範圍"),
-                    strong("未來 63 個交易日"),
-                    tags$small("約一季；非價格漲跌預測")))
-                )
-              ),
-              div(class = "g16-kpis",
-                div(class = "g16-kpi",
-                  span("未來一季預測年化波動"),
-                  strong(textOutput("g10_kpi_fvol", inline = TRUE)),
-                  tags$small("GARCH 模型預測")),
-                div(class = "g16-kpi",
-                  span("近一年歷史年化波動"),
-                  strong(textOutput("g10_kpi_rvol", inline = TRUE)),
-                  tags$small("作為比較基準")),
-                div(class = "g16-kpi",
-                  span("預測／歷史比值"),
-                  strong(textOutput("g10_kpi_ratio", inline = TRUE)),
-                  tags$small("大於 1 表示預測波動較高")),
-                div(class = "g16-kpi g16-kpi-state",
-                  span("波動狀態"),
-                  strong(textOutput("g10_kpi_regime", inline = TRUE)),
-                  tags$small("依現有 0.90／1.10 門檻判定"))
-              ),
-              div(class = "g16-insight",
-                div(class = "g16-insight-head", "這次的預測要怎麼看？"),
-                uiOutput("g16_one_summary")
-              ),
-              div(class = "g16-graph-grid",
-                div(class = "g16-graph-card",
-                  div(class = "g16-graph-tag", "01｜往後看"),
-                  h4("未來 63 日波動預測"),
-                  p("綠線為預測波動；紅色虛線為近一年歷史波動基準。"),
-                  plotOutput("g10_fan", height = "325px"),
-                  uiOutput("g17_forecast_readout")),
-                div(class = "g16-graph-card",
-                  div(class = "g16-graph-tag", "02｜往回看"),
-                  h4("模型與歷史波動對照"),
-                  p("藍線為 GARCH 配適波動，灰線為近 21 日的歷史波動估計。"),
-                  plotOutput("g10_vol_path", height = "325px"),
-                  uiOutput("g17_history_readout"))
-              ),
-              div(class = "g16-foot",
-                "波動代表價格起伏程度，不等於未來漲跌方向；本頁為模型估計，不代表投資建議。"
-              ),
-              h4(class = "g16-more-head", "完整統計資料"),
-              p(class = "g16-more-lead", "保留最大概似估計與診斷表。需要研究細節時，直接點開對應項目。"),
-              tags$details(class = "g16-details",
-                tags$summary(
-                  span(class = "g16-details-num", "01"),
-                  span(class = "g16-details-copy",
-                    tags$strong("查看模型參數｜ω、α、β 與波動持續性"),
-                    tags$small("最大概似估計值、標準誤、t 值與半衰期")),
-                  span(class = "g16-details-action", "展開")
-                ),
-                div(class = "g16-details-body",
-                  p("這一區說明模型如何描述波動的衝擊與延續；數值用來檢查估計結果，不是股票的預測報酬。"),
-                  div(class = "g16-table-scroll", tableOutput("g10_param_table"))
-                )
-              ),
-              tags$details(class = "g16-details",
-                tags$summary(
-                  span(class = "g16-details-num", "02"),
-                  span(class = "g16-details-copy",
-                    tags$strong("查看模型診斷｜殘差、收斂與風險值"),
-                    tags$small("Ljung-Box p 值、AIC／BIC、VaR／CVaR 等完整指標")),
-                  span(class = "g16-details-action", "展開")
-                ),
-                div(class = "g16-details-body",
-                  p("Ljung-Box 用來檢查標準化殘差是否仍有自相關；p 值大於 0.05 只代表沒有足夠證據拒絕無自相關假設，並非保證模型正確。"),
-                  div(class = "g16-table-scroll", tableOutput("g10_diag"))
-                )
-              )
-            )
-          ),
-tabPanel(
-            "全體波動排名",
-            div(class = "g18-panel g19-all-garch g20-all-garch g21-all-garch",
-              h3("0050 成分股｜未來一季波動預測"),
-              p(class = "g18-intro", "用過去的股價資料估計 GARCH，觀察未來一季哪些成分股的價格起伏可能較大。這裡比較的是風險，不是預測股價漲跌。"),
-              div(class = "g21-setup",
-                div(class = "g21-run-row",
-                  div(class = "g21-window-control",
-                    selectInput("g21_all_window", "歷史估計期間",
-                      choices = c("近 2 年（500 個交易日）" = 500,
-                                  "近 4 年（1,000 個交易日）" = 1000,
-                                  "近 6 年（1,500 個交易日）" = 1500),
-                      selected = 1000, width = "100%")),
-                  div(class = "g21-run-action",
-                    actionButton("g10_run_all", "執行全體 GARCH 估計", class = "btn-primary"))
-                ),
-                div(class = "g21-setup-cards",
-                  div(class = "g21-setup-card",
-                    span("準備使用的歷史資料"),
-                    strong(textOutput("g21_window_label", inline = TRUE)),
-                    tags$small("最多取所選交易日數的報酬；資料不足者使用可取得期間")),
-                  div(class = "g21-setup-card",
-                    span("預測未來"), strong("63 個交易日"),
-                    tags$small("約一季；波動以年化 % 表示，不是預測一年"))
-                )
-              ),
-              uiOutput("g21_all_status"),
-              uiOutput("g18_g_summary"),
-              h4("全體股票｜預測年化波動排名"),
-              div(class = "g21-reading",
-                tags$strong("這張圖怎麼看？"),
-                span("長條越長，代表模型預測未來一季的價格波動可能越劇烈；不是未來報酬排名，也不代表一定下跌。")),
-              uiOutput("g18_g_chart_box"),
-              p(class = "g18-hint", "圖表列出全部有效預測股票；歷史波動、比值及 GARCH 模型參數保留在下方展開區。個股波動不等於 0010 整體組合波動。"),
-              tags$details(class = "g18-detail",
-                tags$summary(
-                  span(class = "g18-detail-icon", "01"),
-                  span(class = "g18-detail-copy", tags$strong("完整 GARCH 參數與個股數據"),
-                       tags$small("查看所有估計結果的 ω、α、β、持續性、半衰期、預測／歷史波動與比值")),
-                  span(class = "g18-detail-action", "展開 ▾")
-                ),
-                div(class = "g18-detail-content",
-                  p(class = "g18-hint", "完整表格保留原本的參數與比值資訊；缺少足夠資料的股票可能顯示空值，這與上方圖表的有效股票數不同。"),
-                  div(class = "g18-table-wrap", tableOutput("g10_all_table"))
-                )
-              )
-            )
-          ))
-            )
-          )
-        )
+    )
+
       )
     ),
 
@@ -3388,14 +3550,6 @@ tabPanel(
       div(
         class = "section-box",
         h2("研究方法、指標與資料說明"),
-        tags$details(class="method-details",
-          tags$summary("14. T+1 歷史滾動預測與區間：怎麼計算、怎麼驗證？"),
-          p("漲跌方向：v33 採 Ridge Logistic（L2 懲罰固定 10），原五項變數新增 0050 五日動能與相對強弱；一般 Logistic 保留同期比較。所有訓練標籤截至預測起點當日，兩模型機率均未經獨立校準。"),
-          p("報酬與價格：另以 AR(1) 最小平方法估計隔日對數報酬並換算調整後價格；使用 GARCH(1,1) 估計下一交易日條件波動，再結合當期標準化訓練殘差分位數建立預測區間。名目區間預設 95%（可切換 90%）；95% 通常較寬，不保證未來每次命中。"),
-          p("歷史驗證：預設用 0050 最近 63 個共同交易日，可改 20／126 日。每個預測日只用當時已知資料：Ridge 與原 Logistic 每天重新估計（特徵快取只建立一次），AR 每日更新，GARCH 參數每 21 個測試日重估。缺漏交易日不當作連續 T+1。"),
-          p("評估：比較 Ridge、原 Logistic 的隔日方向命中率、Balanced Accuracy、Brier，對照永遠猜上漲基準；AR 查看 MAE／RMSE；GARCH 區間查看涵蓋率、平均寬度與區間損失。全體 Top 5 為 Ridge 實驗訊號。"),
-          p("研究限制：Ridge／一般 Logistic 機率尚未獨立校準；AR／GARCH 不保證具有方向預測能力，且市場可能結構變動。使用現行 0050 成分股回推歷史有存活者偏誤。最新預測尚未以每日不可覆寫紀錄保存，不能視為已完成即時前瞻驗證；亦未將訊號當作扣成本可交易績效。")
-        ),
         tags$details(class = "method-details",
           tags$summary("12. 資料字典與口徑"),
           p("所有計算共用同一份日資料，欄位與用途如下。"),
@@ -3580,7 +3734,7 @@ h3(class = "v15-more-title", "完整統計資料"),
             p(class = "v15-plain-note", "此項需要手動執行，完成後才顯示全體結果。"),
             fluidRow(
               column(6, actionButton("v5_run_gall", "執行全體收斂檢查", class = "btn-primary")),
-              column(6, div(class = "v15-window-note", "估計視窗與「市場分析 → GARCH 波動預測 → 單檔預測」相同"))
+              column(6, div(class = "v15-window-note", "估計視窗與「模型驗證 → GARCH 波動預測 → 單檔預測」相同"))
             ),
             tableOutput("v5_gall_summary"),
             div(class = "v15-table-scroll", tableOutput("v5_gall_tab"))
@@ -3650,893 +3804,11 @@ h3(class = "v15-more-title", "完整統計資料"),
 
 
 # ============================================================
-# v30｜T+1：AR(1)＋GARCH(1,1) 點預測與區間；Logistic 專責隔日漲跌方向。
-# GARCH 不宣稱改善方向，Logistic 機率亦尚未經獨立校準。
-# 每個樣本外預測只用 origin 當日及其以前資料。
-# 為控制全體運算時間，GARCH 參數每 21 個測試日重新估計，
-# 其間仍逐日用當時已知的 AR 殘差更新條件變異數。
-# ============================================================
-v29_ar_inputs <- function(price, origin, window) {
-  if(origin < window+1L) stop("T+1 訓練期資料不足")
-  recent<-as.numeric(price[(origin-window):origin])
-  if(any(!is.finite(recent))||any(recent<=0)) stop("T+1 訓練期價格無效")
-  rr<-diff(log(recent)); xx<-head(rr,-1L);yy<-tail(rr,-1L)
-  fit<-tryCatch(stats::lm.fit(cbind(1,xx),yy),error=function(e)NULL)
-  b<-if(is.null(fit))c(NA_real_,NA_real_)else as.numeric(fit$coefficients)
-  if(length(b)!=2L||any(!is.finite(b)))b<-c(mean(yy),0)
-  residual<-yy-(b[1L]+b[2L]*xx)
-  if(any(!is.finite(residual))||length(residual)<200L)stop("T+1 AR 殘差資料不足")
-  list(mu=as.numeric(b[1L]+b[2L]*tail(rr,1L)),resid_pct=100*residual,
-       price=as.numeric(price[origin]))
-}
-
-# GARCH 用與原 garch_model.R 相同的 omega/alpha/beta 參數限制；
-# 這裡只計算 T+1 所需參數，不重算 Hessian 與完整模型診斷。
-v29_garch_path<-function(r_pct,omega,alpha,beta) {
-  r<-as.numeric(r_pct); v0<-mean(r*r)
-  if(!is.finite(v0)||v0<=1e-9) stop("GARCH 殘差變異數過小")
-  lagr2<-c(v0,utils::head(r*r,-1L))
-  v<-as.numeric(stats::filter(omega+alpha*lagr2,beta,
-                                method="recursive",init=v0))
-  if(length(v)!=length(r)||any(!is.finite(v))||any(v<=1e-10))stop("GARCH 條件變異數不合法")
-  v
-}
-v29_garch_fit<-function(r_pct) {
-  r<-as.numeric(r_pct);n<-length(r)
-  if(n<240L||any(!is.finite(r)))stop("GARCH 有效訓練殘差不足")
-  v0<-mean(r*r)
-  if(!is.finite(v0)||v0<=1e-9)stop("GARCH 訓練期波動不足")
-  fn<-function(par) {
-    omega<-exp(par[1L]);rho<-stats::plogis(par[2L]);s<-stats::plogis(par[3L])
-    a<-rho*s;b<-rho*(1-s)
-    if(!is.finite(omega)||omega<=0||!is.finite(a)||!is.finite(b))return(1e12)
-    v<-tryCatch(v29_garch_path(r,omega,a,b),error=function(e)NULL)
-    if(is.null(v))return(1e12)
-    idx<-seq.int(21L,n)
-    sum(.5*(log(2*pi)+log(v[idx])+r[idx]^2/v[idx]))
-  }
-  starts<-list(c(log(v0*.06),stats::qlogis(.94),stats::qlogis(.08)),
-               c(log(v0*.12),stats::qlogis(.88),stats::qlogis(.13)))
-  fits<-lapply(starts,function(st){
-    tryCatch(stats::optim(st,fn,method="Nelder-Mead",
-        control=list(maxit=240L,reltol=1e-6)),error=function(e)NULL)
-  })
-  good<-Filter(function(f)!is.null(f)&&is.finite(f$value)&&f$value<1e11&&
-                   identical(f$convergence,0L),fits)
-  if(!length(good))stop("GARCH 參數估計未收斂；本檔不納入比較")
-  best<-good[[which.min(vapply(good,`[[`,numeric(1),"value"))]]
-  omega<-exp(best$par[1L]);rho<-stats::plogis(best$par[2L]);share<-stats::plogis(best$par[3L])
-  list(omega=omega,alpha=rho*share,beta=rho*(1-share))
-}
-
-v29_interval_score<-function(actual,lower,upper,level){
-  # Winkler interval score; percentage-point units; lower is better.
-  alpha<-1-level
-  (upper-lower)+(2/alpha)*(lower-actual)*(actual<lower)+
-    (2/alpha)*(actual-upper)*(actual>upper)
-}
-
-# v30｜Logistic 只做「下一交易日是否上漲」的機率估計。
-# 特徵均在 origin 收盤以前可計算；訓練標籤最多到 origin 當日報酬。
-# 每個 origin 使用最近 window 筆報酬，前 20 筆僅作特徵暖機。
-v30_market_returns<-function(stock_table) {
-  d<-as.data.frame(stock_table)
-  d<-d[as.character(d$symbol)=="0050" & !is.na(d$date) &
-    is.finite(d$adjusted) & d$adjusted>0,c("date","adjusted"),drop=FALSE]
-  d$date<-as.Date(d$date)
-  d<-d[order(d$date),,drop=FALSE]
-  d<-d[!duplicated(d$date,fromLast=TRUE),,drop=FALSE]
-  if(nrow(d)<30L)stop("缺少 0050 大盤日報酬資料，無法建立 Logistic 特徵")
-  stats::setNames(c(NA_real_,100*diff(log(as.numeric(d$adjusted)))),as.character(d$date))
-}
-
-# v31｜同檔股票整段歷史的 Logistic 特徵只建立一次。
-# 過去的 v30_logit_prob() 會在每一個樣本外日期，重算 5/20 日動能、
-# 20 日波動、0050 日期對齊與連續交易日檢查；這些值都不依模型參數改變。
-# 這裡只快取「截至各日已知」的特徵，仍對每個預測起點重新估計 glm。
-v31_logit_prepare<-function(price,dates,market_returns) {
-  pp<-as.numeric(price);dd<-as.Date(dates);n<-length(pp)
-  if(n<40L||length(dd)!=n||any(!is.finite(pp))||any(pp<=0))
-    stop("Logistic 特徵資料不足或價格無效")
-  rr<-diff(log(pp));m<-length(rr)
-  ix<-match(as.character(dd),names(market_returns))
-  mr<-as.numeric(market_returns[as.character(dd[-1L])])
-  cs<-c(0,cumsum(rr));cs2<-c(0,cumsum(rr^2))
-  k<-seq.int(20L,m)
-  sum5<-cs[k+1L]-cs[k-4L]
-  sum20<-cs[k+1L]-cs[k-19L]
-  sq20<-cs2[k+1L]-cs2[k-19L]
-  sd20<-sqrt(pmax(0,(sq20-sum20^2/20)/19))
-  features<-matrix(NA_real_,nrow=m,ncol=5L,
-    dimnames=list(NULL,c("r1","mom5","mom20","vol20","market")))
-  features[k,]<-cbind(100*rr[k],100*sum5,100*sum20,100*sd20,mr[k])
-  edge_ok<-is.finite(ix[-n])&is.finite(ix[-1L])&
-    ((ix[-1L]-ix[-n])==1L)
-  edge_ok[is.na(edge_ok)]<-FALSE
-  bad<-c(0L,cumsum(as.integer(!edge_ok)))
-  # 訓練特徵位於 k 日、標籤為 k+1 日；必須兩日均已公布。
-  train_ok<-rep(FALSE,m)
-  kk<-seq.int(20L,m-1L)
-  train_ok[kk]<-(bad[kk+2L]-bad[kk-19L]==0L)&is.finite(mr[kk])
-  # 要預測下一天，只需檢查到 origin 當日，不能偷看目標日。
-  future_ok<-rep(FALSE,m)
-  future_ok[k]<-(bad[k+1L]-bad[k-19L]==0L)&is.finite(mr[k])
-  # v33: 0050 近五日動能，以及股票相對 0050 的五日強弱。
-  # 所有值只使用特徵日及更早資料；建立一次後供逐日訓練共用。
-  extra<-matrix(NA_real_,nrow=m,ncol=2L,
-    dimnames=list(NULL,c("market_mom5","relative_mom5")))
-  for(ii in k) {
-    recent_market<-mr[(ii-4L):ii]
-    if(all(is.finite(recent_market))) {
-      m5<-sum(recent_market)
-      extra[ii,]<-c(m5,features[ii,"mom5"]-m5)
-    }
-  }
-  list(features=features,ridge_features=cbind(features,extra),
-       returns=rr,train_ok=train_ok,future_ok=future_ok,dates=dd)
-}
-
-v30_logit_prob<-function(price,dates,origin,window,market_returns,feature_cache=NULL) {
-  if(is.null(market_returns)||length(market_returns)<30L)stop("缺少同期 0050 資料")
-  first<-origin-window
-  if(first<1L)stop("Logistic 訓練資料不足")
-  if(is.null(feature_cache)) {
-    pp<-as.numeric(price[first:origin])
-    dd<-as.Date(dates[first:origin])
-    if(any(!is.finite(pp))||any(pp<=0))stop("Logistic 價格無效")
-    rr<-diff(log(pp))
-    dr<-dd[-1L]
-    mr<-as.numeric(market_returns[as.character(dr)])
-    ix<-match(as.character(dd),names(market_returns))
-    feature<-function(t) c(
-      r1=100*rr[t],
-      mom5=100*sum(rr[(t-4L):t]),
-      mom20=100*sum(rr[(t-19L):t]),
-      vol20=100*stats::sd(rr[(t-19L):t]),
-      market=mr[t])
-    # t+1 已知才可當訓練標籤；連續交易日檢查避免跨停牌日。
-    tset<-seq.int(20L,window-1L)
-    valid<-vapply(tset,function(t){
-      z<-ix[(t-19L):(t+2L)]
-      all(is.finite(z)) && all(diff(z)==1L) && is.finite(mr[t]) &&
-        all(is.finite(rr[(t-19L):(t+1L)]))
-    },logical(1))
-    tset<-tset[valid]
-    if(length(tset)<100L)stop("Logistic 有效連續交易日樣本少於 100 筆")
-    xx<-t(vapply(tset,feature,numeric(5)))
-    yy<-as.integer(rr[tset+1L]>0)
-  } else {
-    # 與舊版同一訓練日期：t=20,...,window-1；回報至 origin 當日。
-    k<-seq.int(origin-window+19L,origin-2L)
-    k<-k[feature_cache$train_ok[k]]
-    if(length(k)<100L)stop("Logistic 有效連續交易日樣本少於 100 筆")
-    xx<-feature_cache$features[k,,drop=FALSE]
-    yy<-as.integer(feature_cache$returns[k+1L]>0)
-  }
-  if(length(unique(yy))<2L)stop("Logistic 訓練樣本只有單一漲跌類別")
-  mu<-colMeans(xx)
-  sc<-apply(xx,2L,stats::sd)
-  sc[!is.finite(sc)|sc<1e-8]<-1
-  standardized<-sweep(sweep(xx,2L,mu,"-"),2L,sc,"/")
-  fit<-suppressWarnings(tryCatch(stats::glm.fit(
-    x=cbind(`(Intercept)`=1,standardized),y=yy,family=stats::binomial(),
-    control=stats::glm.control(maxit=50L)),error=function(e)NULL))
-  if(is.null(fit)||!isTRUE(fit$converged)||any(!is.finite(fit$coefficients)))
-    stop("Logistic 未收斂，該股票不納入模型比較")
-  if(is.null(feature_cache)) {
-    i<-window
-    last_ix<-ix[(i-19L):(i+1L)]
-    if(!all(is.finite(last_ix))||!all(diff(last_ix)==1L)||!is.finite(mr[i]))
-      stop("Logistic 目前日期缺少相鄰交易資料")
-    next_row<-feature(i)
-  } else {
-    k<-origin-1L
-    if(!isTRUE(feature_cache$future_ok[k]))
-      stop("Logistic 目前日期缺少相鄰交易資料")
-    next_row<-feature_cache$features[k,]
-  }
-  next_x<-(next_row-mu)/sc
-  eta<-sum(c(1,next_x)*fit$coefficients)
-  prob<-stats::plogis(eta)
-  if(!is.finite(prob))stop("Logistic 上漲機率無效")
-  as.numeric(pmax(1e-6,pmin(1-1e-6,prob)))
-}
-
-
-# v33｜Ridge (L2) Logistic，僅以訓練窗口資料估計；不依賴額外 R 套件。
-# 固定 lambda=10 是研究起點，不按樣本外 63 日命中率挑選參數。
-v33_ridge_fit<-function(xx,yy,lambda=10) {
-  xx<-as.matrix(xx); yy<-as.numeric(yy)
-  if(nrow(xx)<100L||ncol(xx)<1L||any(!is.finite(xx))||
-     any(!is.finite(yy))||length(unique(yy))<2L)
-    stop("Ridge Logistic 訓練資料不足或無效")
-  mu<-colMeans(xx)
-  sc<-apply(xx,2L,stats::sd)
-  sc[!is.finite(sc)|sc<1e-8]<-1
-  zz<-sweep(sweep(xx,2L,mu,"-"),2L,sc,"/")
-  X<-cbind(1,zz)
-  beta<-c(stats::qlogis(mean(yy)),rep(0,ncol(xx)))
-  penalty<-c(0,rep(lambda,ncol(xx)))
-  for(iter in seq_len(30L)) {
-    eta<-pmax(-25,pmin(25,drop(X%*%beta)))
-    p<-stats::plogis(eta)
-    w<-pmax(p*(1-p),1e-6)
-    score<-drop(crossprod(X,yy-p))-penalty*beta
-    hessian<-crossprod(X,X*as.numeric(w))+diag(penalty+1e-8,ncol(X))
-    step<-tryCatch(as.numeric(solve(hessian,score)),error=function(e)NULL)
-    if(is.null(step)||any(!is.finite(step)))stop("Ridge Logistic 數值估計失敗")
-    beta<-beta+step
-    if(max(abs(step))<1e-6)break
-  }
-  if(any(!is.finite(beta)))stop("Ridge Logistic 參數無效")
-  list(beta=beta,mean=mu,scale=sc,lambda=lambda)
-}
-
-v33_ridge_prob<-function(feature_cache,origin,window,lambda=10) {
-  if(is.null(feature_cache$ridge_features))stop("缺少 Ridge 特徵快取")
-  if(origin-window<1L)stop("Ridge 訓練資料不足")
-  k<-seq.int(origin-window+19L,origin-2L)
-  k<-k[feature_cache$train_ok[k]]
-  xx<-feature_cache$ridge_features[k,,drop=FALSE]
-  good<-rowSums(!is.finite(xx))==0L
-  xx<-xx[good,,drop=FALSE]
-  k<-k[good]
-  yy<-as.integer(feature_cache$returns[k+1L]>0)
-  fit<-v33_ridge_fit(xx,yy,lambda=lambda)
-  next_k<-origin-1L
-  if(!isTRUE(feature_cache$future_ok[next_k]))
-    stop("Ridge 下一日缺少相鄰交易資料")
-  nx<-feature_cache$ridge_features[next_k,]
-  if(any(!is.finite(nx)))stop("Ridge 預測日特徵缺漏")
-  eta<-sum(c(1,(nx-fit$mean)/fit$scale)*fit$beta)
-  p<-stats::plogis(eta)
-  as.numeric(pmax(1e-6,pmin(1-1e-6,p)))
-}
-
-# AR(1) 預測隔日報酬；GARCH(1,1) 預測條件波動。
-# 使用標準化訓練殘差估計名目預測區間；不再呈現舊固定區間。
-v27_one_step <- function(price, origin, window=252L, gfit=NULL, level=.95,
-                         dates=NULL, market_returns=NULL,logit_cache=NULL) {
-  ar<-v29_ar_inputs(price,origin,window)
-  if(is.null(gfit))gfit<-v29_garch_fit(ar$resid_pct)
-  v<-v29_garch_path(ar$resid_pct,gfit$omega,gfit$alpha,gfit$beta)
-  v_next<-gfit$omega+gfit$alpha*tail(ar$resid_pct,1L)^2+gfit$beta*tail(v,1L)
-  if(!is.finite(v_next)||v_next<=0)stop("GARCH 下期變異數無效")
-  sigma<-sqrt(v_next)/100
-  z<-ar$resid_pct/sqrt(v)
-  q<-as.numeric(stats::quantile(z,c((1-level)/2,1-(1-level)/2),
-                 na.rm=TRUE,names=FALSE,type=8))
-  pred<-ar$price*exp(ar$mu)
-  lower<-ar$price*exp(ar$mu+q[1L]*sigma)
-  upper<-ar$price*exp(ar$mu+q[2L]*sigma)
-  if(is.null(dates))stop("Logistic 需要日期與共同交易日資訊")
-  old_prob<-v30_logit_prob(price,dates,origin,window,market_returns,
-                             feature_cache=logit_cache)
-  ridge_prob<-v33_ridge_prob(logit_cache,origin,window,lambda=10)
-  if(any(!is.finite(c(pred,lower,upper,old_prob,ridge_prob)))||lower>upper)
-    stop("T+1 預測結果不是有效數值")
-  c(pred=pred,lower=lower,upper=upper,pred_ret=100*(exp(ar$mu)-1),
-    prob_up=ridge_prob,prob_up_baseline=old_prob,sigma_pct=100*sigma)
-}
-
-v27_rolling_oos <- function(stock_table,symbol,test_days=63L,window=252L,
-                            level=.95,market_returns=NULL,logit_cache=NULL) {
-  d<-as.data.frame(stock_table)
-  if(!all(c("symbol","date","adjusted")%in%names(d)))stop("缺少股票／日期／調整後價格欄")
-  if(is.null(market_returns))market_returns<-v30_market_returns(d)
-  d<-d[as.character(d$symbol)==as.character(symbol)&!is.na(d$date)&
-      is.finite(d$adjusted)&d$adjusted>0,c("date","adjusted"),drop=FALSE]
-  d$date<-as.Date(d$date);d<-d[order(d$date),,drop=FALSE]
-  d<-d[!duplicated(d$date,fromLast=TRUE),,drop=FALSE]
-  n<-nrow(d);window<-as.integer(window);test_days<-as.integer(test_days)
-  if(n<window+test_days+1L)
-    stop(paste0("至少需要 ",window+test_days+1L," 筆有效價格；目前 ",n," 筆"))
-  px<-as.numeric(d$adjusted)
-  if(is.null(logit_cache))logit_cache<-v31_logit_prepare(px,d$date,market_returns)
-  origins<-seq.int(n-test_days,n-1L)
-  rows<-vector("list",length(origins));cached_fit<-NULL
-  for(j in seq_along(origins)) {
-    i<-origins[j]
-    # 一個交易日換一個 Logistic 訓練集；GARCH 每 21 個測試日重估參數。
-    if(is.null(cached_fit)||((j-1L)%%21L)==0L) {
-      cached_fit<-tryCatch({
-        ar<-v29_ar_inputs(px,i,window)
-        v29_garch_fit(ar$resid_pct)
-      },error=function(e)NULL)
-    }
-    if(is.null(cached_fit))next
-    # 當天若有缺漏或模型估計失敗，只排除該日，不淘汰整檔股票。
-    fc<-tryCatch(v27_one_step(px,i,window,gfit=cached_fit,level=level,
-                     dates=d$date,market_returns=market_returns,
-                     logit_cache=logit_cache),error=function(e)NULL)
-    if(is.null(fc))next
-    p0<-px[i];actual_price<-px[i+1L]
-    actual_return<-100*(actual_price/p0-1)
-    low_ret<-100*(fc[["lower"]]/p0-1);high_ret<-100*(fc[["upper"]]/p0-1)
-    rows[[j]]<-data.frame(origin_date=d$date[i],date=d$date[i+1L],
-      previous_price=p0,actual=actual_price,pred=fc[["pred"]],
-      lower=fc[["lower"]],upper=fc[["upper"]],
-      pred_return=fc[["pred_ret"]],prob_up=fc[["prob_up"]],
-      prob_up_baseline=fc[["prob_up_baseline"]],
-      actual_return=actual_return,error_pp=actual_return-fc[["pred_ret"]],
-      direction_hit=if(actual_return>0) fc[["prob_up"]]>=.5 else
-                    if(actual_return<0) fc[["prob_up"]]<.5 else NA,
-      direction_hit_baseline=if(actual_return>0) fc[["prob_up_baseline"]]>=.5 else
-                    if(actual_return<0) fc[["prob_up_baseline"]]<.5 else NA,
-      covered=(actual_price>=fc[["lower"]]&&actual_price<=fc[["upper"]]),
-      width_pp=high_ret-low_ret,
-      interval_score_pp=v29_interval_score(actual_return,low_ret,high_ret,level),
-      sigma_pct=fc[["sigma_pct"]],stringsAsFactors=FALSE)
-  }
-  test<-do.call(rbind,Filter(Negate(is.null),rows))
-  if(is.null(test)||!nrow(test))stop("歷史測試沒有任何有效的相鄰交易日")
-  rownames(test)<-NULL
-  future<-v27_one_step(px,n,window,level=level,dates=d$date,
-                        market_returns=market_returns,logit_cache=logit_cache)
-  direction_valid<-is.finite(test$prob_up)&is.finite(test$actual_return)&test$actual_return!=0
-  dn<-sum(direction_valid)
-  metrics<-list(n=nrow(test),mae_pp=mean(abs(test$error_pp)),
-    rmse_pp=sqrt(mean(test$error_pp^2)),baseline_mae_pp=mean(abs(test$actual_return)),
-    coverage=mean(test$covered),avg_width_pp=mean(test$width_pp),
-    interval_score_pp=mean(test$interval_score_pp),direction_n=dn,
-    direction_accuracy=if(dn)mean(test$direction_hit[direction_valid])else NA_real_,
-    always_up_accuracy=if(dn)mean(test$actual_return[direction_valid]>0)else NA_real_,
-    baseline_direction_accuracy=if(dn)mean(test$direction_hit_baseline[direction_valid])else NA_real_,
-    brier=mean((test$prob_up-as.numeric(test$actual_return>0))^2),
-    baseline_brier=mean((test$prob_up_baseline-as.numeric(test$actual_return>0))^2))
-  list(symbol=as.character(symbol),window=window,test_days=test_days,level=level,
-    last_date=d$date[n],last_price=px[n],first_test_date=min(test$date),
-    last_test_date=max(test$date),test=test,future=future,metrics=metrics)
-}
-
-# 0050 同一資料基準日的全體股票機率、報酬點預測及價格區間。
-v28_universe <- function(stock_table, symbols) {
-  d<-as.data.frame(stock_table)
-  d<-d[as.character(d$symbol)%in%c("0050",as.character(symbols))&
-    !is.na(d$date)&is.finite(d$adjusted)&d$adjusted>0,
-    c("symbol","date","adjusted"),drop=FALSE]
-  d$date<-as.Date(d$date);d<-d[order(d$date),,drop=FALSE]
-  d<-d[!duplicated(d[,c("symbol","date")],fromLast=TRUE),,drop=FALSE]
-  ref<-d[d$symbol=="0050",,drop=FALSE]
-  if(!nrow(ref))stop("缺少 0050 交易日基準")
-  common_date<-max(ref$date)
-  d<-d[d$date<=common_date,,drop=FALSE]
-  lastdates<-tapply(d$date,d$symbol,max)
-  avail<-setdiff(as.character(symbols),"0050")
-  last_of_avail<-lastdates[avail]
-  eligible<-!is.na(last_of_avail)
-  eligible[eligible]<-as.Date(last_of_avail[eligible],origin="1970-01-01")==common_date
-  list(data=d,date=common_date,symbols=avail[which(eligible)])
-}
-
-v28_forecast_snapshot <- function(stock_table,symbols,window=252L,level=.95,
-                                  market_returns=NULL,logit_cache_env=NULL) {
-  u<-v28_universe(stock_table,symbols)
-  if(!length(u$symbols))stop("共同資料日沒有可用的成分股")
-  if(is.null(market_returns))market_returns<-v30_market_returns(u$data)
-  rows<-lapply(u$symbols,function(sym) {
-    d<-u$data[u$data$symbol==sym,,drop=FALSE]
-    px<-as.numeric(d$adjusted)
-    if(length(px)<window+2L)return(NULL)
-    lgcache<-tryCatch({
-      if(!is.null(logit_cache_env)&&exists(as.character(sym),
-          envir=logit_cache_env,inherits=FALSE)) {
-        get(as.character(sym),envir=logit_cache_env,inherits=FALSE)
-      } else {
-        cc<-v31_logit_prepare(px,d$date,market_returns)
-        if(!is.null(logit_cache_env))assign(as.character(sym),cc,
-          envir=logit_cache_env)
-        cc
-      }
-    },error=function(e)NULL)
-    if(is.null(lgcache))return(NULL)
-    fc<-tryCatch(v27_one_step(px,length(px),window,level=level,
-                              dates=d$date,market_returns=market_returns,
-                              logit_cache=lgcache),error=function(e)NULL)
-    if(is.null(fc)||any(!is.finite(fc)))return(NULL)
-    p0<-tail(px,1L)
-    data.frame(symbol=sym,date=u$date,last_price=p0,
-      prob_up=as.numeric(fc[["prob_up"]]),
-      prob_up_baseline=as.numeric(fc[["prob_up_baseline"]]),
-      pred_return=as.numeric(fc[["pred_ret"]]),
-      low_return=100*(as.numeric(fc[["lower"]])/p0-1),
-      high_return=100*(as.numeric(fc[["upper"]])/p0-1),
-      pred_price=as.numeric(fc[["pred"]]),
-      price_lower=as.numeric(fc[["lower"]]),price_upper=as.numeric(fc[["upper"]]),
-      crosses_zero=(fc[["lower"]]<=p0&&fc[["upper"]]>=p0),
-      stringsAsFactors=FALSE)
-  })
-  x<-do.call(rbind,Filter(Negate(is.null),rows))
-  if(is.null(x)||!nrow(x))stop("沒有符合所選建模期間的有效股票")
-  x<-x[order(-x$prob_up,x$symbol),,drop=FALSE]
-  rownames(x)<-NULL
-  list(date=u$date,window=window,level=level,available=length(u$symbols),result=x)
-}
-
-v28_all_oos <- function(stock_table,symbols,test_days=63L,window=252L,level=.95,
-                        progress=NULL,market_returns=NULL,logit_cache_env=NULL) {
-  u<-v28_universe(stock_table,symbols)
-  if(is.null(market_returns))market_returns<-v30_market_returns(u$data)
-  benchmark_dates<-as.Date(names(market_returns))
-  if(length(benchmark_dates)<test_days+1L)stop("0050 交易日不足以完成指定驗證")
-  # 所有股票共享「最近 N 個 0050 交易日」，不以每檔各自最近 N 筆混算。
-  common_test_dates<-utils::tail(benchmark_dates,test_days)
-  prev_day<-stats::setNames(as.character(utils::head(benchmark_dates,-1L)),
-                            as.character(utils::tail(benchmark_dates,-1L)))
-  rows<-vector("list",length(u$symbols))
-  for(j in seq_along(u$symbols)) {
-    sym<-u$symbols[j]
-    lgcache<-if(!is.null(logit_cache_env)&&exists(as.character(sym),
-      envir=logit_cache_env,inherits=FALSE))
-      get(as.character(sym),envir=logit_cache_env,inherits=FALSE) else NULL
-    z<-tryCatch(v27_rolling_oos(u$data,sym,test_days=test_days,
-                 window=window,level=level,market_returns=market_returns,
-                 logit_cache=lgcache),error=function(e)NULL)
-    if(!is.null(z)) {
-      x<-z$test
-      adj<-as.character(x$origin_date)==unname(prev_day[as.character(x$date)])
-      x<-x[x$date%in%common_test_dates&!is.na(adj)&adj,,drop=FALSE]
-      if(nrow(x)) {
-        x$symbol<-sym
-        rows[[j]]<-x
-      }
-    }
-    if(is.function(progress))progress(j,length(u$symbols))
-  }
-  all<-do.call(rbind,Filter(Negate(is.null),rows))
-  if(is.null(all)||!nrow(all))stop("沒有股票通過相同交易日與模型資料品質檢查")
-  all<-all[order(all$date,all$symbol),,drop=FALSE]
-  rownames(all)<-NULL
-  splitday<-split(all,all$date)
-  day_rows<-lapply(splitday,function(x) {
-    x<-x[is.finite(x$prob_up)&is.finite(x$actual_return),,drop=FALSE]
-    pos<-x[x$prob_up>.5,,drop=FALSE]
-    neg<-x[x$prob_up<.5,,drop=FALSE]
-    pos<-utils::head(pos[order(-pos$prob_up,pos$symbol),,drop=FALSE],5L)
-    neg<-utils::head(neg[order(neg$prob_up,neg$symbol),,drop=FALSE],5L)
-    ss<-list(positive=pos,negative=neg)
-    do.call(rbind,lapply(names(ss),function(side) {
-      z<-ss[[side]]
-      if(!nrow(z))return(NULL)
-      data.frame(date=z$date,symbol=z$symbol,side=side,
-        prob_up=z$prob_up,forecast_pct=z$pred_return,
-        actual_pct=z$actual_return,
-        hit=if(side=="positive")z$actual_return>0 else z$actual_return<0,
-        error_pp=z$error_pp,covered=z$covered,stringsAsFactors=FALSE)
-    }))
-  })
-  signals<-do.call(rbind,Filter(Negate(is.null),day_rows))
-  if(is.null(signals))signals<-data.frame(date=as.Date(character()),symbol=character(),
-    side=character(),prob_up=numeric(),forecast_pct=numeric(),actual_pct=numeric(),
-    hit=logical(),error_pp=numeric(),covered=logical())
-  rownames(signals)<-NULL
-  bystock<-split(all,all$symbol)
-  per_stock<-do.call(rbind,lapply(names(bystock),function(sym){
-    x<-bystock[[sym]]
-    v<-x$actual_return!=0 & is.finite(x$prob_up)
-    data.frame(symbol=sym,n=nrow(x),mae=mean(abs(x$error_pp)),
-      rmse=sqrt(mean(x$error_pp^2)),baseline=mean(abs(x$actual_return)),
-      coverage=mean(x$covered),avg_width=mean(x$width_pp),
-      interval_score=mean(x$interval_score_pp),
-      brier=mean((x$prob_up-as.numeric(x$actual_return>0))^2),
-      baseline_brier=mean((x$prob_up_baseline-as.numeric(x$actual_return>0))^2),
-      direction_n=sum(v),
-      direction_accuracy=if(any(v))mean(x$direction_hit[v])else NA_real_,
-      baseline_direction_accuracy=if(any(v))mean(x$direction_hit_baseline[v])else NA_real_,
-      balanced_accuracy=if(any(v&x$actual_return>0)&any(v&x$actual_return<0))
-        (mean(x$direction_hit[v&x$actual_return>0])+
-         mean(x$direction_hit[v&x$actual_return<0]))/2 else NA_real_,
-      baseline_balanced_accuracy=if(any(v&x$actual_return>0)&any(v&x$actual_return<0))
-        (mean(x$direction_hit_baseline[v&x$actual_return>0])+
-         mean(x$direction_hit_baseline[v&x$actual_return<0]))/2 else NA_real_,
-      always_up_accuracy=if(any(v))mean(x$actual_return[v]>0)else NA_real_,
-      stringsAsFactors=FALSE)
-  }))
-  list(date=u$date,window=window,test_days=test_days,level=level,
-       eligible=length(u$symbols),all=all,signals=signals,per_stock=per_stock,
-       benchmark_days=length(common_test_dates))
-}
-
-# v32｜模型版號。更動 T+1 公式後請一併更新，以免讀到舊快取。
-T1_ENGINE_VERSION <- "v33-ridge10-mkt-relative-20261115"
-
-# v32｜只讀入符合當前資料檔及預設設定的已計算結果。
-# 不讓網站啟動時同步估計數千次模型，也不會顯示過期快取。
-v32_cache_path <- "data/t1_precomputed.rds"
-v32_cache_settings <- list(window=252L,test_days=63L,level=.95)
-v32_data_md5 <- function(path=DATA_FILE) {
-  if(!file.exists(path))return(NA_character_)
-  as.character(unname(tools::md5sum(path))[[1L]])
-}
-v32_read_cache <- function(path=v32_cache_path) {
-  if(!file.exists(path))return(NULL)
-  cache<-tryCatch(readRDS(path),error=function(e)NULL)
-  if(is.null(cache)||!is.list(cache)||!identical(cache$schema,1L)||
-     !identical(cache$engine_version,T1_ENGINE_VERSION)||
-     !identical(cache$data_md5,v32_data_md5())||
-     !identical(cache$params,v32_cache_settings)||
-     !is.list(cache$result)||is.null(cache$result$snapshot$result)||
-     is.null(cache$result$history$per_stock))return(NULL)
-  if(!nrow(cache$result$snapshot$result)||!nrow(cache$result$history$per_stock))return(NULL)
-  list(snapshot=cache$result$snapshot,history=cache$result$history,
-       cache_info=list(from_disk=TRUE,computed_at=cache$computed_at,
-                       data_md5=cache$data_md5))
-}
-v32_default_cache <- v32_read_cache()
-v32_can_use_cache <- function(train,days,level) {
-  !is.null(v32_default_cache)&&identical(as.integer(train),252L)&&
-    identical(as.integer(days),63L)&&isTRUE(all.equal(as.numeric(level),.95))&&
-    identical(v32_default_cache$cache_info$data_md5,v32_data_md5())
-}
-
 server <- function(input, output, session) {
   
-  # v5 新功能（T+1 回測、GARCH 診斷、樣本外評估）
+  # v5：季度策略回測（下一交易日進場）、GARCH 診斷、樣本外評估
   source("v5_server.R", local = TRUE)
 
-
-  # v30｜單一按鈕執行全體預測和歷史驗證；單檔僅讀取同一批結果。
-  # 所有模型的目標日資料不參與估計，單檔切換不會重新計算。
-  # 有有效快取時，訪客進站即可看預設結果；無快取仍可手動執行。
-  v28_all_result<-shiny::reactiveVal(v32_default_cache)
-  shiny::observeEvent(input$v30_run,{
-    train<-as.integer(input$v28_train);days<-as.integer(input$v27_m_test)
-    level<-as.numeric(input$v29_level)
-    if(length(train)!=1L||is.na(train)||!train%in%c(252L,504L,756L)||
-       length(days)!=1L||is.na(days)||!days%in%c(20L,63L,126L)||
-       length(level)!=1L||is.na(level)||!level%in%c(.90,.95)) {
-      v28_all_result(list(error="請選擇有效的建模期間、驗證期間及預測區間"))
-      return(invisible(NULL))
-    }
-    # 預設組合優先重用每日預先估計結果，避免每個訪客消耗雲端 CPU。
-    # 自訂視窗或快取過期，才沿用原本的逐檔計算流程。
-    if(v32_can_use_cache(train,days,level)) {
-      v28_all_result(v32_default_cache)
-      shiny::updateTabsetPanel(session,"v28_main_tabs",selected="預測")
-      shiny::updateTabsetPanel(session,"v28_prediction_tabs",selected="全體偏多／偏空訊號")
-      return(invisible(NULL))
-    }
-    d<-as.data.frame(data())
-    v28_all_result(NULL)
-    shiny::withProgress(message="自訂設定或無有效快取：執行全體 T+1 估計…",value=0,{
-      z<-tryCatch({
-        lookup<-v30_market_returns(d)
-        # 本次執行內共享全部股票特徵；換設定或重新執行即重建。
-        logit_cache_env<-new.env(parent=emptyenv())
-        snap<-v28_forecast_snapshot(d,stock_info$symbol,window=train,
-                                    level=level,market_returns=lookup,
-                                    logit_cache_env=logit_cache_env)
-        shiny::incProgress(.12,detail="已完成全體隔日預測")
-        history<-v28_all_oos(d,stock_info$symbol,test_days=days,window=train,
-                              level=level,market_returns=lookup,
-                              logit_cache_env=logit_cache_env,
-          progress=function(j,n){
-            if(n>0)shiny::setProgress(.12+.88*j/n,
-              detail=paste0("歷史驗證第 ",j," / ",n," 檔"))
-          })
-        list(snapshot=snap,history=history)
-      },error=function(e)list(error=conditionMessage(e)))
-      v28_all_result(z)
-    })
-    if(is.null(z$error)){
-      shiny::updateTabsetPanel(session,"v28_main_tabs",selected="預測")
-      shiny::updateTabsetPanel(session,"v28_prediction_tabs",selected="全體偏多／偏空訊號")
-    }
-  })
-  v28_valid_all<-shiny::reactive({
-    z<-v28_all_result();shiny::req(!is.null(z),is.null(z$error));z
-  })
-  # 本期已成功全體預測且有歷史有效資料，才顯示該檔單檔結果。
-  # 直接從全體歷史 OOS 明細抽取，不再次建模。
-  v27_result<-shiny::reactive({
-    z<-v28_all_result()
-    if(is.null(z))return(NULL)
-    if(!is.null(z$error))return(list(error=z$error))
-    sym<-as.character(input$v27_m_stock)
-    snap<-z$snapshot$result
-    one<-snap[snap$symbol==sym,,drop=FALSE]
-    t<-z$history$all
-    t<-t[t$symbol==sym,,drop=FALSE]
-    if(!nrow(one)||!nrow(t))return(list(error=
-      "這檔股票沒有通過本次共同交易日或模型資料品質檢查；可選其他股票，或縮短建模期間後重新執行。"))
-    t<-t[order(t$date),,drop=FALSE]
-    f<-c(pred=one$pred_price[1L],lower=one$price_lower[1L],
-         upper=one$price_upper[1L],pred_ret=one$pred_return[1L],
-         prob_up=one$prob_up[1L],prob_up_baseline=one$prob_up_baseline[1L])
-    valid<-is.finite(t$prob_up)&is.finite(t$actual_return)&t$actual_return!=0
-    nv<-sum(valid)
-    m<-list(n=nrow(t),mae_pp=mean(abs(t$error_pp)),
-      rmse_pp=sqrt(mean(t$error_pp^2)),baseline_mae_pp=mean(abs(t$actual_return)),
-      coverage=mean(t$covered),avg_width_pp=mean(t$width_pp),
-      interval_score_pp=mean(t$interval_score_pp),
-      direction_n=nv,direction_accuracy=if(nv)mean(t$direction_hit[valid])else NA_real_,
-      always_up_accuracy=if(nv)mean(t$actual_return[valid]>0)else NA_real_,
-      baseline_direction_accuracy=if(nv)mean(t$direction_hit_baseline[valid])else NA_real_,
-      balanced_accuracy=if(any(valid&t$actual_return>0)&any(valid&t$actual_return<0))
-        (mean(t$direction_hit[valid&t$actual_return>0])+
-         mean(t$direction_hit[valid&t$actual_return<0]))/2 else NA_real_,
-      baseline_balanced_accuracy=if(any(valid&t$actual_return>0)&any(valid&t$actual_return<0))
-        (mean(t$direction_hit_baseline[valid&t$actual_return>0])+
-         mean(t$direction_hit_baseline[valid&t$actual_return<0]))/2 else NA_real_,
-      brier=mean((t$prob_up-as.numeric(t$actual_return>0))^2),
-      baseline_brier=mean((t$prob_up_baseline-as.numeric(t$actual_return>0))^2))
-    list(symbol=sym,window=z$history$window,test_days=z$history$test_days,
-      level=z$history$level,last_date=z$snapshot$date,
-      last_price=one$last_price[1L],first_test_date=min(t$date),
-      last_test_date=max(t$date),test=t,future=f,metrics=m)
-  })
-  v27_valid_result<-shiny::reactive({
-    z<-v27_result();shiny::req(!is.null(z),is.null(z$error));z
-  })
-  v28_all_status_ui<-function(){
-    z<-v28_all_result()
-    if(is.null(z)) return(tags$p(class="v27-status","目前沒有對應資料版本的 T+1 預算快取。可按上方按鈕手動估計，或先執行 precompute_t1.R 產生快取並重新部署。"))
-    if(!is.null(z$error)) return(tags$p(class="v27-error",z$error))
-    msg<-paste0(if(!is.null(z$cache_info)&&isTRUE(z$cache_info$from_disk))
-                     "已載入每日預先計算結果｜" else "已完成手動估計｜",
-      "全體預測基準日：",format(z$snapshot$date),
-      "｜有效預測 ",nrow(z$snapshot$result)," 檔；歷史驗證 ",nrow(z$history$per_stock),
-      " 檔、最近 ",z$history$test_days," 日｜建模 ",z$history$window,
-      " 日｜區間 ",sprintf("%.0f%%",100*z$history$level))
-    if(as.integer(input$v28_train)!=z$history$window ||
-       as.integer(input$v27_m_test)!=z$history$test_days ||
-       as.numeric(input$v29_level)!=z$history$level) msg<-paste0(msg,"。設定已變更，請按上方唯一按鈕重新執行。")
-    market<-as.data.frame(data()); market<-market[market$symbol=="0050" & !is.na(market$date),,drop=FALSE]
-    if(nrow(market)&&max(as.Date(market$date))>z$snapshot$date)
-      msg<-paste0(msg,"。已有更新交易資料，請重新產生快取或手動估計。")
-    if(!is.null(z$cache_info)&&!identical(z$cache_info$data_md5,v32_data_md5()))
-      msg<-paste0(msg,"。股票資料已變更，快取不再有效，請執行每日預算更新。")
-    tags$p(class="v27-status",msg)
-  }
-  output$v28_all_status<-shiny::renderUI({v28_all_status_ui()})
-  output$v28_all_status_validation<-shiny::renderUI({v28_all_status_ui()})
-  output$v28_snapshot_kpis<-shiny::renderUI({
-    z<-v28_valid_all();x<-z$snapshot$result
-    cell<-function(k,v,note)div(class="v27-kpi",tags$small(k),tags$strong(v),tags$small(note))
-    div(class="v27-kpis",
-      cell("有效預測股票",paste0(nrow(x)," 檔"),paste0("同日更新；可選 ",z$snapshot$available," 檔")),
-      cell("預測偏多",paste0(sum(x$prob_up>.5)," 檔"),"Ridge Logistic 上漲機率 > 50%"),
-      cell("預測偏空",paste0(sum(x$prob_up<.5)," 檔"),"Ridge Logistic 上漲機率 < 50%"))
-  })
-  v28_show_signal_table<-function(side){
-    z<-v28_valid_all();x<-z$snapshot$result
-    x<-if(side=="positive")x[x$prob_up>.5,,drop=FALSE]
-       else x[x$prob_up<.5,,drop=FALSE]
-    x<-x[order(if(side=="positive")-x$prob_up else x$prob_up,x$symbol),,drop=FALSE]
-    x<-utils::head(x,5L)
-    if(!nrow(x))return(data.frame(說明="本次沒有符合該方向的股票",check.names=FALSE))
-    data.frame(股票=vapply(x$symbol,get_stock_label,character(1)),
-      `預估上漲機率`=sprintf("%.1f%%",100*x$prob_up),
-      `AR 預測隔日報酬`=sprintf("%+.2f%%",x$pred_return),
-      `所選報酬區間`=sprintf("%+.1f%%～%+.1f%%",x$low_return,x$high_return),
-      check.names=FALSE,stringsAsFactors=FALSE)
-  }
-  output$v28_positive_table<-shiny::renderTable(v28_show_signal_table("positive"),striped=TRUE,hover=TRUE)
-  output$v28_negative_table<-shiny::renderTable(v28_show_signal_table("negative"),striped=TRUE,hover=TRUE)
-  output$v28_full_snapshot<-shiny::renderTable({
-    x<-v28_valid_all()$snapshot$result
-    data.frame(股票=vapply(x$symbol,get_stock_label,character(1)),
-      `Ridge 上漲機率`=sprintf("%.1f%%",100*x$prob_up),
-      `舊 Logistic 機率`=sprintf("%.1f%%",100*x$prob_up_baseline),
-      `AR 預測隔日報酬`=sprintf("%+.3f%%",x$pred_return),
-      `預測區間`=sprintf("%+.2f%%～%+.2f%%",x$low_return,x$high_return),
-      區間跨零=ifelse(x$crosses_zero,"是","否"),check.names=FALSE)
-  },striped=TRUE,hover=TRUE)
-  output$v28_snapshot_csv<-shiny::downloadHandler(
-    filename=function()paste0("T1_signals_",v28_valid_all()$snapshot$date,".csv"),
-    content=function(file)utils::write.csv(v28_valid_all()$snapshot$result,file,row.names=FALSE,fileEncoding="UTF-8"))
-  output$v28_validation_kpis<-shiny::renderUI({
-    h<-v28_valid_all()$history;s<-h$signals
-    cell<-function(k,v,note)div(class="v27-kpi",tags$small(k),tags$strong(v),tags$small(note))
-    p<-s[s$side=="positive",,drop=FALSE];n<-s[s$side=="negative",,drop=FALSE]
-    div(class="v27-kpis",
-      cell("有效驗證股票",paste0(nrow(h$per_stock)," 檔"),paste0("統一最近 ",h$benchmark_days," 個 0050 交易日")),
-      cell("偏多 Top 5 命中率",if(nrow(p))sprintf("%.1f%%",100*mean(p$hit))else "無訊號",
-           paste0("歷史訊號 ",nrow(p)," 筆")),
-      cell("偏空 Top 5 命中率",if(nrow(n))sprintf("%.1f%%",100*mean(n$hit))else "無訊號",
-           paste0("歷史訊號 ",nrow(n)," 筆")))
-  })
-  output$v28_signal_summary<-shiny::renderTable({
-    h<-v28_valid_all()$history; s<-h$signals
-    byside<-lapply(c("positive","negative"),function(a){
-      x<-s[s$side==a,,drop=FALSE]
-      h_same <- h$all[h$all$date %in% x$date,,drop=FALSE]
-      base_ratio <- if(nrow(h_same)) mean(if(a=="positive") h_same$actual_return>0 else h_same$actual_return<0) else NA_real_
-      data.frame(訊號=if(a=="positive")"偏多前 5 檔" else "偏空前 5 檔",
-        驗證筆數=nrow(x),
-        命中率=if(nrow(x))sprintf("%.1f%%",100*mean(x$hit))else "—",
-        `全體股票同期方向比例`=if(is.finite(base_ratio))sprintf("%.1f%%",100*base_ratio)else "—",
-        `平均隔日實際報酬`=if(nrow(x))sprintf("%+.3f%%",mean(x$actual_pct))else "—",
-        check.names=FALSE,stringsAsFactors=FALSE)
-    });do.call(rbind,byside)
-  },striped=TRUE,hover=TRUE,bordered=TRUE)
-  # v33｜同一組樣本外股票與日期，直接比較方向模型，不另外訓練模型。
-  output$v33_all_compare<-shiny::renderTable({
-    d<-v28_valid_all()$history$per_stock
-    avg<-function(z)if(any(is.finite(z)))mean(z,na.rm=TRUE)else NA_real_
-    data.frame(方法=c("Ridge Logistic（新實驗）","一般 Logistic（舊基準）","永遠猜上漲（簡單基準）"),
-      `方向命中率`=sprintf("%.1f%%",100*c(avg(d$direction_accuracy),
-                     avg(d$baseline_direction_accuracy),avg(d$always_up_accuracy))),
-      `Balanced Accuracy`=c(sprintf("%.1f%%",100*avg(d$balanced_accuracy)),
-        sprintf("%.1f%%",100*avg(d$baseline_balanced_accuracy)),"50.0%"),
-      `Brier（越低越好）`=c(sprintf("%.4f",avg(d$brier)),
-                       sprintf("%.4f",avg(d$baseline_brier)),"—"),
-      `股票數`=nrow(d),check.names=FALSE)
-  },striped=TRUE,bordered=TRUE)
-
-  output$v28_all_error_summary<-shiny::renderTable({
-    d<-v28_valid_all()$history$per_stock
-    data.frame(方法="Ridge Logistic 方向＋AR(1)／GARCH(1,1) 報酬區間",
-      驗證股票數=nrow(d),
-      `Ridge 方向準確率`=sprintf("%.1f%%",100*mean(d$direction_accuracy,na.rm=TRUE)),
-      `Ridge Brier（越低越好）`=sprintf("%.3f",mean(d$brier)),
-      `AR MAE（百分點）`=sprintf("%.3f",mean(d$mae)),
-      `AR RMSE（百分點）`=sprintf("%.3f",mean(d$rmse)),
-      `GARCH 區間涵蓋率`=sprintf("%.1f%%",100*mean(d$coverage)),
-      `平均區間寬度（百分點）`=sprintf("%.2f",mean(d$avg_width)),
-      check.names=FALSE)
-  },striped=TRUE,bordered=TRUE)
-  output$v28_daily_signal_table<-shiny::renderTable({
-    x<-v28_valid_all()$history$signals
-    x<-x[order(x$date,decreasing=TRUE),,drop=FALSE]
-    data.frame(日期=format(x$date),
-      股票=vapply(x$symbol,get_stock_label,character(1)),
-      方向=ifelse(x$side=="positive","偏多","偏空"),
-      `Ridge 上漲機率`=sprintf("%.1f%%",100*x$prob_up),
-      `AR 預測報酬`=sprintf("%+.2f%%",x$forecast_pct),
-      `實際報酬`=sprintf("%+.2f%%",x$actual_pct),
-      命中=ifelse(x$hit,"是","否"),check.names=FALSE)
-  },striped=TRUE,hover=TRUE)
-  output$v28_signal_csv<-shiny::downloadHandler(
-    filename=function()paste0("T1_historical_signals_",v28_valid_all()$history$test_days,"d.csv"),
-    content=function(file)utils::write.csv(v28_valid_all()$history$signals,file,row.names=FALSE,fileEncoding="UTF-8"))
-
-  v27_status_ui <- function(request_sym=NULL,request_days=NULL,request_window=NULL,
-                             request_level=NULL) {
-    z <- v27_result()
-    if (is.null(z)) return(tags$p(class="v27-status",
-      "尚未載入有效快取或手動估計。單檔會直接使用與全體相同的結果。"))
-    if (!is.null(z$error)) return(tags$p(class="v27-error",z$error))
-    label <- get_stock_label(z$symbol)
-    msg <- paste0("已完成：",label,"｜歷史測試 ",z$metrics$n," 日（",
-      format(z$first_test_date),"～",format(z$last_test_date),
-      "）｜每次使用歷史 ",z$window," 個交易日報酬估計｜區間 ",
-      sprintf("%.0f%%",100*z$level))
-    if (length(request_sym)==1L && length(request_days)==1L &&
-        !is.na(request_sym) && !is.na(request_days) &&
-        (as.character(request_sym) != z$symbol || as.integer(request_days) != z$test_days ||
-         as.integer(request_window) != z$window ||
-         as.numeric(request_level)!=z$level))
-      msg <- paste0(msg,"。建模或驗證設定已改變，請按上方按鈕重新執行；更換股票只切換已完成的結果。")
-    # 更新價日期若改變，提醒需要手動重估；不回頭變更舊結果。
-    d <- as.data.frame(data())
-    d <- d[d$symbol==z$symbol & is.finite(d$adjusted) & d$adjusted>0 & !is.na(d$date),,drop=FALSE]
-    if (nrow(d) && max(as.Date(d$date)) > z$last_date)
-      msg <- paste0(msg,"。已有新資料，請按執行以重新產生預測。")
-    tags$p(class="v27-status",msg)
-  }
-  output$v27_market_status <- shiny::renderUI({
-    v27_status_ui(input$v27_m_stock,input$v27_m_test,input$v28_train,input$v29_level)})
-  output$v27_validation_status <- shiny::renderUI({
-    v27_status_ui(input$v27_m_stock,input$v27_m_test,input$v28_train,input$v29_level)})
-  output$v27_next_summary <- shiny::renderUI({
-    z <- v27_valid_result(); f <- z$future
-    cards <- function(lbl, val, sub) div(class="v27-kpi",tags$small(lbl),tags$strong(val),tags$small(sub))
-    div(class="v27-kpis",
-      cards("Ridge 預估上漲機率",sprintf("%.1f%%",100*f[["prob_up"]]),"方向機率尚未經獨立校準"),
-      cards("AR 隔日預測報酬",sprintf("%+.2f%%",f[["pred_ret"]]),"與 Ridge 方向可能不同"),
-      cards("預測調整後價格",sprintf("%.2f",f[["pred"]]),paste0("截至 ",format(z$last_date)," 的資料")),
-      cards(paste0(sprintf("%.0f%%",100*z$level)," GARCH 預測區間"),
-            sprintf("%.2f～%.2f",f[["lower"]],f[["upper"]]),"下個交易日尚無實際值"))
-  })
-  output$v27_price_plot <- shiny::renderPlot({
-    z <- v27_valid_result()
-    n_show <- as.integer(input$v27_show_days)
-    if (length(n_show)!=1L || !is.finite(n_show)) n_show <- 10L
-    x <- utils::tail(z$test, if (n_show==5L) 5L else 10L)
-    x <- x[,c("date","actual","pred","lower","upper"),drop=FALSE]
-    x <- rbind(x, data.frame(date=as.Date(NA),actual=NA_real_,
-      pred=as.numeric(z$future[["pred"]]),
-      lower=as.numeric(z$future[["lower"]]),
-      upper=as.numeric(z$future[["upper"]])))
-    x$idx <- seq_len(nrow(x))
-    breaks <- x$idx
-    labels <- c(format(utils::head(x$date,-1L),"%m/%d"),"下一交易日")
-    ggplot2::ggplot(x,ggplot2::aes(x=idx)) +
-      ggplot2::geom_ribbon(ggplot2::aes(ymin=lower,ymax=upper),
-                           fill="#91b7d1",alpha=.26) +
-      ggplot2::geom_line(ggplot2::aes(y=pred,colour="模型預測"),linewidth=.9) +
-      ggplot2::geom_point(ggplot2::aes(y=pred,colour="模型預測"),size=1.8) +
-      ggplot2::geom_line(ggplot2::aes(y=actual,colour="實際價格"),linewidth=.8,na.rm=TRUE) +
-      ggplot2::geom_point(ggplot2::aes(y=actual,colour="實際價格"),size=2,na.rm=TRUE) +
-      ggplot2::scale_colour_manual(values=c("模型預測"="#447fa8","實際價格"="#c17b4d")) +
-      ggplot2::scale_x_continuous(breaks=breaks,labels=labels,expand=ggplot2::expansion(mult=c(.03,.05))) +
-      ggplot2::labs(x=NULL,y="調整後價格",colour=NULL,
-                    title="隔日預測與實際值",
-                    subtitle=paste0("藍色陰影為名目 ",sprintf("%.0f%%",100*z$level),
-                                    " AR(1)＋GARCH 波動預測區間")) +
-      ggplot2::theme_minimal(base_size=12) +
-      ggplot2::theme(legend.position="bottom",axis.text.x=ggplot2::element_text(angle=30,hjust=1),
-                     plot.title=ggplot2::element_text(face="bold",colour="#34556d"))
-  })
-  output$v27_recent_table <- shiny::renderTable({
-    z <- v27_valid_result()
-    t <- utils::tail(z$test,10L)
-    t <- t[nrow(t):1L,,drop=FALSE]
-    data.frame(日期=format(t$date),預測調整後價格=sprintf("%.2f",t$pred),
-      實際調整後價格=sprintf("%.2f",t$actual),
-      `預測區間`=sprintf("%.2f～%.2f",t$lower,t$upper),
-      預測誤差=sprintf("%+.2f 百分點",t$error_pp),
-      落在區間=ifelse(t$covered,"是","否"),
-      check.names=FALSE,stringsAsFactors=FALSE)
-  },striped=TRUE,hover=TRUE,bordered=TRUE)
-  output$v33_single_compare<-shiny::renderTable({
-    z<-v27_valid_result(); m<-z$metrics
-    data.frame(方法=c("Ridge Logistic（新實驗）","一般 Logistic（舊基準）","永遠猜上漲（簡單基準）"),
-      `方向命中率`=sprintf("%.1f%%",100*c(m$direction_accuracy,
-           m$baseline_direction_accuracy,m$always_up_accuracy)),
-      `Balanced Accuracy`=c(sprintf("%.1f%%",100*m$balanced_accuracy),
-        sprintf("%.1f%%",100*m$baseline_balanced_accuracy),"50.0%"),
-      `Brier（越低越好）`=c(sprintf("%.4f",m$brier),
-                             sprintf("%.4f",m$baseline_brier),"—"),
-      check.names=FALSE)
-  },striped=TRUE,bordered=TRUE)
-
-  output$v27_validation_cards <- shiny::renderUI({
-    z <- v27_valid_result();m<-z$metrics
-    cell<-function(label,value,note) div(class="v27-kpi",tags$small(label),tags$strong(value),tags$small(note))
-    div(class="v27-kpis",
-      cell("AR 平均絕對誤差 MAE",sprintf("%.3f 百分點",m$mae_pp),
-           sprintf("零報酬基準 MAE %.3f 百分點",m$baseline_mae_pp)),
-      cell("Ridge 方向準確率",if (is.finite(m$direction_accuracy))
-             sprintf("%.1f%%",100*m$direction_accuracy) else "無有效方向",
-           paste0("有效 ",m$direction_n," 日；永遠猜漲基準 ",
-                  if (is.finite(m$always_up_accuracy))
-                    sprintf("%.1f%%",100*m$always_up_accuracy) else "—")),
-      cell("Ridge Brier 分數",sprintf("%.3f",m$brier),"越小越好；機率尚未校準"),
-      cell(paste0(sprintf("%.0f%%",100*z$level)," 區間涵蓋率"),
-           sprintf("%.1f%%",100*m$coverage),
-           paste0("歷史樣本外 ",m$n," 日")),
-      cell("平均區間寬度",sprintf("%.2f 百分點",m$avg_width_pp),"區間越寬通常越容易涵蓋"),
-      cell("RMSE",sprintf("%.3f 百分點",m$rmse_pp),"較重視少數大誤差"))
-  })
-  output$v30_interval_summary<-shiny::renderTable({
-    z<-v27_valid_result();m<-z$metrics
-    data.frame(方法="AR(1)＋GARCH(1,1)",
-      `名目預測區間`=sprintf("%.0f%%",100*z$level),
-      `實際涵蓋率`=sprintf("%.1f%%",100*m$coverage),
-      `平均寬度（百分點）`=sprintf("%.3f",m$avg_width_pp),
-      `區間損失（越低越好）`=sprintf("%.3f",m$interval_score_pp),
-      check.names=FALSE,stringsAsFactors=FALSE)
-  },striped=TRUE,hover=TRUE,bordered=TRUE)
-  output$v27_error_plot <- shiny::renderPlot({
-    z <- v27_valid_result()
-    t <- utils::tail(z$test,60L)
-    ggplot2::ggplot(t,ggplot2::aes(x=date,y=error_pp)) +
-      ggplot2::geom_hline(yintercept=0,colour="#8699a6",linetype="dashed") +
-      ggplot2::geom_col(fill="#6d96b4",alpha=.85,width=.8) +
-      ggplot2::labs(x=NULL,y="實際－預測（百分點）",title="最近最多 60 個交易日的預測誤差") +
-      ggplot2::theme_minimal(base_size=12) +
-      ggplot2::theme(plot.title=ggplot2::element_text(face="bold",colour="#34556d"))
-  })
-  output$v27_validation_table <- shiny::renderTable({
-    z <- v27_valid_result(); t <- z$test
-    t <- t[nrow(t):1L,,drop=FALSE]
-    data.frame(日期=format(t$date),
-      Ridge上漲機率=sprintf("%.1f%%",100*t$prob_up),
-      原Logistic機率=sprintf("%.1f%%",100*t$prob_up_baseline),
-      AR預測日報酬=sprintf("%+.2f%%",t$pred_return),
-      實際日報酬=sprintf("%+.2f%%",t$actual_return),
-      誤差=sprintf("%+.2f 個百分點",t$error_pp),
-      預測調整後價格=sprintf("%.2f",t$pred),
-      實際調整後價格=sprintf("%.2f",t$actual),
-      預測區間=sprintf("%.2f～%.2f",t$lower,t$upper),
-      涵蓋=ifelse(t$covered,"是","否"),
-      check.names=FALSE,stringsAsFactors=FALSE)
-  },striped=TRUE,hover=TRUE,bordered=TRUE)
-  output$v27_csv <- shiny::downloadHandler(
-    filename=function(){z<-v27_valid_result();paste0("T1_rolling_oos_",z$symbol,"_",z$test_days,"d.csv")},
-    content=function(file){z<-v27_valid_result();utils::write.csv(z$test,file,row.names=FALSE,fileEncoding="UTF-8")})
 
   # v25：季度回測執行後，依已完成且實際回測使用的評分日期提供季別選單。
   observeEvent(v5_bt(), {
@@ -4553,7 +3825,7 @@ server <- function(input, output, session) {
   })
 
   # 不使用事後報酬選股：同 v5_backtest_v4()，先在歷史評分日執行 v4_score_table + v4_pick，
-  # 再用回測所紀錄的 T+1 成交日與出場日計算全體可比較股的未來報酬名次。
+  # 再用回測所紀錄的下一交易日成交日與出場日計算全體可比較股的未來報酬名次。
   # 不改原季度回測結果（包括既有 IC、Spread），僅新增獨立相對排名報表。
   v25_rank_result <- shiny::reactive({
     z <- v5_bt()
@@ -4609,7 +3881,7 @@ server <- function(input, output, session) {
       return(tags$p(class="v25-method-hint", "回測完成後即可選擇歷史評分日。"))
     z <- v25_rank_result()
     if (is.null(z)) return(tags$p(class="v25-method-hint", "這一季沒有足夠的共同進出場價格可完成相對排名。"))
-    tags$p(class="v25-method-hint",paste0("評分：",format(z$rated),"｜T+1 進場：",format(z$buy),
+    tags$p(class="v25-method-hint",paste0("評分：",format(z$rated),"｜下一交易日進場：",format(z$buy),
       "｜出場：",format(z$exit),"｜同期可比較：",z$n," 檔股票（未扣交易成本）"))
   })
   output$v25_rank_summary <- shiny::renderUI({
@@ -5213,7 +4485,7 @@ server <- function(input, output, session) {
     pm <- as.matrix(wide[, setdiff(names(wide), "date"), drop = FALSE])
     storage.mode(pm) <- "double"
     rownames(pm) <- as.character(dates)
-    # 和既有 v5 季度回測共用季末定義；評分日後 T+1 買入、持有 63 交易日。
+    # 和既有 v5 季度回測共用季末定義；評分日後下一交易日買入、持有 63 交易日。
     quarters <- v5_quarter_ends(dates)
     quarters <- quarters[quarters > 300 & quarters + 64 <= length(dates)]
     shiny::validate(shiny::need(length(quarters) > 0, "尚無可檢驗的完整季度。"))
@@ -5388,7 +4660,7 @@ server <- function(input, output, session) {
     list(p10 = metric(z$p10), etf = metric(z$etf))
   })
 
-  # v8 數字：僅報酬類以漲紅跌綠；波動、回撤、Sharpe 等維持中性色。
+  # v35 數字：僅報酬類以正向柔綠、負向柔紅；波動、回撤、Sharpe 等維持中性色。
   v8_color_value <- function(x, label, use_color = TRUE) {
     cls <- if (!use_color || !is.finite(x)) "v8-flat" else
       if (x > 0) "v8-up" else if (x < 0) "v8-down" else "v8-flat"
@@ -5467,7 +4739,7 @@ server <- function(input, output, session) {
     ggplot2::ggplot(d, ggplot2::aes(x=date, y=pct, colour=label)) +
       ggplot2::geom_hline(yintercept=0, linetype="dashed", colour="gray75") +
       ggplot2::geom_line(linewidth=1.2, na.rm=TRUE) +
-      ggplot2::scale_colour_manual(values=c("0010"="#397db8", "0050"="#d75c57")) +
+      ggplot2::scale_colour_manual(values=c("0010"="#547E75", "0050"="#8CA3A7")) +
       ggplot2::scale_y_continuous(labels=function(x) sprintf("%+.1f%%",x)) +
       ggplot2::labs(x=NULL, y="累積報酬率", colour=NULL) +
       ggplot2::theme_minimal(base_size=13) +
@@ -5492,7 +4764,7 @@ server <- function(input, output, session) {
     ggplot2::ggplot(d, ggplot2::aes(x=date,y=pct)) +
       ggplot2::geom_hline(yintercept=0, colour="gray65") +
       ggplot2::geom_col(ggplot2::aes(fill=pct>=0), width=.85, show.legend=FALSE) +
-      ggplot2::scale_fill_manual(values=c("TRUE"="#d94b4b", "FALSE"="#238a58")) +
+      ggplot2::scale_fill_manual(values=c("TRUE"="#337B65", "FALSE"="#B45F65")) +
       ggplot2::scale_y_continuous(limits=v8_daily_limits(),labels=function(x) paste0(round(x,1),"%")) +
       ggplot2::labs(x=NULL,y="日對數報酬率") +
       ggplot2::theme_minimal(base_size=11) +
@@ -10155,7 +9427,7 @@ server <- function(input, output, session) {
           "Top5" = "#6f9fd0",
           "Top10" = "#a28bd2",
           "Bottom5" = "#dfb46f",
-          "0050" = "#5b8ecb"
+          "0050" = "#8CA3A7"
         )
       ) +
       scale_y_continuous(
@@ -13134,8 +12406,9 @@ server <- function(input, output, session) {
     g[valid, , drop = FALSE]
   })
 
-  g18_stat_box <- function(label, value, sub = "") {
-    tags$div(class = "g18-stat",
+  g18_stat_box <- function(label, value, sub = "", tone = "neutral") {
+    class_name <- paste("g18-stat", paste0("g35-tone-", tone))
+    tags$div(class = class_name,
       tags$span(class = "g18-stat-label", label),
       tags$strong(class = "g18-stat-value", value),
       tags$span(class = "g18-stat-sub", sub))
@@ -13191,7 +12464,7 @@ server <- function(input, output, session) {
     d <- data.frame(label = factor(labs, levels = rev(labs)),
                     value = as.numeric(x$forecast_vol), stringsAsFactors = FALSE)
     ggplot2::ggplot(d, ggplot2::aes(x = label, y = value)) +
-      ggplot2::geom_col(fill = "#6d96ba", width = .7) +
+      ggplot2::geom_col(fill = "#62839D", width = .7) +
       ggplot2::coord_flip() +
       ggplot2::scale_y_continuous(labels = function(z) sprintf("%.0f%%", 100 * z),
                                   expand = ggplot2::expansion(mult = c(0, .20))) +
@@ -13265,6 +12538,29 @@ server <- function(input, output, session) {
     paste0("NT$ ", formatC(round(z), format = "d", big.mark = ","))
   }
 
+  # v35｜季度表格的正負色彩。只接受程式計算的數值，不改動任何收益或回測公式。
+  g35_tone <- function(x) {
+    if (length(x) != 1L || !is.finite(x) || x == 0) return("neutral")
+    if (x > 0) "positive" else "negative"
+  }
+
+  g35_color_table <- function(df, numeric_tones = list()) {
+    if (!is.data.frame(df)) return(NULL)
+    header_cells <- lapply(names(df), function(label) tags$th(scope = "col", label))
+    header <- do.call(tags$tr, header_cells)
+    body <- lapply(seq_len(nrow(df)), function(i) {
+      cells <- lapply(seq_along(df), function(j) {
+        key <- names(df)[j]
+        colored <- key %in% names(numeric_tones)
+        cls <- if (colored) paste("g35-number", paste0("g35-", g35_tone(numeric_tones[[key]][i]))) else NULL
+        tags$td(class = cls, as.character(df[[j]][i]))
+      })
+      do.call(tags$tr, cells)
+    })
+    tags$table(class = "table table-striped table-bordered table-hover g35-colored-table",
+      tags$thead(header), tags$tbody(body))
+  }
+
   output$g18_bt_summary <- shiny::renderUI({
     # eventReactive 尚未執行時會 req()，先檢查按鈕次數才能顯示提示。
     if (is.null(input$v5_run_bt) || input$v5_run_bt < 1) {
@@ -13286,10 +12582,10 @@ server <- function(input, output, session) {
     tags$div(
       tags$p(class = "g18-hint", paste0("目前查看：", label, "（", nrow(q), " 季）")),
       tags$div(class = "g18-stat-grid g19-bt-stat-grid",
-        g18_stat_box("0010 期間報酬（扣成本）", g18_pct(ret_a), "季度淨報酬複利串接"),
-        g18_stat_box("0050 同期報酬", g18_pct(ret_b), "相同回測季度比較"),
+        g18_stat_box("0010 期間報酬（扣成本）", g18_pct(ret_a), "季度淨報酬複利串接", tone = g35_tone(ret_a)),
+        g18_stat_box("0050 同期報酬", g18_pct(ret_b), "相同回測季度比較", tone = g35_tone(ret_b)),
         g18_stat_box("勝過 0050 的季度", if (n) sprintf("%d / %d（%.0f%%）", w, n, 100 * w / n) else "—", "季度勝率，不等於累積報酬"),
-        g18_stat_box("累積報酬差距", g19_pp(ret_a - ret_b), "0010 累積報酬 − 0050 累積報酬"),
+        g18_stat_box("累積報酬差距", g19_pp(ret_a - ret_b), "0010 累積報酬 − 0050 累積報酬", tone = g35_tone(ret_a - ret_b)),
         g18_stat_box("累計交易成本", g18_money(sum(as.numeric(q$成本合計), na.rm = TRUE)), "所選季度的模擬交易費用")
       )
     )
@@ -13307,16 +12603,16 @@ server <- function(input, output, session) {
     ggplot2::ggplot(df, ggplot2::aes(x = year, y = value, fill = series)) +
       ggplot2::geom_hline(yintercept = 0, colour = "#a6b2bc", linewidth = 0.4) +
       ggplot2::geom_col(position = ggplot2::position_dodge(width = .74), width = .64) +
-      ggplot2::scale_fill_manual(values = c("0010（扣成本）" = "#628db3", "0050" = "#c3a68a")) +
+      ggplot2::scale_fill_manual(values = c("0010（扣成本）" = "#547E75", "0050" = "#8CA3A7")) +
       ggplot2::scale_y_continuous(labels = function(x) sprintf("%+.0f%%", 100*x)) +
       ggplot2::labs(x = "評分年度", y = "該年度評分季度報酬", fill = NULL) +
       ggplot2::theme_minimal(base_size = 12) +
       ggplot2::theme(legend.position = "bottom", panel.grid.major.x = ggplot2::element_blank())
   })
 
-  output$g18_bt_year_table <- shiny::renderTable({
+  output$g18_bt_year_table <- shiny::renderUI({
     y <- g18_bt_yearly()
-    data.frame(
+    df <- data.frame(
       評分年度 = y$year,
       回測季數 = y$n,
       `0010淨報酬` = vapply(y$ret0010, g18_pct, character(1)),
@@ -13325,18 +12621,23 @@ server <- function(input, output, session) {
       勝過0050 = ifelse(y$compared > 0, paste0(y$win, "/", y$compared), "—"),
       交易成本 = vapply(y$cost, g18_money, character(1)),
       check.names = FALSE, stringsAsFactors = FALSE)
-  }, striped = TRUE, bordered = TRUE, hover = TRUE)
+    tones <- list()
+    tones[["0010淨報酬"]] <- y$ret0010
+    tones[["0050同期報酬"]] <- y$ret0050
+    tones[["累積報酬差距"]] <- y$gap
+    g35_color_table(df, tones)
+  })
 
   output$g18_bt_quarter_title <- shiny::renderText({
     y <- input$g18_bt_year
     if (is.null(y) || identical(y, "all")) "最近八季績效" else paste0(y, " 年評分季度績效")
   })
 
-  output$g18_bt_quarter_table <- shiny::renderTable({
+  output$g18_bt_quarter_table <- shiny::renderUI({
     q <- g18_bt_quarters()
     y <- input$g18_bt_year
     if (is.null(y) || identical(y, "all")) q <- utils::tail(q, 8)
-    data.frame(
+    df <- data.frame(
       評分日 = format(as.Date(q$評分日), "%Y-%m-%d"),
       成交日 = format(as.Date(q$成交日), "%Y-%m-%d"),
       出場日 = format(as.Date(q$出場日), "%Y-%m-%d"),
@@ -13345,7 +12646,12 @@ server <- function(input, output, session) {
       超額 = vapply(q$淨報酬 - q$基準0050, g18_pct, character(1)),
       跨年 = ifelse(format(as.Date(q$評分日), "%Y") != format(as.Date(q$出場日), "%Y"), "是", "否"),
       check.names = FALSE, stringsAsFactors = FALSE)
-  }, striped = TRUE, bordered = TRUE, hover = TRUE)
+    tones <- list()
+    tones[["0010淨報酬"]] <- as.numeric(q$淨報酬)
+    tones[["0050同期報酬"]] <- as.numeric(q$基準0050)
+    tones[["超額"]] <- as.numeric(q$淨報酬 - q$基準0050)
+    g35_color_table(df, tones)
+  })
 
   # ----------------------------------------------------------
   # 3. 0010 組合
@@ -13838,7 +13144,7 @@ server <- function(input, output, session) {
   })
   
   # v14：同一上季持股清單，依各種配置方式計算買進持有的單期試算。
-  # 調整後股價試算；不扣交易成本、不執行停損、不取代正式季度 T+1 回測。
+  # 調整後股價試算；不扣交易成本、不執行停損、不取代正式季度策略回測。
   g10_v14_money <- function(x, signed = FALSE) {
     if (length(x) != 1L || !is.finite(x)) return("資料不足")
     val <- paste0("NT$ ", formatC(round(abs(x)), format = "d", big.mark = ","))
