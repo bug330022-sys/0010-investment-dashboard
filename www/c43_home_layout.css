@@ -1,0 +1,117 @@
+/* C43: home only, replaces C40 brittle grid-row placement and C42 market row overrides.
+   Add AFTER c42_readability_fix.css in app.R.
+   No server calculations, output IDs or other page sections changed. */
+
+/* Home blocks now follow normal document flow, with their own columns. */
+body #main_tabs + .tab-content > .tab-pane:first-child.active {
+  display:block !important;
+  grid-template-columns:none !important;
+}
+body .c43-home-grid {
+  display:grid !important;
+  grid-template-columns:minmax(0,1.65fr) minmax(345px,1fr) !important;
+  align-items:start !important;
+  gap:18px !important;
+  margin:0 0 17px !important;
+}
+body .c43-home-main, body .c43-home-side {
+  display:flex !important;
+  flex-direction:column !important;
+  min-width:0 !important;
+  gap:16px !important;
+}
+body .c43-home-grid .section-box,
+body .c43-home-grid .method-details.v25-home-expand {
+  margin:0 !important;
+  min-width:0 !important;
+  width:auto !important;
+  box-sizing:border-box !important;
+}
+/* Avoid a tall plot forcing an unrelated row to have equal height. */
+body .c43-home-main .shiny-plot-output { width:100% !important;max-width:100%; }
+
+/* Market KPIs: a genuine flat grid instead of nested Bootstrap columns.
+   Two stable columns, with the long breadth value using a whole row. */
+body .c43-market-grid {
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:11px !important;
+  align-items:stretch !important;
+}
+body .c43-market-grid .info-card {
+  min-width:0 !important;
+  width:100% !important;
+  box-sizing:border-box !important;
+  height:auto !important;
+  min-height:112px !important;
+  margin:0 !important;
+  padding:15px 15px !important;
+  display:flex !important;
+  flex-direction:column !important;
+  justify-content:space-between !important;
+}
+body .c43-market-grid .info-card:last-child {
+  grid-column:1/-1 !important;
+  min-height:105px !important;
+}
+body .c43-market-grid .info-card-title {
+  margin:0 0 14px !important;
+  min-height:0 !important;
+  font-size:12px !important;
+  line-height:1.5 !important;
+  overflow-wrap:normal !important;
+  word-break:keep-all !important;
+}
+body .c43-market-grid h3.info-card-value {
+  font-size:clamp(18px,1.55vw,24px) !important;
+  line-height:1.3 !important;
+  font-weight:800 !important;
+  margin:0 !important;
+  min-width:0 !important;
+  word-break:keep-all !important;
+  overflow-wrap:normal !important;
+}
+body .c43-market-grid h3.info-card-value > .shiny-text-output,
+body .c43-market-grid h3.info-card-value > .shiny-html-output,
+body .c43-market-grid h3.info-card-value > span {
+  font-size:inherit !important;
+  line-height:inherit !important;
+  overflow-wrap:normal !important;
+  word-break:keep-all !important;
+}
+body .c43-market-grid .info-card:last-child h3.info-card-value {
+  font-size:clamp(18px,1.5vw,23px) !important;
+}
+
+/* Performance KPIs retain the C42 two-column values; eliminate its brittle
+   mid-width five-column override that causes compressed numbers. */
+body .home-compare-grid .home-side,
+body .home-compare-grid .home-center {
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+}
+body .home-compare-grid .home-stat > strong,
+body .home-compare-grid .home-center .home-stat > strong {
+  font-size:clamp(17px,1.4vw,22px) !important;
+  letter-spacing:-0.4px !important;
+  white-space:nowrap !important;
+}
+
+/* Breakpoint based on viewport INCLUDING the 228px sidebar; keep both columns
+   only while the actual available content width can support them. */
+@media(max-width:1200px) {
+  body .c43-home-grid {
+    grid-template-columns:minmax(0,1fr) !important;
+    gap:16px !important;
+  }
+}
+@media(max-width:780px) {
+  body .c43-market-grid {gap:10px !important;}
+  body .c43-market-grid .info-card {min-height:100px !important;padding:13px 12px !important;}
+  body .c43-market-grid h3.info-card-value {font-size:19px !important;}
+  body .home-compare-grid .home-stat > strong,
+  body .home-compare-grid .home-center .home-stat > strong {font-size:18px !important;}
+}
+@media(max-width:360px) {
+  body .c43-market-grid {grid-template-columns:minmax(0,1fr) !important;}
+  body .c43-market-grid .info-card:last-child {grid-column:auto !important;}
+}
