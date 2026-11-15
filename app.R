@@ -13,6 +13,52 @@ library(ggplot2)
 library(dplyr)
 library(tidyr)
 
+# C40: plot appearance only. Same ggplot2::theme_minimal() arguments and data.
+# This avoids light chart canvases on the dark Shiny dashboard.
+c40_theme_minimal <- function(base_size = 12, base_family = "", ...) {
+  ggplot2::theme_minimal(base_size = base_size, base_family = base_family, ...) +
+    ggplot2::theme(
+      plot.background = ggplot2::element_rect(fill = "#112335", colour = NA),
+      panel.background = ggplot2::element_rect(fill = "#112335", colour = NA),
+      legend.background = ggplot2::element_rect(fill = "#112335", colour = NA),
+      legend.key = ggplot2::element_rect(fill = "#112335", colour = NA),
+      plot.title = ggplot2::element_text(colour = "#EAF4FB", face = "bold"),
+      plot.subtitle = ggplot2::element_text(colour = "#AAC1D0"),
+      plot.caption = ggplot2::element_text(colour = "#9BB5C7"),
+      axis.title = ggplot2::element_text(colour = "#C4D9E7"),
+      axis.text = ggplot2::element_text(colour = "#AFC7D8"),
+      panel.grid.major = ggplot2::element_line(colour = "#294459", linewidth = 0.3),
+      panel.grid.minor = ggplot2::element_line(colour = "#203749", linewidth = 0.25),
+      legend.text = ggplot2::element_text(colour = "#D0E1EB"),
+      legend.title = ggplot2::element_text(colour = "#C4D9E7"),
+      strip.text = ggplot2::element_text(colour = "#D8E9F5"),
+      strip.background = ggplot2::element_rect(fill = "#193548", colour = NA)
+    )
+}
+
+# C41: two readable chart palettes; calculations, aesthetics, and series stay untouched.
+c41_theme_dark <- c40_theme_minimal
+c41_theme_light <- function(base_size = 12, base_family = "", ...) {
+  ggplot2::theme_minimal(base_size = base_size, base_family = base_family, ...) +
+    ggplot2::theme(
+      plot.background = ggplot2::element_rect(fill = "#FFFFFF", colour = NA),
+      panel.background = ggplot2::element_rect(fill = "#FFFFFF", colour = NA),
+      legend.background = ggplot2::element_rect(fill = "#FFFFFF", colour = NA),
+      legend.key = ggplot2::element_rect(fill = "#FFFFFF", colour = NA),
+      plot.title = ggplot2::element_text(colour = "#244E71", face = "bold"),
+      plot.subtitle = ggplot2::element_text(colour = "#617B8E"),
+      plot.caption = ggplot2::element_text(colour = "#71879A"),
+      axis.title = ggplot2::element_text(colour = "#395E78"),
+      axis.text = ggplot2::element_text(colour = "#4B6980"),
+      panel.grid.major = ggplot2::element_line(colour = "#DCE6EE", linewidth = 0.3),
+      panel.grid.minor = ggplot2::element_line(colour = "#ECF1F5", linewidth = 0.25),
+      legend.text = ggplot2::element_text(colour = "#345C79"),
+      legend.title = ggplot2::element_text(colour = "#395E78"),
+      strip.text = ggplot2::element_text(colour = "#355B79"),
+      strip.background = ggplot2::element_rect(fill = "#EAF3F9", colour = NA)
+    )
+}
+
 options(scipen = 999)
 source("garch_model.R", local = TRUE)
 source("p10_model.R", local = TRUE)
@@ -1477,7 +1523,7 @@ other_stock_symbols <-
   )
 
 stock_colors <- c(
-  "0050" = "#CF9448"
+  "0050" = "#F0AC58"
 )
 
 if (
@@ -2774,7 +2820,13 @@ ui <- fluidPage(
         "
         
       )
-    )
+    ),
+    # C40 dark theme: external CSS loaded after original v40 visual rules.
+    # Put c40_dark_theme.css inside the existing project's www/ folder.
+    tags$link(id = "c41-dark-css", rel = "stylesheet", type = "text/css", href = "c40_dark_theme.css", media = "all"),
+    tags$link(id = "c41-light-css", rel = "stylesheet", type = "text/css", href = "c41_light_theme.css", media = "not all"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "c41_theme_switch.css"),
+    tags$script(src = "c41_theme_switch.js")
   ),
   
   
@@ -2789,6 +2841,11 @@ ui <- fluidPage(
       class = "hero-badge",
       "統計研究｜非投資建議｜資料更新至：",
       textOutput("header_latest_date", inline = TRUE)
+    ),
+    # C41: UI-only switch. Existing main tabs and IDs are untouched.
+    div(class = "c41-theme-switch", role = "group", `aria-label` = "網站明暗模式",
+      tags$button(id = "c41-theme-light", type = "button", `aria-pressed` = "false", "☀ 淺色"),
+      tags$button(id = "c41-theme-dark", type = "button", `aria-pressed` = "true", "☾ 深色")
     )
   ),
   
@@ -4084,7 +4141,18 @@ h3(class = "v15-more-title", "完整統計資料"),
 
 # ============================================================
 server <- function(input, output, session) {
-  
+  # Read the UI theme reactively *only when a chart renders*; switch modes
+  # without changing existing data/model code or any plot output IDs.
+  # This local helper shadows only the previous c40 plot appearance helper.
+  c40_theme_minimal <- function(base_size = 12, base_family = "", ...) {
+    mode <- input$c41_theme_mode
+    if (identical(mode, "light")) {
+      c41_theme_light(base_size = base_size, base_family = base_family, ...)
+    } else {
+      c41_theme_dark(base_size = base_size, base_family = base_family, ...)
+    }
+  }
+
   # v5：季度策略回測（下一交易日進場）、GARCH 診斷、樣本外評估
   source("v5_server.R", local = TRUE)
 
@@ -4333,7 +4401,7 @@ server <- function(input, output, session) {
         breaks = function(x) pretty(x, n = 5),
         expand = ggplot2::expansion(mult = c(0, 0))) +
       ggplot2::labs(x = "QLIKE 最低的股票數（檔）", y = NULL) +
-      ggplot2::theme_minimal(base_size = 12) +
+      c40_theme_minimal(base_size = 12) +
       ggplot2::theme(panel.grid.major.y = ggplot2::element_blank(),
                      panel.grid.minor = ggplot2::element_blank(),
                      plot.margin = ggplot2::margin(8, 12, 8, 8))
@@ -4358,7 +4426,7 @@ server <- function(input, output, session) {
         breaks = function(x) pretty(x, n = 5),
         expand = ggplot2::expansion(mult = c(0, 0))) +
       ggplot2::labs(x = "各股票等權平均 MAE（百分點；越低越好）", y = NULL) +
-      ggplot2::theme_minimal(base_size = 12) +
+      c40_theme_minimal(base_size = 12) +
       ggplot2::theme(panel.grid.major.y = ggplot2::element_blank(),
                      panel.grid.minor = ggplot2::element_blank(),
                      plot.margin = ggplot2::margin(8, 12, 8, 8))
@@ -4429,7 +4497,7 @@ server <- function(input, output, session) {
       ggplot2::geom_line(linewidth = 0.65, alpha = 0.88) +
       ggplot2::labs(title = "樣本外每日波動幅度比較", x = "測試期間交易日序號",
                     y = "日波動／|報酬|（%）", colour = NULL) +
-      ggplot2::theme_minimal() +
+      c40_theme_minimal() +
       ggplot2::theme(legend.position = "bottom",
                      plot.title = ggplot2::element_text(hjust = 0.5, face = "bold"))
   })
@@ -4545,7 +4613,7 @@ server <- function(input, output, session) {
       ggplot2::scale_y_continuous(limits = c(0, 112), breaks = c(0, 25, 50, 75, 100),
                                   expand = ggplot2::expansion(mult = c(0, 0))) +
       ggplot2::labs(x = NULL, y = axis_name) +
-      ggplot2::theme_minimal(base_size = 12) +
+      c40_theme_minimal(base_size = 12) +
       ggplot2::theme(plot.title = ggplot2::element_blank(),
                      panel.grid.major.y = ggplot2::element_blank(),
                      panel.grid.minor = ggplot2::element_blank(),
@@ -4707,7 +4775,7 @@ server <- function(input, output, session) {
       ggplot2::coord_flip() +
       ggplot2::scale_y_continuous(limits = c(0, 100), expand = ggplot2::expansion(mult = c(0, 0.03))) +
       ggplot2::labs(title = "目前權重下選出的十檔", x = NULL, y = "合成分數（0～100）") +
-      ggplot2::theme_minimal(base_size = 12) +
+      c40_theme_minimal(base_size = 12) +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5, face = "bold"))
   })
 
@@ -5017,11 +5085,13 @@ server <- function(input, output, session) {
                data.frame(date=z$date, pct=(z$etf-1)*100, label="0050"))
     ggplot2::ggplot(d, ggplot2::aes(x=date, y=pct, colour=label)) +
       ggplot2::geom_hline(yintercept=0, linetype="dashed", colour="gray75") +
-      ggplot2::geom_line(linewidth=1.2, na.rm=TRUE) +
-      ggplot2::scale_colour_manual(values=c("0010"="#365F87", "0050"="#CF9448")) +
+      ggplot2::geom_line(linewidth=1.2, linetype="solid", na.rm=TRUE) +
+      ggplot2::scale_colour_manual(values=if (identical(input$c41_theme_mode, "light"))
+        c("0010"="#226AA1", "0050"="#B97825") else
+        c("0010"="#65B5F1", "0050"="#F0AC58")) +
       ggplot2::scale_y_continuous(labels=function(x) sprintf("%+.1f%%",x)) +
       ggplot2::labs(x=NULL, y="累積報酬率", colour=NULL) +
-      ggplot2::theme_minimal(base_size=13) +
+      c40_theme_minimal(base_size=13) +
       ggplot2::theme(legend.position="bottom", panel.grid.minor=ggplot2::element_blank())
   })
 
@@ -5046,7 +5116,7 @@ server <- function(input, output, session) {
       ggplot2::scale_fill_manual(values=c("TRUE"="#C04F58", "FALSE"="#278066")) +
       ggplot2::scale_y_continuous(limits=v8_daily_limits(),labels=function(x) paste0(round(x,1),"%")) +
       ggplot2::labs(x=NULL,y="日對數報酬率") +
-      ggplot2::theme_minimal(base_size=11) +
+      c40_theme_minimal(base_size=11) +
       ggplot2::theme(panel.grid.minor=ggplot2::element_blank())
   }
   output$v8_p10_daily_log <- shiny::renderPlot({
@@ -5156,7 +5226,7 @@ server <- function(input, output, session) {
       ggplot2::geom_line(linewidth = 0.9) +
       ggplot2::scale_y_continuous(labels = function(z) paste0(round(z * 100), "%")) +
       ggplot2::labs(title = "本期回撤（自上次再平衡起）", x = NULL, y = "回撤", colour = NULL) +
-      ggplot2::theme_minimal() +
+      c40_theme_minimal() +
       ggplot2::theme(legend.position = "bottom",
                      plot.title = ggplot2::element_text(hjust = 0.5, face = "bold"))
   })
@@ -6185,7 +6255,7 @@ server <- function(input, output, session) {
             y = "調整後價格"
           ) +
           
-          theme_minimal() +
+          c40_theme_minimal() +
           
           theme(
             plot.title =
@@ -6259,7 +6329,7 @@ server <- function(input, output, session) {
         color = NULL
       ) +
       
-      theme_minimal() +
+      c40_theme_minimal() +
       
       theme(
         plot.title =
@@ -6363,7 +6433,7 @@ server <- function(input, output, session) {
             }
           ) +
           
-          theme_minimal() +
+          c40_theme_minimal() +
           
           theme(
             plot.title =
@@ -6446,7 +6516,7 @@ server <- function(input, output, session) {
         }
       ) +
       
-      theme_minimal() +
+      c40_theme_minimal() +
       
       theme(
         plot.title =
@@ -6552,7 +6622,7 @@ server <- function(input, output, session) {
           )
         }
       ) +
-      theme_minimal() +
+      c40_theme_minimal() +
       theme(
         plot.title = element_text(
           hjust = 0.5,
@@ -7166,7 +7236,7 @@ server <- function(input, output, session) {
         color = NULL
       ) +
       
-      theme_minimal() +
+      c40_theme_minimal() +
       
       theme(
         plot.title =
@@ -7222,7 +7292,7 @@ server <- function(input, output, session) {
       ) +
       scale_y_continuous(labels=function(z) paste0(round(z*100,1), "%")) +
       labs(title="期間累積報酬", x="日期", y="累積報酬率", color=NULL) +
-      theme_minimal() +
+      c40_theme_minimal() +
       theme(plot.title=element_text(hjust=0.5, face="bold"), legend.position="bottom")
   })
   
@@ -7444,7 +7514,7 @@ server <- function(input, output, session) {
                       
                     ) +
                     
-                    theme_minimal() +
+                    c40_theme_minimal() +
                     
                     theme(
                       
@@ -7601,7 +7671,7 @@ server <- function(input, output, session) {
                     }
                   ) +
                   
-                  theme_minimal() +
+                  c40_theme_minimal() +
                   
                   theme(
                     plot.title =
@@ -7759,7 +7829,7 @@ server <- function(input, output, session) {
                       }
                     ) +
                     
-                    theme_minimal() +
+                    c40_theme_minimal() +
                     
                     theme(
                       plot.title =
@@ -8154,7 +8224,7 @@ server <- function(input, output, session) {
                       }
                     ) +
                     
-                    theme_minimal() +
+                    c40_theme_minimal() +
                     
                     theme(
                       plot.title =
@@ -8298,7 +8368,7 @@ server <- function(input, output, session) {
         }
       ) +
       
-      theme_minimal() +
+      c40_theme_minimal() +
       
       theme(
         plot.title =
@@ -8386,7 +8456,7 @@ server <- function(input, output, session) {
       scale_color_manual(values = stock_colors, labels = function(z) get_stock_label(z)) +
       scale_y_continuous(limits = c(-1, 1)) +
       labs(title = "與 0050 的 60 日滾動相關性", x = "日期", y = "相關係數", color = NULL) +
-      theme_minimal() +
+      c40_theme_minimal() +
       theme(plot.title = element_text(hjust = 0.5, face = "bold"), legend.position = "bottom")
   })
   
@@ -8511,7 +8581,7 @@ server <- function(input, output, session) {
         y = NULL
       ) +
       xlim(0, 100) +
-      theme_minimal() +
+      c40_theme_minimal() +
       theme(plot.title = element_text(hjust = 0.5, face = "bold"))
   })
   
@@ -8552,7 +8622,7 @@ server <- function(input, output, session) {
         y = NULL
       ) +
       xlim(0, 100) +
-      theme_minimal() +
+      c40_theme_minimal() +
       theme(plot.title = element_text(hjust = 0.5, face = "bold"))
   })
   
@@ -8754,7 +8824,7 @@ server <- function(input, output, session) {
         y = "第二主成分",
         color = "分群"
       ) +
-      theme_minimal() +
+      c40_theme_minimal() +
       theme(
         plot.title = element_text(
           hjust = 0.5,
@@ -9150,7 +9220,7 @@ server <- function(input, output, session) {
         x = "成長分數差（成分股－0050）",
         y = "密度"
       ) +
-      theme_minimal() +
+      c40_theme_minimal() +
       theme(
         plot.title = element_text(
           hjust = 0.5,
@@ -9703,10 +9773,10 @@ server <- function(input, output, session) {
       ) +
       scale_color_manual(
         values = c(
-          "Top5" = "#365F87",
+          "Top5" = "#65B5F1",
           "Top10" = "#7D92BD",
           "Bottom5" = "#8B7395",
-          "0050" = "#CF9448"
+          "0050" = "#F0AC58"
         )
       ) +
       scale_y_continuous(
@@ -9727,7 +9797,7 @@ server <- function(input, output, session) {
         y = "後續報酬",
         color = "比較組別"
       ) +
-      theme_minimal() +
+      c40_theme_minimal() +
       theme(
         plot.title = element_text(
           hjust = 0.5,
@@ -10138,7 +10208,7 @@ server <- function(input, output, session) {
           x = date,
           y = cumulative
         ),
-        color = "#CF9448",
+        color = "#F0AC58",
         linewidth = 1
       ) +
       
@@ -10164,7 +10234,7 @@ server <- function(input, output, session) {
         }
       ) +
       
-      theme_minimal() +
+      c40_theme_minimal() +
       
       theme(
         plot.title =
@@ -10276,7 +10346,7 @@ server <- function(input, output, session) {
         }
       ) +
       
-      theme_minimal() +
+      c40_theme_minimal() +
       
       theme(
         plot.title =
@@ -10386,7 +10456,7 @@ server <- function(input, output, session) {
         }
       ) +
       
-      theme_minimal() +
+      c40_theme_minimal() +
       
       theme(
         plot.title =
@@ -10527,7 +10597,7 @@ server <- function(input, output, session) {
                       }
                     ) +
                     
-                    theme_minimal() +
+                    c40_theme_minimal() +
                     
                     theme(
                       plot.title =
@@ -10683,7 +10753,7 @@ server <- function(input, output, session) {
         }
       ) +
       
-      theme_minimal() +
+      c40_theme_minimal() +
       
       theme(
         plot.title =
@@ -10850,7 +10920,7 @@ server <- function(input, output, session) {
         y = NULL,
         fill = "相關係數"
       ) +
-      theme_minimal() +
+      c40_theme_minimal() +
       theme(
         plot.title = element_text(
           hjust = 0.5,
@@ -11824,7 +11894,7 @@ server <- function(input, output, session) {
           )
         }
       ) +
-      theme_minimal() +
+      c40_theme_minimal() +
       theme(
         plot.title = element_text(
           hjust = 0.5,
@@ -12182,8 +12252,8 @@ server <- function(input, output, session) {
       
       scale_color_manual(
         values = c(
-          "投資組合" = "#365F87",
-          "0050" = "#CF9448"
+          "投資組合" = if (identical(input$c41_theme_mode, "light")) "#226AA1" else "#65B5F1",
+          "0050" = if (identical(input$c41_theme_mode, "light")) "#B97825" else "#F0AC58"
         )
       ) +
       
@@ -12203,7 +12273,7 @@ server <- function(input, output, session) {
         }
       ) +
       
-      theme_minimal() +
+      c40_theme_minimal() +
       
       theme(
         plot.title = element_text(
@@ -12450,7 +12520,7 @@ server <- function(input, output, session) {
       ggplot2::scale_y_continuous(labels = function(z) paste0(round(z * 100), "%")) +
       ggplot2::labs(title = "GARCH 條件波動（藍）vs 21 日實現波動（灰）",
                     x = "最近 250 個交易日", y = "年化波動") +
-      ggplot2::theme_minimal() +
+      c40_theme_minimal() +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5, face = "bold"))
   })
   
@@ -12464,7 +12534,7 @@ server <- function(input, output, session) {
       ggplot2::scale_y_continuous(labels = function(z) paste0(round(z * 100), "%")) +
       ggplot2::labs(title = "未來 63 日年化波動預測（紅虛線 = 近一年實現波動）",
                     x = "預測期（交易日）", y = "年化波動") +
-      ggplot2::theme_minimal() +
+      c40_theme_minimal() +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5, face = "bold"))
   })
   
@@ -12748,7 +12818,7 @@ server <- function(input, output, session) {
       ggplot2::geom_text(ggplot2::aes(label = sprintf("%.1f%%", 100 * value)),
                          hjust = -0.12, size = 3.1, colour = "#3e607b") +
       ggplot2::labs(x = NULL, y = "預測年化波動率") +
-      ggplot2::theme_minimal(base_size = 12) +
+      c40_theme_minimal(base_size = 12) +
       ggplot2::theme(axis.text.y = ggplot2::element_text(size = 9),
                      panel.grid.major.y = ggplot2::element_blank())
   })
@@ -12880,10 +12950,10 @@ server <- function(input, output, session) {
     ggplot2::ggplot(df, ggplot2::aes(x = year, y = value, fill = series)) +
       ggplot2::geom_hline(yintercept = 0, colour = "#a6b2bc", linewidth = 0.4) +
       ggplot2::geom_col(position = ggplot2::position_dodge(width = .74), width = .64) +
-      ggplot2::scale_fill_manual(values = c("0010（扣成本）" = "#365F87", "0050" = "#CF9448")) +
+      ggplot2::scale_fill_manual(values = c("0010（扣成本）" = "#65B5F1", "0050" = "#F0AC58")) +
       ggplot2::scale_y_continuous(labels = function(x) sprintf("%+.0f%%", 100*x)) +
       ggplot2::labs(x = "評分年度", y = "該年度評分季度報酬", fill = NULL) +
-      ggplot2::theme_minimal(base_size = 12) +
+      c40_theme_minimal(base_size = 12) +
       ggplot2::theme(legend.position = "bottom", panel.grid.major.x = ggplot2::element_blank())
   })
 
@@ -13243,9 +13313,9 @@ server <- function(input, output, session) {
       data.frame(date = q$date, value = q$equity_0050, series = "0050")
     )
     ggplot2::ggplot(df, ggplot2::aes(x = date, y = value, colour = series)) +
-      ggplot2::geom_line(linewidth = 1) +
+      ggplot2::geom_line(linewidth = 1, linetype = "solid") +
       ggplot2::labs(title = "季度再平衡淨值曲線", x = NULL, y = "淨值（起始 = 1）", colour = NULL) +
-      ggplot2::theme_minimal() +
+      c40_theme_minimal() +
       ggplot2::theme(legend.position = "bottom",
                      plot.title = ggplot2::element_text(hjust = 0.5, face = "bold"))
   })
@@ -13362,7 +13432,7 @@ server <- function(input, output, session) {
         labels = function(v) paste0(round(v * 100), "%"),
         expand = ggplot2::expansion(mult = c(0, 0.22))) +
       ggplot2::labs(x = NULL, y = "資金權重") +
-      ggplot2::theme_minimal(base_size = 12) +
+      c40_theme_minimal(base_size = 12) +
       ggplot2::theme(
         panel.grid.major.y = ggplot2::element_blank(),
         panel.grid.minor = ggplot2::element_blank(),
