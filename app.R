@@ -3037,7 +3037,7 @@ h3("日對數報酬分布"),
                 choices=c("95%（預設）"=0.95,"90%（較窄）"=0.90),selected=0.95),
               p(class="v27-hint","建模期間＝每個預測日用多少筆過去報酬估計；驗證期間＝評估最近多少個交易日。95% 比 90% 的區間通常更寬；涵蓋率仍需樣本外驗證。"))
           ),
-          p(class="v27-hint","隔日漲跌方向：Logistic Regression，以過去日報酬、動能、波動和 0050 當日報酬估計上漲機率（尚未校準）；隔日報酬／價格區間：AR(1)＋GARCH(1,1)。歷史驗證每 21 日重新估計 GARCH 參數，其間每日更新條件波動。新版快取每檔的歷史特徵，避免逐日重算；一次執行全體後，單檔切換直接查看相同結果。"),
+          p(class="v27-hint","v33 實驗方向模型：Ridge Logistic（原 5 項特徵＋大盤近 5 日動能＋相對 0050 五日強弱；固定 L2 懲罰 10），舊 Logistic 只作同期間基準。上漲機率尚未校準，不代表真實勝率。隔日報酬／價格區間仍由 AR(1)＋GARCH(1,1) 估計。歷史驗證每 21 日重新估計 GARCH 參數，其間每日更新條件波動。新版快取每檔的歷史特徵，避免逐日重算；一次執行全體後，單檔切換直接查看相同結果。"),
           div(class="v28-primary-tabs",
             tabsetPanel(id="v28_main_tabs",type="pills",
               tabPanel("預測",
@@ -3045,7 +3045,7 @@ h3("日對數報酬分布"),
                   tabPanel("全體偏多／偏空訊號",
                     div(class="v28-part",
                       h3("0050 成分股｜隔日方向訊號"),
-                      p(class="v27-hint","使用同一資料基準日：依 Logistic 估計上漲機率排序，偏多取機率超過 50% 的前 5 檔；偏空取低於 50% 的後 5 檔。機率尚未校準，只是研究訊號，不代表實際勝率或買賣建議。"),
+                      p(class="v27-hint","使用同一資料基準日：依 Ridge Logistic 的實驗性上漲機率排序，偏多取機率超過 50% 的前 5 檔；偏空取低於 50% 的後 5 檔。機率尚未校準，只是研究訊號，不代表實際勝率或買賣建議。"),
                       uiOutput("v28_all_status"),
                       uiOutput("v28_snapshot_kpis"),
                       fluidRow(
@@ -3056,7 +3056,7 @@ h3("日對數報酬分布"),
                           h4("偏空觀察｜最多 5 檔"),
                           tableOutput("v28_negative_table")))
                       ),
-                      p(class="v27-hint","上漲機率來自 Logistic；報酬預測及價格區間來自 AR＋GARCH，兩種模型可能給出不同方向。即使預估機率較高，也需要和歷史命中率一起看。"),
+                      p(class="v27-hint","上漲機率來自 Ridge Logistic；報酬預測及價格區間來自 AR＋GARCH，兩種模型可能給出不同方向。即使預估機率較高，也需要和歷史命中率一起看。"),
                       tags$details(class="method-details",
                         tags$summary("查看全部股票的隔日預測報酬與區間"),
                         div(class="v27-overflow",tableOutput("v28_full_snapshot")),
@@ -3073,7 +3073,7 @@ h3("日對數報酬分布"),
                         radioButtons("v27_show_days","畫面顯示範圍",
                           choices=c("近 5 日"=5,"近 10 日"=10),selected=10,inline=TRUE)),
                       plotOutput("v27_price_plot",height="390px"),
-                      p(class="v27-hint","藍線＝AR(1) 預測調整後價格；橘線＝實際調整後價格；陰影＝95%（或所選涵蓋率）的 GARCH 預測區間。方向訊號另外由 Logistic 估計，兩者不保證一致。"),
+                      p(class="v27-hint","藍線＝AR(1) 預測調整後價格；橘線＝實際調整後價格；陰影＝95%（或所選涵蓋率）的 GARCH 預測區間。方向訊號另外由 Ridge Logistic 估計，兩者不保證一致。"),
                       tags$details(class="method-details",
                         tags$summary("查看最近的預測誤差"),
                         tableOutput("v27_recent_table")),
@@ -3087,16 +3087,19 @@ h3("日對數報酬分布"),
                   tabPanel("全體訊號驗證",
                     div(class="v28-part",
                       h3("偏多／偏空 Top 5｜歷史樣本外驗證"),
-                      p(class="v27-hint","所有股票對齊同一批 0050 交易日；每天只用前一交易日的已知資料，依 Logistic 預估上漲機率挑選偏多／偏空各最多 5 檔，隔日核對實際方向。"),
+                      p(class="v27-hint","所有股票對齊同一批 0050 交易日；每天只用當時已知資料，依 Ridge Logistic 預估上漲機率挑選偏多／偏空各最多 5 檔，隔日核對實際方向。"),
                       uiOutput("v28_all_status_validation"),
                       uiOutput("v28_validation_kpis"),
                       h4("歷史訊號命中率與後續實際報酬"),
                       tableOutput("v28_signal_summary"),
                       p(class="v27-hint","偏多命中＝隔日實際上漲；偏空命中＝隔日實際下跌。『全體股票同期方向比例』作為簡單基準，檢查挑選 Top 5 是否有額外價值。平均隔日報酬是觀察性數據，不含交易成本，不能當作可交易的投資淨績效。"),
+                      h4("方向模型比較｜相同樣本外日期"),
+                      tableOutput("v33_all_compare"),
+                      p(class="v27-hint","Ridge Logistic 和原 Logistic 使用相同股票、相同測試日，比較方向準確率、Balanced Accuracy 與 Brier（越低越好）；只報告結果，不把測試期當成調參依據。固定 lambda=10，尚未經獨立校準。"),
                       h4("全體股票｜預測誤差摘要"),
                       tableOutput("v28_all_error_summary"),
-                      p(class="v27-hint","AR＋GARCH 的 MAE／RMSE 衡量報酬點預測；Logistic 的方向命中率與 Brier 分數衡量漲跌機率。95% 區間涵蓋率必須搭配平均寬度一起看，各檔股票先計算再等權平均。"),
-                      p(class="v27-hint","解讀提醒：95% 預測區間本來就較寬，落在區間內的次數多，不代表明日漲跌猜得準；方向模型應與同期永遠猜漲的基準比較。若兩者差不多，暫時不宜當成交易建議。"),
+                      p(class="v27-hint","AR＋GARCH 的 MAE／RMSE 衡量報酬點預測；Ridge Logistic 的方向命中率與 Brier 分數衡量漲跌機率。95% 區間涵蓋率必須搭配平均寬度一起看，各檔股票先計算再等權平均。"),
+                      p(class="v27-hint","解讀提醒：95% 預測區間本來就較寬，落在區間內的次數多，不代表明日漲跌猜得準；Ridge 的方向結果必須同時與原 Logistic、永遠猜漲的同期基準比較。若兩者差不多，暫時不宜當成交易建議。"),
                       tags$details(class="method-details",
                         tags$summary("查看每天的 Top 5 訊號驗證明細"),
                         div(class="v27-overflow",tableOutput("v28_daily_signal_table")),
@@ -3109,9 +3112,11 @@ h3("日對數報酬分布"),
                       h3("單檔 T+1｜樣本外準確度"),
                       uiOutput("v27_validation_status"),
                       uiOutput("v27_validation_cards"),
+                      h4("單檔方向模型｜相同測試日比較"),
+                      tableOutput("v33_single_compare"),
                       h4("每日預測誤差（實際－預測）"),
                       plotOutput("v27_error_plot",height="290px"),
-                      p(class="v27-hint","誤差＝實際隔日報酬－AR 預測報酬，正值代表實際報酬較高。下方同時顯示 Logistic 方向表現與 AR＋GARCH 的區間品質。"),
+                      p(class="v27-hint","誤差＝實際隔日報酬－AR 預測報酬，正值代表實際報酬較高。下方同時顯示 Ridge Logistic 方向表現與 AR＋GARCH 的區間品質。"),
                       h4("預測區間品質｜歷史樣本外"),
                       tableOutput("v30_interval_summary"),
                       p(class="v27-hint","涵蓋率應與 95% 名目水準及區間寬度一同解讀。95% 區間比 90% 更寬，不等於預測方向更準；若區間已非常寬，應同時檢查平均寬度與區間損失。"),
@@ -3385,11 +3390,11 @@ tabPanel(
         h2("研究方法、指標與資料說明"),
         tags$details(class="method-details",
           tags$summary("14. T+1 歷史滾動預測與區間：怎麼計算、怎麼驗證？"),
-          p("漲跌方向：使用 Logistic Regression，以最近 252／504／756 個交易日報酬建立前日報酬、5／20 日動能、20 日波動及 0050 同期日報酬等特徵，預測下一交易日上漲機率。所有訓練標籤截至預測起點當日，機率尚未另外校準。"),
+          p("漲跌方向：v33 採 Ridge Logistic（L2 懲罰固定 10），原五項變數新增 0050 五日動能與相對強弱；一般 Logistic 保留同期比較。所有訓練標籤截至預測起點當日，兩模型機率均未經獨立校準。"),
           p("報酬與價格：另以 AR(1) 最小平方法估計隔日對數報酬並換算調整後價格；使用 GARCH(1,1) 估計下一交易日條件波動，再結合當期標準化訓練殘差分位數建立預測區間。名目區間預設 95%（可切換 90%）；95% 通常較寬，不保證未來每次命中。"),
-          p("歷史驗證：預設用 0050 最近 63 個共同交易日，可改 20／126 日。每個預測日僅用此前的資料：Logistic 每天重新估計（但歷史特徵只準備一次）；AR 每天更新；為控制運算時間，GARCH 參數每 21 個測試日重估，其間仍每日更新條件波動。停牌或缺價形成的跨交易日報酬不計為 T+1。"),
-          p("評估：Logistic 查看隔日方向命中率、Brier 分數及與『永遠猜漲』比較；AR 報酬點估計查看 MAE／RMSE 及零報酬基準；GARCH 預測區間查看涵蓋率、平均寬度和區間損失。全體訊號依 Logistic 機率排序，偏多／偏空各最多五檔。"),
-          p("研究限制：Logistic 機率尚未獨立校準；AR／GARCH 不保證具有方向預測能力，且市場可能結構變動。使用現行 0050 成分股回推歷史有存活者偏誤。最新預測尚未以每日不可覆寫紀錄保存，不能視為已完成即時前瞻驗證；亦未將訊號當作扣成本可交易績效。")
+          p("歷史驗證：預設用 0050 最近 63 個共同交易日，可改 20／126 日。每個預測日只用當時已知資料：Ridge 與原 Logistic 每天重新估計（特徵快取只建立一次），AR 每日更新，GARCH 參數每 21 個測試日重估。缺漏交易日不當作連續 T+1。"),
+          p("評估：比較 Ridge、原 Logistic 的隔日方向命中率、Balanced Accuracy、Brier，對照永遠猜上漲基準；AR 查看 MAE／RMSE；GARCH 區間查看涵蓋率、平均寬度與區間損失。全體 Top 5 為 Ridge 實驗訊號。"),
+          p("研究限制：Ridge／一般 Logistic 機率尚未獨立校準；AR／GARCH 不保證具有方向預測能力，且市場可能結構變動。使用現行 0050 成分股回推歷史有存活者偏誤。最新預測尚未以每日不可覆寫紀錄保存，不能視為已完成即時前瞻驗證；亦未將訊號當作扣成本可交易績效。")
         ),
         tags$details(class = "method-details",
           tags$summary("12. 資料字典與口徑"),
@@ -3756,8 +3761,19 @@ v31_logit_prepare<-function(price,dates,market_returns) {
   # 要預測下一天，只需檢查到 origin 當日，不能偷看目標日。
   future_ok<-rep(FALSE,m)
   future_ok[k]<-(bad[k+1L]-bad[k-19L]==0L)&is.finite(mr[k])
-  list(features=features,returns=rr,train_ok=train_ok,future_ok=future_ok,
-       dates=dd)
+  # v33: 0050 近五日動能，以及股票相對 0050 的五日強弱。
+  # 所有值只使用特徵日及更早資料；建立一次後供逐日訓練共用。
+  extra<-matrix(NA_real_,nrow=m,ncol=2L,
+    dimnames=list(NULL,c("market_mom5","relative_mom5")))
+  for(ii in k) {
+    recent_market<-mr[(ii-4L):ii]
+    if(all(is.finite(recent_market))) {
+      m5<-sum(recent_market)
+      extra[ii,]<-c(m5,features[ii,"mom5"]-m5)
+    }
+  }
+  list(features=features,ridge_features=cbind(features,extra),
+       returns=rr,train_ok=train_ok,future_ok=future_ok,dates=dd)
 }
 
 v30_logit_prob<-function(price,dates,origin,window,market_returns,feature_cache=NULL) {
@@ -3826,6 +3842,57 @@ v30_logit_prob<-function(price,dates,origin,window,market_returns,feature_cache=
   as.numeric(pmax(1e-6,pmin(1-1e-6,prob)))
 }
 
+
+# v33｜Ridge (L2) Logistic，僅以訓練窗口資料估計；不依賴額外 R 套件。
+# 固定 lambda=10 是研究起點，不按樣本外 63 日命中率挑選參數。
+v33_ridge_fit<-function(xx,yy,lambda=10) {
+  xx<-as.matrix(xx); yy<-as.numeric(yy)
+  if(nrow(xx)<100L||ncol(xx)<1L||any(!is.finite(xx))||
+     any(!is.finite(yy))||length(unique(yy))<2L)
+    stop("Ridge Logistic 訓練資料不足或無效")
+  mu<-colMeans(xx)
+  sc<-apply(xx,2L,stats::sd)
+  sc[!is.finite(sc)|sc<1e-8]<-1
+  zz<-sweep(sweep(xx,2L,mu,"-"),2L,sc,"/")
+  X<-cbind(1,zz)
+  beta<-c(stats::qlogis(mean(yy)),rep(0,ncol(xx)))
+  penalty<-c(0,rep(lambda,ncol(xx)))
+  for(iter in seq_len(30L)) {
+    eta<-pmax(-25,pmin(25,drop(X%*%beta)))
+    p<-stats::plogis(eta)
+    w<-pmax(p*(1-p),1e-6)
+    score<-drop(crossprod(X,yy-p))-penalty*beta
+    hessian<-crossprod(X,X*as.numeric(w))+diag(penalty+1e-8,ncol(X))
+    step<-tryCatch(as.numeric(solve(hessian,score)),error=function(e)NULL)
+    if(is.null(step)||any(!is.finite(step)))stop("Ridge Logistic 數值估計失敗")
+    beta<-beta+step
+    if(max(abs(step))<1e-6)break
+  }
+  if(any(!is.finite(beta)))stop("Ridge Logistic 參數無效")
+  list(beta=beta,mean=mu,scale=sc,lambda=lambda)
+}
+
+v33_ridge_prob<-function(feature_cache,origin,window,lambda=10) {
+  if(is.null(feature_cache$ridge_features))stop("缺少 Ridge 特徵快取")
+  if(origin-window<1L)stop("Ridge 訓練資料不足")
+  k<-seq.int(origin-window+19L,origin-2L)
+  k<-k[feature_cache$train_ok[k]]
+  xx<-feature_cache$ridge_features[k,,drop=FALSE]
+  good<-rowSums(!is.finite(xx))==0L
+  xx<-xx[good,,drop=FALSE]
+  k<-k[good]
+  yy<-as.integer(feature_cache$returns[k+1L]>0)
+  fit<-v33_ridge_fit(xx,yy,lambda=lambda)
+  next_k<-origin-1L
+  if(!isTRUE(feature_cache$future_ok[next_k]))
+    stop("Ridge 下一日缺少相鄰交易資料")
+  nx<-feature_cache$ridge_features[next_k,]
+  if(any(!is.finite(nx)))stop("Ridge 預測日特徵缺漏")
+  eta<-sum(c(1,(nx-fit$mean)/fit$scale)*fit$beta)
+  p<-stats::plogis(eta)
+  as.numeric(pmax(1e-6,pmin(1-1e-6,p)))
+}
+
 # AR(1) 預測隔日報酬；GARCH(1,1) 預測條件波動。
 # 使用標準化訓練殘差估計名目預測區間；不再呈現舊固定區間。
 v27_one_step <- function(price, origin, window=252L, gfit=NULL, level=.95,
@@ -3843,12 +3910,13 @@ v27_one_step <- function(price, origin, window=252L, gfit=NULL, level=.95,
   lower<-ar$price*exp(ar$mu+q[1L]*sigma)
   upper<-ar$price*exp(ar$mu+q[2L]*sigma)
   if(is.null(dates))stop("Logistic 需要日期與共同交易日資訊")
-  prob<-v30_logit_prob(price,dates,origin,window,market_returns,
-                         feature_cache=logit_cache)
-  if(any(!is.finite(c(pred,lower,upper,prob)))||lower>upper)
+  old_prob<-v30_logit_prob(price,dates,origin,window,market_returns,
+                             feature_cache=logit_cache)
+  ridge_prob<-v33_ridge_prob(logit_cache,origin,window,lambda=10)
+  if(any(!is.finite(c(pred,lower,upper,old_prob,ridge_prob)))||lower>upper)
     stop("T+1 預測結果不是有效數值")
-  c(pred=pred,lower=lower,upper=upper,
-    pred_ret=100*(exp(ar$mu)-1),prob_up=prob,sigma_pct=100*sigma)
+  c(pred=pred,lower=lower,upper=upper,pred_ret=100*(exp(ar$mu)-1),
+    prob_up=ridge_prob,prob_up_baseline=old_prob,sigma_pct=100*sigma)
 }
 
 v27_rolling_oos <- function(stock_table,symbol,test_days=63L,window=252L,
@@ -3889,9 +3957,12 @@ v27_rolling_oos <- function(stock_table,symbol,test_days=63L,window=252L,
       previous_price=p0,actual=actual_price,pred=fc[["pred"]],
       lower=fc[["lower"]],upper=fc[["upper"]],
       pred_return=fc[["pred_ret"]],prob_up=fc[["prob_up"]],
+      prob_up_baseline=fc[["prob_up_baseline"]],
       actual_return=actual_return,error_pp=actual_return-fc[["pred_ret"]],
       direction_hit=if(actual_return>0) fc[["prob_up"]]>=.5 else
                     if(actual_return<0) fc[["prob_up"]]<.5 else NA,
+      direction_hit_baseline=if(actual_return>0) fc[["prob_up_baseline"]]>=.5 else
+                    if(actual_return<0) fc[["prob_up_baseline"]]<.5 else NA,
       covered=(actual_price>=fc[["lower"]]&&actual_price<=fc[["upper"]]),
       width_pp=high_ret-low_ret,
       interval_score_pp=v29_interval_score(actual_return,low_ret,high_ret,level),
@@ -3910,7 +3981,9 @@ v27_rolling_oos <- function(stock_table,symbol,test_days=63L,window=252L,
     interval_score_pp=mean(test$interval_score_pp),direction_n=dn,
     direction_accuracy=if(dn)mean(test$direction_hit[direction_valid])else NA_real_,
     always_up_accuracy=if(dn)mean(test$actual_return[direction_valid]>0)else NA_real_,
-    brier=mean((test$prob_up-as.numeric(test$actual_return>0))^2))
+    baseline_direction_accuracy=if(dn)mean(test$direction_hit_baseline[direction_valid])else NA_real_,
+    brier=mean((test$prob_up-as.numeric(test$actual_return>0))^2),
+    baseline_brier=mean((test$prob_up_baseline-as.numeric(test$actual_return>0))^2))
   list(symbol=as.character(symbol),window=window,test_days=test_days,level=level,
     last_date=d$date[n],last_price=px[n],first_test_date=min(test$date),
     last_test_date=max(test$date),test=test,future=future,metrics=metrics)
@@ -3964,6 +4037,7 @@ v28_forecast_snapshot <- function(stock_table,symbols,window=252L,level=.95,
     p0<-tail(px,1L)
     data.frame(symbol=sym,date=u$date,last_price=p0,
       prob_up=as.numeric(fc[["prob_up"]]),
+      prob_up_baseline=as.numeric(fc[["prob_up_baseline"]]),
       pred_return=as.numeric(fc[["pred_ret"]]),
       low_return=100*(as.numeric(fc[["lower"]])/p0-1),
       high_return=100*(as.numeric(fc[["upper"]])/p0-1),
@@ -4045,8 +4119,16 @@ v28_all_oos <- function(stock_table,symbols,test_days=63L,window=252L,level=.95,
       coverage=mean(x$covered),avg_width=mean(x$width_pp),
       interval_score=mean(x$interval_score_pp),
       brier=mean((x$prob_up-as.numeric(x$actual_return>0))^2),
+      baseline_brier=mean((x$prob_up_baseline-as.numeric(x$actual_return>0))^2),
       direction_n=sum(v),
       direction_accuracy=if(any(v))mean(x$direction_hit[v])else NA_real_,
+      baseline_direction_accuracy=if(any(v))mean(x$direction_hit_baseline[v])else NA_real_,
+      balanced_accuracy=if(any(v&x$actual_return>0)&any(v&x$actual_return<0))
+        (mean(x$direction_hit[v&x$actual_return>0])+
+         mean(x$direction_hit[v&x$actual_return<0]))/2 else NA_real_,
+      baseline_balanced_accuracy=if(any(v&x$actual_return>0)&any(v&x$actual_return<0))
+        (mean(x$direction_hit_baseline[v&x$actual_return>0])+
+         mean(x$direction_hit_baseline[v&x$actual_return<0]))/2 else NA_real_,
       always_up_accuracy=if(any(v))mean(x$actual_return[v]>0)else NA_real_,
       stringsAsFactors=FALSE)
   }))
@@ -4056,7 +4138,7 @@ v28_all_oos <- function(stock_table,symbols,test_days=63L,window=252L,level=.95,
 }
 
 # v32｜模型版號。更動 T+1 公式後請一併更新，以免讀到舊快取。
-T1_ENGINE_VERSION <- "v31-t1-20261115"
+T1_ENGINE_VERSION <- "v33-ridge10-mkt-relative-20261115"
 
 # v32｜只讀入符合當前資料檔及預設設定的已計算結果。
 # 不讓網站啟動時同步估計數千次模型，也不會顯示過期快取。
@@ -4160,7 +4242,7 @@ server <- function(input, output, session) {
     t<-t[order(t$date),,drop=FALSE]
     f<-c(pred=one$pred_price[1L],lower=one$price_lower[1L],
          upper=one$price_upper[1L],pred_ret=one$pred_return[1L],
-         prob_up=one$prob_up[1L])
+         prob_up=one$prob_up[1L],prob_up_baseline=one$prob_up_baseline[1L])
     valid<-is.finite(t$prob_up)&is.finite(t$actual_return)&t$actual_return!=0
     nv<-sum(valid)
     m<-list(n=nrow(t),mae_pp=mean(abs(t$error_pp)),
@@ -4169,7 +4251,15 @@ server <- function(input, output, session) {
       interval_score_pp=mean(t$interval_score_pp),
       direction_n=nv,direction_accuracy=if(nv)mean(t$direction_hit[valid])else NA_real_,
       always_up_accuracy=if(nv)mean(t$actual_return[valid]>0)else NA_real_,
-      brier=mean((t$prob_up-as.numeric(t$actual_return>0))^2))
+      baseline_direction_accuracy=if(nv)mean(t$direction_hit_baseline[valid])else NA_real_,
+      balanced_accuracy=if(any(valid&t$actual_return>0)&any(valid&t$actual_return<0))
+        (mean(t$direction_hit[valid&t$actual_return>0])+
+         mean(t$direction_hit[valid&t$actual_return<0]))/2 else NA_real_,
+      baseline_balanced_accuracy=if(any(valid&t$actual_return>0)&any(valid&t$actual_return<0))
+        (mean(t$direction_hit_baseline[valid&t$actual_return>0])+
+         mean(t$direction_hit_baseline[valid&t$actual_return<0]))/2 else NA_real_,
+      brier=mean((t$prob_up-as.numeric(t$actual_return>0))^2),
+      baseline_brier=mean((t$prob_up_baseline-as.numeric(t$actual_return>0))^2))
     list(symbol=sym,window=z$history$window,test_days=z$history$test_days,
       level=z$history$level,last_date=z$snapshot$date,
       last_price=one$last_price[1L],first_test_date=min(t$date),
@@ -4205,8 +4295,8 @@ server <- function(input, output, session) {
     cell<-function(k,v,note)div(class="v27-kpi",tags$small(k),tags$strong(v),tags$small(note))
     div(class="v27-kpis",
       cell("有效預測股票",paste0(nrow(x)," 檔"),paste0("同日更新；可選 ",z$snapshot$available," 檔")),
-      cell("預測偏多",paste0(sum(x$prob_up>.5)," 檔"),"Logistic 預估上漲機率 > 50%"),
-      cell("預測偏空",paste0(sum(x$prob_up<.5)," 檔"),"Logistic 預估上漲機率 < 50%"))
+      cell("預測偏多",paste0(sum(x$prob_up>.5)," 檔"),"Ridge Logistic 上漲機率 > 50%"),
+      cell("預測偏空",paste0(sum(x$prob_up<.5)," 檔"),"Ridge Logistic 上漲機率 < 50%"))
   })
   v28_show_signal_table<-function(side){
     z<-v28_valid_all();x<-z$snapshot$result
@@ -4226,7 +4316,8 @@ server <- function(input, output, session) {
   output$v28_full_snapshot<-shiny::renderTable({
     x<-v28_valid_all()$snapshot$result
     data.frame(股票=vapply(x$symbol,get_stock_label,character(1)),
-      `Logistic 上漲機率`=sprintf("%.1f%%",100*x$prob_up),
+      `Ridge 上漲機率`=sprintf("%.1f%%",100*x$prob_up),
+      `舊 Logistic 機率`=sprintf("%.1f%%",100*x$prob_up_baseline),
       `AR 預測隔日報酬`=sprintf("%+.3f%%",x$pred_return),
       `預測區間`=sprintf("%+.2f%%～%+.2f%%",x$low_return,x$high_return),
       區間跨零=ifelse(x$crosses_zero,"是","否"),check.names=FALSE)
@@ -4259,12 +4350,26 @@ server <- function(input, output, session) {
         check.names=FALSE,stringsAsFactors=FALSE)
     });do.call(rbind,byside)
   },striped=TRUE,hover=TRUE,bordered=TRUE)
+  # v33｜同一組樣本外股票與日期，直接比較方向模型，不另外訓練模型。
+  output$v33_all_compare<-shiny::renderTable({
+    d<-v28_valid_all()$history$per_stock
+    avg<-function(z)if(any(is.finite(z)))mean(z,na.rm=TRUE)else NA_real_
+    data.frame(方法=c("Ridge Logistic（新實驗）","一般 Logistic（舊基準）","永遠猜上漲（簡單基準）"),
+      `方向命中率`=sprintf("%.1f%%",100*c(avg(d$direction_accuracy),
+                     avg(d$baseline_direction_accuracy),avg(d$always_up_accuracy))),
+      `Balanced Accuracy`=c(sprintf("%.1f%%",100*avg(d$balanced_accuracy)),
+        sprintf("%.1f%%",100*avg(d$baseline_balanced_accuracy)),"50.0%"),
+      `Brier（越低越好）`=c(sprintf("%.4f",avg(d$brier)),
+                       sprintf("%.4f",avg(d$baseline_brier)),"—"),
+      `股票數`=nrow(d),check.names=FALSE)
+  },striped=TRUE,bordered=TRUE)
+
   output$v28_all_error_summary<-shiny::renderTable({
     d<-v28_valid_all()$history$per_stock
-    data.frame(方法="Logistic 方向＋AR(1)／GARCH(1,1) 報酬區間",
+    data.frame(方法="Ridge Logistic 方向＋AR(1)／GARCH(1,1) 報酬區間",
       驗證股票數=nrow(d),
-      `Logistic 方向準確率`=sprintf("%.1f%%",100*mean(d$direction_accuracy,na.rm=TRUE)),
-      `Logistic Brier（越低越好）`=sprintf("%.3f",mean(d$brier)),
+      `Ridge 方向準確率`=sprintf("%.1f%%",100*mean(d$direction_accuracy,na.rm=TRUE)),
+      `Ridge Brier（越低越好）`=sprintf("%.3f",mean(d$brier)),
       `AR MAE（百分點）`=sprintf("%.3f",mean(d$mae)),
       `AR RMSE（百分點）`=sprintf("%.3f",mean(d$rmse)),
       `GARCH 區間涵蓋率`=sprintf("%.1f%%",100*mean(d$coverage)),
@@ -4277,7 +4382,7 @@ server <- function(input, output, session) {
     data.frame(日期=format(x$date),
       股票=vapply(x$symbol,get_stock_label,character(1)),
       方向=ifelse(x$side=="positive","偏多","偏空"),
-      `Logistic 上漲機率`=sprintf("%.1f%%",100*x$prob_up),
+      `Ridge 上漲機率`=sprintf("%.1f%%",100*x$prob_up),
       `AR 預測報酬`=sprintf("%+.2f%%",x$forecast_pct),
       `實際報酬`=sprintf("%+.2f%%",x$actual_pct),
       命中=ifelse(x$hit,"是","否"),check.names=FALSE)
@@ -4318,8 +4423,8 @@ server <- function(input, output, session) {
     z <- v27_valid_result(); f <- z$future
     cards <- function(lbl, val, sub) div(class="v27-kpi",tags$small(lbl),tags$strong(val),tags$small(sub))
     div(class="v27-kpis",
-      cards("Logistic 預估上漲機率",sprintf("%.1f%%",100*f[["prob_up"]]),"方向機率尚未經獨立校準"),
-      cards("AR 隔日預測報酬",sprintf("%+.2f%%",f[["pred_ret"]]),"與 Logistic 方向可能不同"),
+      cards("Ridge 預估上漲機率",sprintf("%.1f%%",100*f[["prob_up"]]),"方向機率尚未經獨立校準"),
+      cards("AR 隔日預測報酬",sprintf("%+.2f%%",f[["pred_ret"]]),"與 Ridge 方向可能不同"),
       cards("預測調整後價格",sprintf("%.2f",f[["pred"]]),paste0("截至 ",format(z$last_date)," 的資料")),
       cards(paste0(sprintf("%.0f%%",100*z$level)," GARCH 預測區間"),
             sprintf("%.2f～%.2f",f[["lower"]],f[["upper"]]),"下個交易日尚無實際值"))
@@ -4365,18 +4470,30 @@ server <- function(input, output, session) {
       落在區間=ifelse(t$covered,"是","否"),
       check.names=FALSE,stringsAsFactors=FALSE)
   },striped=TRUE,hover=TRUE,bordered=TRUE)
+  output$v33_single_compare<-shiny::renderTable({
+    z<-v27_valid_result(); m<-z$metrics
+    data.frame(方法=c("Ridge Logistic（新實驗）","一般 Logistic（舊基準）","永遠猜上漲（簡單基準）"),
+      `方向命中率`=sprintf("%.1f%%",100*c(m$direction_accuracy,
+           m$baseline_direction_accuracy,m$always_up_accuracy)),
+      `Balanced Accuracy`=c(sprintf("%.1f%%",100*m$balanced_accuracy),
+        sprintf("%.1f%%",100*m$baseline_balanced_accuracy),"50.0%"),
+      `Brier（越低越好）`=c(sprintf("%.4f",m$brier),
+                             sprintf("%.4f",m$baseline_brier),"—"),
+      check.names=FALSE)
+  },striped=TRUE,bordered=TRUE)
+
   output$v27_validation_cards <- shiny::renderUI({
     z <- v27_valid_result();m<-z$metrics
     cell<-function(label,value,note) div(class="v27-kpi",tags$small(label),tags$strong(value),tags$small(note))
     div(class="v27-kpis",
       cell("AR 平均絕對誤差 MAE",sprintf("%.3f 百分點",m$mae_pp),
            sprintf("零報酬基準 MAE %.3f 百分點",m$baseline_mae_pp)),
-      cell("Logistic 方向準確率",if (is.finite(m$direction_accuracy))
+      cell("Ridge 方向準確率",if (is.finite(m$direction_accuracy))
              sprintf("%.1f%%",100*m$direction_accuracy) else "無有效方向",
            paste0("有效 ",m$direction_n," 日；永遠猜漲基準 ",
                   if (is.finite(m$always_up_accuracy))
                     sprintf("%.1f%%",100*m$always_up_accuracy) else "—")),
-      cell("Logistic Brier 分數",sprintf("%.3f",m$brier),"越小越好；機率尚未校準"),
+      cell("Ridge Brier 分數",sprintf("%.3f",m$brier),"越小越好；機率尚未校準"),
       cell(paste0(sprintf("%.0f%%",100*z$level)," 區間涵蓋率"),
            sprintf("%.1f%%",100*m$coverage),
            paste0("歷史樣本外 ",m$n," 日")),
@@ -4406,7 +4523,8 @@ server <- function(input, output, session) {
     z <- v27_valid_result(); t <- z$test
     t <- t[nrow(t):1L,,drop=FALSE]
     data.frame(日期=format(t$date),
-      Logistic上漲機率=sprintf("%.1f%%",100*t$prob_up),
+      Ridge上漲機率=sprintf("%.1f%%",100*t$prob_up),
+      原Logistic機率=sprintf("%.1f%%",100*t$prob_up_baseline),
       AR預測日報酬=sprintf("%+.2f%%",t$pred_return),
       實際日報酬=sprintf("%+.2f%%",t$actual_return),
       誤差=sprintf("%+.2f 個百分點",t$error_pp),
