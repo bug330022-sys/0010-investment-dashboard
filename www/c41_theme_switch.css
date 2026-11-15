@@ -1,0 +1,17 @@
+/* C41 theme switch: shared across light/dark and deliberately limited to the new switch. */
+.c41-theme-switch {position:absolute;right:24px;top:20px;display:flex;gap:4px;padding:5px;
+  background:rgba(13,31,47,.63);border:1px solid rgba(149,193,216,.25);border-radius:13px;z-index:25;}
+.c41-theme-switch button {appearance:none;cursor:pointer;border:1px solid transparent;border-radius:9px;
+  background:transparent;color:#BED0E1;padding:9px 12px;font-size:13px;font-weight:750;line-height:1.25;white-space:nowrap;}
+.c41-theme-switch button[aria-pressed="true"] {background:#2F79A9;color:#FFFFFF;box-shadow:0 1px 6px rgba(0,0,0,.12);}
+.c41-theme-switch button:hover {color:#FFFFFF;background:rgba(75,152,200,.28);}
+.c41-theme-switch button:focus-visible {outline:3px solid #76BEE9;outline-offset:2px;}
+body .container-fluid > .hero {position:relative !important;padding-right:250px !important;}
+html[data-c41-theme="light"] .c41-theme-switch {background:#EDF5FA;border-color:#C5DAE8;}
+html[data-c41-theme="light"] .c41-theme-switch button {color:#526F84;}
+html[data-c41-theme="light"] .c41-theme-switch button[aria-pressed="true"] {background:#286A9B;color:#FFFFFF;}
+html[data-c41-theme="light"] .c41-theme-switch button:hover {background:#D6E9F6;color:#24577C;}
+html[data-c41-theme="light"] .c41-theme-switch button[aria-pressed="true"]:hover {background:#286A9B;color:#FFFFFF;}
+@media(max-width:990px){.c41-theme-switch{position:relative;right:auto;top:auto;width:max-content;max-width:100%;margin:15px 0 0;}
+ body .container-fluid > .hero {padding-right:18px !important;}}
+@media(max-width:520px){.c41-theme-switch button{font-size:12px;padding:9px 10px;}}
