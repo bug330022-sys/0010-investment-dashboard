@@ -2840,6 +2840,8 @@ ui <- fluidPage(
     tags$link(rel = "stylesheet", type = "text/css", href = "c49_header_run_and_diagnostics.css"),
     # C51: fixed-quarter dropdowns and same-width daily plot; all prior visual themes unchanged.
     tags$link(rel = "stylesheet", type = "text/css", href = "c51_quarter_picker.css"),
+    # C53: independent quarter dropdown for top comparisons; both charts start at latest quarter.
+    tags$link(rel = "stylesheet", type = "text/css", href = "c53_independent_quarters.css"),
     tags$script(src = "c41_theme_switch.js"),
     # When a collapsed Shiny chart is opened, ask Shiny to recalculate its plot width.
     tags$script(HTML("(function(){ function refresh(){ window.dispatchEvent(new Event('resize')); } document.addEventListener('toggle', function(e){ if (e.target && e.target.matches('details.c44-chart-details') && e.target.open) { setTimeout(refresh,70); setTimeout(refresh,280); } }, true); if (window.jQuery) { window.jQuery(document).on('shown.bs.tab', function(){setTimeout(refresh,100);}); } })();"))
@@ -2887,6 +2889,9 @@ tabPanel(
               div(h2("0010 與 0050｜績效比較"),
                   p(class = "page-description", "自訂十檔組合與元大台灣50｜績效與風險對照")),
               div(class = "home-date", "資料更新至：", textOutput("v7_home_date", inline = TRUE))),
+          div(class = "c53-stats-quarter-control",
+              selectInput("c53_stats_quarter", "績效比較｜選擇季度：",
+                choices=c("歷史績效準備中"="waiting"), selected="waiting", width="100%")),
           div(class = "home-window", "績效統計基準期間：", textOutput("v7_home_period", inline = TRUE)),
           # C44: 0010 and 0050 are the compared subjects. VS is a small separator,
           # while the original five difference metrics remain in a secondary strip.
@@ -5068,29 +5073,39 @@ shiny::observeEvent(c51_quarters(), {
   q <- c51_quarters()
   if (is.null(q) || !nrow(q)) return()
   opts <- stats::setNames(q$c51_key, q$c51_label)
+  old_stats <- shiny::isolate(input$c53_stats_quarter)
   old_curve <- shiny::isolate(input$c51_curve_scope)
   old_daily <- shiny::isolate(input$c51_daily_quarter)
-  valid_curve <- c("all", "recent4", "recent8", q$c51_key)
-  shiny::updateSelectInput(session, "c51_curve_scope",
-    choices=c("全部已完成季度（長期累積）"="all",
-              "最近 4 個完整季度"="recent4",
-              "最近 8 個完整季度"="recent8",opts),
-    selected=if(length(old_curve)==1L && !is.na(old_curve) && old_curve %in% valid_curve) old_curve else "all")
+  latest <- utils::tail(q$c51_key,1)
+  opts_extended <- c("全部已完成季度（長期累積）"="all",
+                     "最近 4 個完整季度"="recent4",
+                     "最近 8 個完整季度"="recent8", opts)
+  valid_scope <- c("all", "recent4", "recent8", q$c51_key)
+  # 選單互不影響：更新季別清單時，保留使用者的選擇；首次開站三者皆為最新完整季。
+  shiny::updateSelectInput(session, "c53_stats_quarter", choices=opts_extended,
+    selected=if(length(old_stats)==1L && !is.na(old_stats) && old_stats %in% valid_scope) old_stats else latest)
+  shiny::updateSelectInput(session, "c51_curve_scope", choices=opts_extended,
+    selected=if(length(old_curve)==1L && !is.na(old_curve) && old_curve %in% valid_scope) old_curve else latest)
   shiny::updateSelectInput(session, "c51_daily_quarter", choices=opts,
-    selected=if(length(old_daily)==1L && !is.na(old_daily) && old_daily %in% q$c51_key) old_daily else utils::tail(q$c51_key,1))
+    selected=if(length(old_daily)==1L && !is.na(old_daily) && old_daily %in% q$c51_key) old_daily else latest)
 }, ignoreInit=FALSE)
 
-c51_curve_quarters <- shiny::reactive({
-  q <- c51_quarters()
+# C53: pure display selection; do NOT call the backtest/scoring functions here.
+c53_scope_quarters <- function(q, key) {
   if(is.null(q) || !nrow(q)) return(NULL)
-  key <- input$c51_curve_scope
-  if(length(key)!=1L || is.na(key) || key=="waiting")key <- "all"
+  if(length(key)!=1L || is.na(key) || key=="waiting")key <- utils::tail(q$c51_key,1)
   if(key=="all") return(q)
   if(key=="recent4") return(utils::tail(q,4L))
   if(key=="recent8") return(utils::tail(q,8L))
   picked <- q[q$c51_key==key,,drop=FALSE]
-  if(!nrow(picked))return(q)
+  if(!nrow(picked)) return(utils::tail(q,1L))
   picked
+}
+c53_stats_quarters <- shiny::reactive({
+  c53_scope_quarters(c51_quarters(), input$c53_stats_quarter)
+})
+c51_curve_quarters <- shiny::reactive({
+  c53_scope_quarters(c51_quarters(), input$c51_curve_scope)
 })
 
 c51_daily_selected <- shiny::reactive({
@@ -5105,6 +5120,11 @@ c51_daily_selected <- shiny::reactive({
 
 c51_curve_window <- shiny::reactive({
   q <- c51_curve_quarters()
+  if(is.null(q)||!nrow(q))return(NULL)
+  as.Date(c(q$成交日[1], utils::tail(q$出場日,1)))
+})
+c53_stats_window <- shiny::reactive({
+  q <- c53_stats_quarters()
   if(is.null(q)||!nrow(q))return(NULL)
   as.Date(c(q$成交日[1], utils::tail(q$出場日,1)))
 })
@@ -5143,14 +5163,15 @@ v9_daily_pair <- shiny::reactive({
   if(is.null(q))return(NULL)
   v48_slice(c(q$成交日[1],q$出場日[1]))
 })
-v7_home_pair <- shiny::reactive({v9_curve_pair()})
+# The headline KPI cards follow ONLY the headline quarter selector.
+v7_home_pair <- shiny::reactive({v48_slice(c53_stats_window())})
 output$v7_home_period <- shiny::renderText({
-  z <- v9_curve_pair()
+  z <- v7_home_pair()
   if (is.null(z)) return(paste0("歷史績效暫不可用｜",v48_error()))
   paste0(min(z$date)," ～ ",max(z$date),"（",nrow(z)," 個交易日）")
 })
 output$v7_home_period_second <- shiny::renderText({
-  z <- v9_curve_pair()
+  z <- v7_home_pair()
   if (is.null(z)) return("尚無完整的歷史策略淨值")
   paste0(min(z$date)," ～ ",max(z$date))
 })
@@ -5171,7 +5192,7 @@ v48_metrics <- function(value) {
   c(ret=ret,ann=ann,mdd=mdd,vol=vol,sharpe=sharpe)
 }
 v7_home_stats <- shiny::reactive({
-  z<-v9_curve_pair()
+  z<-v7_home_pair()
   if(is.null(z))return(list(p10=v48_metrics(numeric()),etf=v48_metrics(numeric())))
   list(p10=v48_metrics(z$p10),etf=v48_metrics(z$etf))
 })
