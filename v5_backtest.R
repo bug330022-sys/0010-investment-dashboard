@@ -254,10 +254,46 @@ v5_backtest_v4 <- function(df, hold=63, n=10, cap=0.20,
   }
   if (end_idx>length(dates) || end_idx<=plan[[length(plan)]]$buy_idx)
     stop("最後一季仍缺少完整持有區間。")
+
+  # C54: 只有歷史回測「連續」走到最近一個已完成季末時，才可開啟當季追蹤。
+  # 歷史中途因缺價/不足十檔被截斷時，不能偷偷跳過中間幾季接上最新季度。
+  # 預定當季持股僅依當時季末評分日以前資訊，不使用追蹤期間的事後漲幅選股。
+  pending_open <- NULL
+  if (last_valid_plan_k+1L == length(qend)) {
+    rated <- dates[last_q]
+    available <- d[d$date<=rated & d$symbol!="0050",,drop=FALSE]
+    if (!is.null(membership)) {
+      eligible <- unique(membership$symbol[membership$effective_from<=rated &
+                                             membership$effective_to>=rated])
+      available <- available[available$symbol %in% eligible,,drop=FALSE]
+    }
+    current_score <- v4_score_table(available,end_date=rated)
+    current_pick <- if (is.null(current_score)) NULL else
+      v4_pick(current_score,n,max_industry=max_ind)
+    if (!is.null(current_pick) && nrow(current_pick)==n) {
+      current_weights <- v4_weights(current_pick,scheme="inv_vol",cap=cap)
+      if (length(current_weights)==n &&
+          all(is.finite(current_weights)) && all(current_weights>=0) &&
+          sum(current_weights)>0) {
+        old_symbols <- names(plan[[length(plan)]]$weights)
+        current_entry <- v52_trade_idx(last_q+1L,
+          union(old_symbols,names(current_weights)),
+          plan[[length(plan)]]$buy_idx)
+        if (is.finite(current_entry) && current_entry < nrow(pm)) {
+          # 出場交易和下季建倉在同一交易日，買賣同時淨額化，避免重複繳費。
+          end_idx <- current_entry
+          pending_open <- list(rate_date=rated,entry_date=dates[current_entry],
+            entry_idx=current_entry,weights=current_weights,
+            selected=names(current_weights),score=current_score)
+        }
+      }
+    }
+  }
   plan[[length(plan)+1L]] <- list(
     rate_idx=last_q, rate_date=dates[last_q],
     buy_idx=end_idx, buy_date=dates[end_idx],
-    weights=numeric(0), score=NULL, chosen=NULL
+    weights=if (is.null(pending_open)) numeric(0) else pending_open$weights,
+    score=NULL, chosen=NULL
   )
   # 真實回測區間：首個有效評分季 T+1 建倉，最後已完成季度的 T+1 平倉。
   last_boundary <- plan[[length(plan)]]$buy_idx
@@ -353,8 +389,9 @@ v5_backtest_v4 <- function(df, hold=63, n=10, cap=0.20,
     if (any(!is.finite(pxend)|pxend<=0))
       stop(paste0("季度交接日 ",dates[end_i]," 舊持股價格缺失，停止回測。"))
     before_rebalance <- sum(old_shares*pxend)
-    # 最後一季在最後邊界全部出清；不再買入未回測的下一季股票。
-    target <- if (j==completed) numeric(0) else nxt$weights
+    # C54: 連續可追蹤時，最後邊界也要以實際新季度的當時評分進場，
+    # 避免先全部賣出、再於同日買回重複計費；未能開啟追蹤則維持原本平倉。
+    target <- if (j==completed && is.null(pending_open)) numeric(0) else nxt$weights
     allsyms <- union(holding_symbols,names(target))
     trade_px <- as.numeric(pm[end_i,allsyms]);names(trade_px)<-allsyms
     trans <- v48_trade_at_close(old_shares,target,trade_px,cost)
@@ -402,6 +439,54 @@ v5_backtest_v4 <- function(df, hold=63, n=10, cap=0.20,
       stringsAsFactors=FALSE)
   }
   if(!length(rec))stop("尚無已完成且價格有效的季度；請檢查歷史持股覆蓋率。")
+
+  # C54: 季度進行中每日估值，不放入 q$quarters 正式已實現季勝率。
+  # 交易日與價格仍從同一份 pm 取得，只沿用最多兩日的歷史估值，不回填未來價格。
+  ongoing <- NULL
+  if (!is.null(pending_open) && length(held) &&
+      # 如果歷史中途因長期缺價被截斷，絕不可用舊季持股假冒最新季度。
+      length(rec)==completed &&
+      identical(as.Date(pending_open$entry_date),as.Date(dates[end_idx]))) {
+    anchor10 <- equity_after_buy/capital
+    anchor50 <- pm[end_idx,"0050"]/bench_start
+    live_rows <- list(data.frame(date=dates[end_idx],equity10=anchor10,
+                                  equity50=anchor50))
+    live_stale <- 0L
+    live_warning <- NULL
+    if (end_idx < nrow(pm)) for (ii in seq.int(end_idx+1L,nrow(pm))) {
+      mark <- v52_valuation(ii,names(held))
+      if (length(mark$missing)) {
+        live_warning <- paste0(dates[ii],"：",paste(mark$missing,collapse=","),
+                               " 超過短期估值容許缺價；當季暫估截至前一有效日。")
+        break
+      }
+      live_stale <- live_stale + length(mark$stale)
+      live_rows[[length(live_rows)+1L]] <- data.frame(
+        date=dates[ii],equity10=sum(held*mark$price)/capital,
+        equity50=pm[ii,"0050"]/bench_start)
+    }
+    live_df <- do.call(rbind,live_rows)
+    if (any(!is.finite(live_df$equity10)|!is.finite(live_df$equity50)|
+            live_df$equity10<=0|live_df$equity50<=0))
+      stop("C54 當季每日淨值異常；已完成回測不受影響。")
+    live_df$log_return10 <- c(0,diff(log(live_df$equity10)))
+    live_df$log_return50 <- c(0,diff(log(live_df$equity50)))
+    ongoing <- list(
+      評分日=as.Date(pending_open$rate_date),
+      成交日=as.Date(pending_open$entry_date),
+      截至日期=utils::tail(live_df$date,1L),
+      data_latest=utils::tail(dates,1L),
+      檔數=length(held),
+      股票=names(held),
+      初始權重=pending_open$weights,
+      日淨值=live_df,
+      暫估0010=utils::tail(live_df$equity10,1L)/anchor10-1,
+      暫估0050=utils::tail(live_df$equity50,1L)/anchor50-1,
+      延用估值筆數=live_stale,
+      note=live_warning,
+      status="進行中／尚未結算（不列入季勝率）"
+    )
+  }
   q <- do.call(rbind,rec)
   # 未完成季度的暫時估值不應留在「已完成」的歷史序列。
   day <- do.call(rbind,daily)
@@ -449,8 +534,8 @@ v5_backtest_v4 <- function(df, hold=63, n=10, cap=0.20,
       daily_mdd=min(dd10/cummax(dd10)-1),bench_daily_mdd=min(dd50/cummax(dd50)-1))
   list(quarters=q,daily=day,stats=stats,
        trades=do.call(rbind,trade_log),valuation_carry=stale_table,
-       delayed_trades=delayed_table,
-       version="C52 tolerant verified-prefix backtest (C50 boundary retained)",
+       delayed_trades=delayed_table,ongoing=ongoing,
+       version="C54 completed-quarter backtest + open-quarter mark-to-market",
        warnings=c(if(is.null(membership)) "沒有歷史成分股名單：結果仍可能有存活者偏誤。" else
                               "歷史成分股名單須人工核對完整性。",
                  "估值缺價只沿用過去最多 2 個交易日；成交需有真實報價，最多延後 2 個交易日。",
@@ -458,5 +543,6 @@ v5_backtest_v4 <- function(df, hold=63, n=10, cap=0.20,
                  if(length(bench_missing))paste0("部分股票交易日無 0050 報價，兩者僅比較共同 0050 有效交易日：",
                    length(bench_missing)," 日"),
                  "以調整後收盤價代理成交價；持倉允許小數股、不含流動性衝擊。",
-                 "季度報酬以換股後淨值為邊界，當期出場日的換股交易費用計入該期。"))
+                 "季度報酬以換股後淨值為邊界，當期出場日的換股交易費用計入該期。",
+                 if(!is.null(ongoing)) "進行中季度僅追蹤建倉後淨值，不含未來平倉費用；並不計入已完成季度勝率。"))
 }

@@ -26,7 +26,7 @@
     }),
     digest::digest(data()[,c("date","symbol","adjusted")],algo="xxhash64"),
     if(is.null(input$v5_run_bt)) 0L else as.integer(input$v5_run_bt),
-    "C52-2026-11-16-policy-v1",
+    "C54-2026-11-16-ongoing-v1",
     cache="app"
   )
   v5_bt_error <- shiny::reactive({v52_cached_run()$error})

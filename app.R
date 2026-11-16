@@ -2923,7 +2923,7 @@ tabPanel(
                       div(class = "home-stat", span("Sharpe 差"), strong(uiOutput("v7_diff_sharpe", inline = TRUE))))
               )
           ),
-          p(class = "home-small-note", "0010 為季末評分、下一交易日換股的連續每日淨值；0050 為相同日期的調整後價格。報酬差以百分點（pp）表示。"),
+          p(class = "home-small-note", "0010 為季末評分、下一交易日換股的連續每日淨值；0050 同期比較。進行中季度為尚未結算的暫估績效，不計入正式季度勝率。報酬差以百分點（pp）表示。"),
           div(class = "home-qualifier", "歷史策略回測：含買賣手續費、稅與滑價；如未提供歷史 0050 成分名單，仍屬當前成分股池的歷史代理研究，可能有存活者偏誤。")
       ),
       # C43: two independent home columns; no more cross-row height reservations.
@@ -2931,7 +2931,7 @@ tabPanel(
         div(class = "c43-home-main",
       div(class = "section-box",
           h2("0010 與 0050 累積報酬走勢"),
-          p(class = "page-description", "0010 與 0050 沿用同一條歷史每日淨值，改選季度只調整顯示區間、不重新選股。每季依實際成交／出場日期切分；單季以該季起點為比較基準，若包含回測首日，則保留首次建倉成本。"),
+          p(class = "page-description", "0010 與 0050 沿用相同歷史策略淨值；季度選單只切換觀看區間、不重新選股。預設顯示最新追蹤季度；『已完成』納入正式回測，『進行中』僅暫估至最新有效收盤日，不列入正式季勝率。"),
           selectInput("c51_curve_scope", "累積報酬圖｜選擇季度：",
                       choices=c("歷史績效準備中"="waiting"), selected="waiting", width="100%"),
           textOutput("v9_curve_actual_range"),
@@ -2939,7 +2939,7 @@ tabPanel(
       tags$details(class = "method-details v25-home-expand c44-chart-details", tags$summary("展開每日報酬波動對照"),
 div(class = "section-box",
           h2("日對數報酬率｜0010 與 0050"),
-          p(class = "page-description", "每日對數報酬直接由正式回測的連續每日淨值計算，0010 含交易成本；每次選取一個完整持有季度。季度交接日的報酬只歸屬前一個持有季度，不會重複計算。"),
+          p(class = "page-description", "每日對數報酬沿用同一份連續淨值；可單獨選擇已完成季度或進行中季度。進行中僅顯示最新可得收盤資料，未計尚未發生的平倉成本；不會混入正式季度勝率。"),
           selectInput("c51_daily_quarter", "每日對數報酬圖｜選擇季度：",
                       choices=c("歷史績效準備中"="waiting"), selected="waiting", width="100%"),
           textOutput("v9_daily_actual_range"),
@@ -5020,17 +5020,35 @@ server <- function(input, output, session) {
 # 保留 C44 的原版位置、五個績效指標與 C47 全寬日圖。
 # ============================================================
 v48_history <- shiny::reactive({
-  z <- v5_bt()
-  if (is.null(z) || !is.null(z$error) || !is.data.frame(z$daily) || nrow(z$daily)<3L)
-    return(NULL)
+  raw <- v5_bt()
+  if (is.null(raw) || !is.null(raw$error) ||
+      !is.data.frame(raw$daily) || nrow(raw$daily)<3L) return(NULL)
+  z <- raw # 僅顯示層擴充；v5_bt() 的季度正式統計一律不加當季暫估。
+  live <- raw$ongoing
+  if (!is.null(live) && is.data.frame(live$日淨值) && nrow(live$日淨值)>1L) {
+    d <- live$日淨值
+    d$date <- as.Date(d$date)
+    hist <- z$daily
+    new_rows <- d[d$date>utils::tail(hist$date,1L),
+                  c("date","equity10","equity50"),drop=FALSE]
+    if (nrow(new_rows)) {
+      hist <- rbind(hist[,c("date","equity10","equity50"),drop=FALSE],new_rows)
+      hist$log_return10 <- c(log(hist$equity10[1]),diff(log(hist$equity10)))
+      hist$log_return50 <- c(0,diff(log(hist$equity50)))
+      z$daily <- hist
+    }
+  }
   z
 })
-# C49: keep one run button and show success/errors in a small header status.
+# C54: separate official completed quarter count and provisional live tracking.
 output$c49_bt_status <- shiny::renderText({
   z <- v5_bt()
   if (is.null(z)) return("未完成｜請查看總覽原因")
   if (is.null(z$quarters) || !nrow(z$quarters)) return("尚無完成季度")
-  paste0("已完成 ", nrow(z$quarters), " 季")
+  live <- z$ongoing
+  if (!is.null(live) && is.data.frame(live$日淨值))
+    return(paste0("已完成 ", nrow(z$quarters), " 季｜當季追蹤至 ", live$截至日期))
+  paste0("已完成 ", nrow(z$quarters), " 季（最新當季尚無完整追蹤價格）")
 })
 output$c49_home_curve_view <- shiny::renderUI({
   z <- v48_history()
@@ -5065,7 +5083,28 @@ c51_quarters <- shiny::reactive({
   q$c51_key <- format(q$成交日, "%Y-%m-%d")
   mm <- as.integer(format(q$成交日, "%m"))
   q$c51_label <- paste0(format(q$成交日, "%Y"), " Q", (mm-1L)%/%3L+1L,
-    "｜",format(q$成交日, "%Y-%m-%d"), " ～ ",format(q$出場日, "%Y-%m-%d"))
+    "｜",format(q$成交日, "%Y-%m-%d"), " ～ ",format(q$出場日, "%Y-%m-%d"),"｜已完成")
+  q$c54_status <- "completed"
+  live <- z$ongoing
+  if (!is.null(live) && is.data.frame(live$日淨值) &&
+      nrow(live$日淨值)>1L && is.finite(live$暫估0010) &&
+      as.Date(live$截至日期)>as.Date(live$成交日)) {
+    lr <- q[nrow(q),,drop=FALSE]
+    lr$評分日 <- as.Date(live$評分日)
+    lr$成交日 <- as.Date(live$成交日)
+    lr$出場日 <- as.Date(live$截至日期)
+    lr$淨報酬 <- as.numeric(live$暫估0010)
+    lr$基準0050 <- as.numeric(live$暫估0050)
+    lr$檔數 <- as.integer(live$檔數)
+    lr$c51_key <- paste0("live:",format(lr$成交日,"%Y-%m-%d"))
+    lm <- as.integer(format(lr$成交日,"%m"))
+    lr$c51_label <- paste0(format(lr$成交日,"%Y")," Q",(lm-1L)%/%3L+1L,
+      "｜",format(lr$成交日,"%Y-%m-%d")," ～ ",format(lr$出場日,"%Y-%m-%d"),
+      "｜進行中・暫估")
+    lr$c54_status <- "ongoing"
+    # 此列只供季度選單與圖表；正式統計仍取 z$quarters，故不會灌入勝率。
+    q <- rbind(q,lr)
+  }
   q
 })
 
@@ -5094,9 +5133,10 @@ shiny::observeEvent(c51_quarters(), {
 c53_scope_quarters <- function(q, key) {
   if(is.null(q) || !nrow(q)) return(NULL)
   if(length(key)!=1L || is.na(key) || key=="waiting")key <- utils::tail(q$c51_key,1)
-  if(key=="all") return(q)
-  if(key=="recent4") return(utils::tail(q,4L))
-  if(key=="recent8") return(utils::tail(q,8L))
+  completed <- q[q$c54_status=="completed",,drop=FALSE]
+  if(key=="all") return(completed)
+  if(key=="recent4") return(utils::tail(completed,4L))
+  if(key=="recent8") return(utils::tail(completed,8L))
   picked <- q[q$c51_key==key,,drop=FALSE]
   if(!nrow(picked)) return(utils::tail(q,1L))
   picked
@@ -5168,7 +5208,9 @@ v7_home_pair <- shiny::reactive({v48_slice(c53_stats_window())})
 output$v7_home_period <- shiny::renderText({
   z <- v7_home_pair()
   if (is.null(z)) return(paste0("歷史績效暫不可用｜",v48_error()))
-  paste0(min(z$date)," ～ ",max(z$date),"（",nrow(z)," 個交易日）")
+  q <- c53_stats_quarters()
+  tag <- if(!is.null(q) && any(q$c54_status=="ongoing")) "｜進行中・暫估" else "｜已完成"
+  paste0(min(z$date)," ～ ",max(z$date),"（",nrow(z)," 個交易日）",tag)
 })
 output$v7_home_period_second <- shiny::renderText({
   z <- v7_home_pair()
@@ -5234,7 +5276,10 @@ output$v9_curve_actual_range <- shiny::renderText({
   z <- v9_curve_pair(); q <- c51_curve_quarters()
   if(is.null(z)||is.null(q))return(paste0("歷史績效尚未就緒：",v48_error()))
   if(nrow(q)==1L) {
-    paste0("選定 ",q$c51_label[1],"｜",nrow(z)," 個共同交易日｜改選季度不重新選股")
+    suffix <- if(identical(q$c54_status[1],"ongoing"))
+      "｜當季尚未結算，暫估不計入正式勝率與報表" else
+      "｜已完成季度，不重新選股"
+    paste0("選定 ",q$c51_label[1],"｜",nrow(z)," 個共同交易日",suffix)
   } else {
     paste0("已完成 ",nrow(q)," 季｜",q$成交日[1]," ～ ",utils::tail(q$出場日,1),
            "｜",nrow(z)," 個共同交易日")
@@ -5244,7 +5289,9 @@ output$v9_daily_actual_range <- shiny::renderText({
   q <- c51_daily_selected(); z <- v9_daily_pair()
   if(is.null(z)||is.null(q))return(paste0("歷史日報酬尚未就緒：",v48_error()))
   paste0("選定 ",q$c51_label[1],"｜評分日 ",q$評分日[1],
-    "｜成交日與出場日為完整回測邊界（交易交接日不重複計入每日報酬）")
+    if(identical(q$c54_status[1],"ongoing"))
+      "｜當季暫估至最新有效收盤日；不含尚未發生的出場費用，不列入正式季度統計" else
+      "｜已完成季度；交接日報酬不重複計入")
 })
 output$v7_home_curve <- shiny::renderPlot({
   z <- v9_curve_pair()
@@ -5284,7 +5331,7 @@ v8_daily <- shiny::reactive({
   q10 <- expm1(sum(d$log_return10))
   q50 <- expm1(sum(d$log_return50))
   if(abs(q10-q$淨報酬[1])>1e-7 || abs(q50-q$基準0050[1])>1e-7)
-    stop(paste0("C51 ",q$c51_label[1]," 季度報酬與每日淨值不一致；請核對資料及成本。"))
+    stop(paste0("C54 ",q$c51_label[1]," 季度報酬與每日淨值不一致；請核對資料及成本。"))
   data.frame(date=d$date,p10=100*d$log_return10,etf=100*d$log_return50)
 })
 v8_daily_limits <- shiny::reactive({
