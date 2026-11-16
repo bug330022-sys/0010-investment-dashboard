@@ -1,0 +1,117 @@
+/* C44 — HOME ONLY. Loaded AFTER C43. No Shiny model or output IDs changed. */
+/* 01. The two actual subjects are visually primary; VS is a small marker. */
+body .home-compare-grid.c44-compare-wrap {
+  display:flex !important;
+  flex-direction:column !important;
+  grid-template-columns:none !important;
+  gap:13px !important;
+  min-width:0 !important;
+  width:100% !important;
+  margin:0 0 14px !important;
+}
+body .c44-compare-pair {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 48px minmax(0,1fr);
+  align-items:stretch;
+  gap:9px;
+  min-width:0;
+}
+body .home-compare-grid .c44-compare-pair .home-side {
+  min-width:0 !important;
+  width:100% !important;
+  margin:0 !important;
+  padding:18px 21px !important;
+  box-sizing:border-box !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  column-gap:18px !important;
+  row-gap:7px !important;
+}
+body .home-compare-grid .c44-compare-pair .home-side h2 {
+  font-size:clamp(26px,2.15vw,34px) !important;
+  line-height:1.1 !important;
+}
+body .c44-vs-marker {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:0;
+  isolation:isolate;
+}
+body .c44-vs-marker span {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  color:var(--c-text,#E8F1F8);
+  background:var(--c-raised,#172D40);
+  border:1px solid var(--c-border,#294459);
+  font-weight:800;
+  font-size:14px;
+  letter-spacing:.4px;
+  box-sizing:border-box;
+}
+body .c44-diff-panel {
+  display:flex;
+  flex-direction:column;
+  gap:11px;
+  min-width:0;
+  padding:14px 17px 16px;
+  border:1px solid var(--c-border,#294459);
+  border-radius:12px;
+  background:var(--c-raised,#172D40);
+  box-sizing:border-box;
+}
+body .c44-diff-title {display:flex;align-items:center;gap:11px;flex-wrap:wrap;}
+body .c44-diff-title strong {font-size:14px;color:var(--c-text,#E8F1F8);}
+body .c44-diff-title span {font-size:12px;color:var(--c-muted,#A5B9CA);}
+body .c44-diff-metrics {display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;min-width:0;}
+body .c44-diff-panel .home-stat {
+  min-width:0 !important;
+  margin:0 !important;
+  border-top:1px solid var(--c-border,#294459) !important;
+  padding:10px 6px 2px !important;
+  display:flex !important;
+  flex-direction:column !important;
+  gap:8px !important;
+  align-items:flex-start !important;
+}
+body .c44-diff-panel .home-stat > span {font-size:12px !important;line-height:1.45;min-height:0 !important;color:var(--c-muted,#A5B9CA) !important;}
+body .c44-diff-panel .home-stat > strong,
+body .c44-diff-panel .home-stat > strong span {font-size:clamp(16px,1.4vw,21px) !important;line-height:1.3 !important;white-space:nowrap !important;overflow-wrap:normal !important;}
+
+/* 02. Let every plot use exactly the available inner width of its card.
+   Shiny redraw on details.toggle (see app.R) handles initially hidden plots.
+   We do NOT clip graph contents or hide axes to fake a fit. */
+body .c43-home-grid,body .c43-home-main,body .c43-home-side,
+body .c44-chart-details,body .c44-chart-details > .section-box,
+body .c44-chart-frame {min-width:0 !important;max-width:100% !important;box-sizing:border-box !important;}
+body .c44-chart-frame {display:block;width:100%;overflow-x:auto;overflow-y:visible;}
+body .c44-chart-frame .shiny-plot-output {display:block;width:100% !important;max-width:100% !important;min-width:0 !important;box-sizing:border-box !important;}
+body .c44-chart-frame .shiny-plot-output img {display:block;max-width:100% !important;object-fit:contain;}
+body .c44-chart-details {width:100%;overflow:visible;}
+body .c44-chart-details[open] > .section-box {width:100% !important;max-width:100% !important;padding:16px !important;}
+body .c44-chart-details .row,body .c44-chart-details [class*="col-"] {min-width:0;}
+
+@media(max-width:1450px) {
+  body .c44-diff-metrics {grid-template-columns:repeat(3,minmax(0,1fr));}
+}
+@media(max-width:1120px) {
+  body .c44-compare-pair {grid-template-columns:minmax(0,1fr) !important;gap:8px !important;}
+  body .c44-vs-marker {padding:1px 0;}
+  body .c44-vs-marker span {width:38px;height:38px;font-size:12px;}
+  body .c44-diff-metrics {grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+@media(max-width:650px) {
+  body .c44-diff-panel {padding:12px;}
+  body .home-compare-grid .c44-compare-pair .home-side {padding:15px 14px !important;column-gap:10px !important;}
+  body .c44-diff-metrics {gap:8px;}
+  body .c44-diff-panel .home-stat > strong,body .c44-diff-panel .home-stat > strong span {font-size:17px !important;}
+  body .c44-chart-details[open] > .section-box {padding:12px !important;}
+  body .c44-chart-details .row {margin-left:0;margin-right:0;}
+  body .c44-chart-details [class*="col-"] {width:100%;padding-left:0;padding-right:0;float:none;}
+}
+@media(max-width:360px) {
+  body .c44-diff-metrics {grid-template-columns:minmax(0,1fr);}
+}
