@@ -1,0 +1,32 @@
+/* C47: 總覽全寬每日對數報酬，維持 C40-C46 其他區塊樣式不動。 */
+/* 讓左側主欄的兩個子區塊直接成為首頁 grid 的子項；每日報酬跨越左右兩欄。 */
+@media (min-width: 1201px) {
+  body .c43-home-grid { display:grid !important; grid-template-columns:minmax(0, 1.65fr) minmax(0, 1fr) !important; gap:20px !important; align-items:start !important; }
+  body .c43-home-grid > .c43-home-main { display:contents !important; }
+  body .c43-home-grid > .c43-home-main > .section-box { grid-column:1 !important; grid-row:1 !important; min-width:0 !important; }
+  body .c43-home-grid > .c43-home-side { grid-column:2 !important; grid-row:1 !important; min-width:0 !important; }
+  body .c43-home-grid > .c43-home-main > details.c44-chart-details { grid-column:1 / -1 !important; grid-row:2 !important; min-width:0 !important; width:100% !important; }
+}
+@media (max-width:1200px) {
+  body .c43-home-grid { display:flex !important; flex-direction:column !important; gap:18px !important; }
+  body .c43-home-grid > .c43-home-main { display:contents !important; }
+  body .c43-home-grid > .c43-home-main > .section-box { order:0 !important; width:100% !important; }
+  body .c43-home-grid > .c43-home-side { order:1 !important; width:100% !important; }
+  body .c43-home-grid > .c43-home-main > details.c44-chart-details { order:2 !important; min-width:0 !important; width:100% !important; }
+}
+.c43-home-main > details.c44-chart-details,
+.c43-home-main > details.c44-chart-details[open] { max-width:100% !important; margin-top:0 !important; }
+.c43-home-main > details.c44-chart-details > .section-box {width:100%;max-width:100%;min-width:0; box-sizing:border-box;}
+.c47-daily-warning {padding:10px 14px;border-left:3px solid #be8c4d;border-radius:7px;background:rgba(190,140,77,.08);}
+.c47-daily-plot-row{margin-left:-12px;margin-right:-12px;display:flex;flex-wrap:wrap;align-items:start;}
+.c47-daily-plot-row > [class*="col-"]{min-width:0;box-sizing:border-box;padding-left:12px;padding-right:12px;}
+.c47-daily-plot-row h3{font-size:clamp(17px,1.45vw,22px);line-height:1.35;overflow-wrap:anywhere;margin:10px 0 14px;}
+.c47-daily-plot,.c47-daily-plot .shiny-plot-output,.c47-daily-plot img{max-width:100% !important;min-width:0 !important;box-sizing:border-box;}
+.c47-daily-plot {width:100%;overflow:hidden;}
+#c47_curve_quarter, #c47_daily_quarter{max-width:710px;width:100%;}
+#c47_curve_quarter select,#c47_daily_quarter select{max-width:100%;font-size:14px;}
+@media (max-width:740px){
+  .c47-daily-plot-row{display:block;}
+  .c47-daily-plot-row > [class*="col-"]{float:none;width:100%;max-width:100%;margin-bottom:14px;}
+  .c47-daily-plot-row h3{font-size:17px;}
+}
