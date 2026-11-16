@@ -1,7 +1,8 @@
 # ============================================================
 # C51 | 整合 C50 末季出場邊界修正：歷史連續日淨值季度回測（測試版）
 # 評分只使用評分日以前資料；下季 T+1 收盤換倉；同日完整計入買賣成本。
-# 所有策略與 0050 使用相同交易日；任何選中股票缺價都停止，不做事後剔除。
+# 所有策略與 0050 使用相同交易日；短缺價容許至多兩個交易日的舊收盤估值；
+# 必須使用真實可得價格成交，未完成季度予以截斷並保留先前完成紀錄，不事後刪股。
 # 注意：adjusted 價格作為含股利調整的「成交代理價」，不是可保證成交價。
 # 注意：沒有歷史 0050 成分股名單時，股票池仍是目前成分的回溯代理。
 # ============================================================
@@ -108,9 +109,8 @@ v5_backtest_v4 <- function(df, hold=63, n=10, cap=0.20,
   other_counts <- table(as.character(active$date))
   market_days <- as.Date(names(other_counts)[other_counts>=n])
   bench_missing <- setdiff(market_days,bench0$date)
-  if (length(bench_missing))
-    stop(paste0("有股票交易、0050 卻缺少有效價格的日期：",
-                paste(utils::head(bench_missing,8L),collapse=",")))
+  # 0050 非有效交易日不作虛構補價；保留診斷資訊，後續一律用 0050 有效日
+  # 建立共同日期。此時其他股票可以有報價，但不會對 0050 補零報酬。
   dates <- sort(unique(bench0$date))
   if (length(dates)<start_after+30L) stop("0050 的有效價格不足以回測。")
   if (anyDuplicated(bench0$date)) stop("0050 有同日重複價格。")
@@ -125,6 +125,42 @@ v5_backtest_v4 <- function(df, hold=63, n=10, cap=0.20,
   if (!identical(as.Date(rownames(pm)),dates)) stop("股票與 0050 交易日無法正確對齊。")
   if (!"0050"%in%colnames(pm) || any(!is.finite(pm[,"0050"]) | pm[,"0050"]<=0))
     stop("0050 交易日價格缺漏；不以零報酬替代。")
+
+  # C52：交易必須使用當天真正的觀測價格。遇到原定交易日無報價時，
+  # 整組持倉延後最多 2 個 0050 交易日成交；不回頭找前一日價格假裝當日成交。
+  max_trade_delay <- 2L
+  max_valuation_stale <- 2L
+  v52_trade_idx <- function(base_idx, syms, prev_idx=0L) {
+    syms <- unique(as.character(syms))
+    if (!length(syms) || base_idx>nrow(pm)) return(NA_integer_)
+    last_idx <- min(nrow(pm),base_idx+max_trade_delay)
+    for (ii in seq.int(base_idx,last_idx)) {
+      if (ii<=prev_idx) next
+      px <- as.numeric(pm[ii,syms,drop=TRUE])
+      if (length(px)==length(syms) && all(is.finite(px) & px>0)) return(ii)
+    }
+    NA_integer_
+  }
+  # 估值可暫用過去已知收盤價，絕不回填未來報價或用於實際成交。
+  # 第 3 個連續缺價交易日起視為資料不足，結束於上一個已驗證季度。
+  v52_valuation <- function(ii,syms) {
+    syms <- as.character(syms)
+    px <- as.numeric(pm[ii,syms,drop=TRUE]);names(px)<-syms
+    stale <- character(0)
+    bad <- !is.finite(px)|px<=0
+    if (any(bad)) for (sym in syms[bad]) {
+      start <- max(1L,ii-max_valuation_stale)
+      if (start>=ii)next
+      prior <- seq.int(start,ii-1L)
+      prior <- prior[is.finite(pm[prior,sym]) & pm[prior,sym]>0]
+      if (length(prior)) {px[sym] <- pm[utils::tail(prior,1L),sym];stale <- c(stale,sym)}
+    }
+    list(price=px,stale=stale,missing=syms[!is.finite(px)|px<=0])
+  }
+  # 追蹤披露：缺價估值天數、交易日期順延、後段未完成的原因。
+  stale_rows <- list()
+  delayed_rows <- list()
+  truncated_reason <- NULL
   membership <- v48_membership()
   universe_type <- if (is.null(membership)) "當前股票池歷史代理（存在成分股事後偏誤風險）" else
     "依 CSV 有效日期過濾的歷史成分股池（完整性須人工核對）"
@@ -143,6 +179,7 @@ v5_backtest_v4 <- function(df, hold=63, n=10, cap=0.20,
   score_qend <- head(qend, -1L)
   plan <- list(); initial_skips <- 0L
   first_skip_detail <- ""
+  last_valid_plan_k <- NA_integer_
   for (k in seq_along(score_qend)) {
     i <- score_qend[k];rated <- dates[i]
     if (!is.null(progress)) progress(k,length(score_qend))
@@ -165,33 +202,58 @@ v5_backtest_v4 <- function(df, hold=63, n=10, cap=0.20,
         first_skip_detail <- reason
         next
       }
-      # 中途若不足固定十檔，一律明確停止；不允許事後跳過績差季度。
-      stop(paste0(reason,"。回測不會放寬固定十檔或事後挑選其他股票。"))
+      # 中途若不足固定十檔，從這季停止延伸歷史；已完成部分照常公布，
+      # 但會標示截斷原因。不能跳過差的季度再從下一季接上來。
+      truncated_reason <- paste0("後續季度未納入：",reason)
+      break
     }
     ww <- v4_weights(chosen,scheme="inv_vol",cap=cap)
     if (length(ww)!=n || any(!is.finite(ww)) || any(ww<0) || sum(ww)<=0)
       stop(paste0("評分日 ",rated," 權重計算失敗。"))
-    entry_idx <- i+1L
     syms <- names(ww)
-    pv <- as.numeric(pm[entry_idx,syms]);names(pv)<-syms
-    if (any(!is.finite(pv)|pv<=0)) {
-      if (!length(plan)) {initial_skips<-initial_skips+1L;next}
-      stop(paste0("評分日 ",rated," 選出股票於下一交易日無成交代理價，不能事後替換。"))
+    # 延後整組交易；舊持股也需要在同一成交日有實際價格才可換手。
+    old_symbols <- if(length(plan))names(plan[[length(plan)]]$weights) else character()
+    entry_idx <- v52_trade_idx(i+1L,union(syms,old_symbols),
+                if(length(plan))plan[[length(plan)]]$buy_idx else 0L)
+    if (!is.finite(entry_idx)) {
+      reason <- paste0("評分日 ",rated,"：T+1 至 T+3 無法取得全部新舊持股的真實成交價格")
+      if (!length(plan)) {initial_skips<-initial_skips+1L;first_skip_detail<-reason;next}
+      truncated_reason <- paste0("後續季度未納入：",reason)
+      break
     }
+    if(entry_idx>i+1L)
+      delayed_rows[[length(delayed_rows)+1L]] <- data.frame(評分日=rated,
+        原定交易日=dates[i+1L],實際交易日=dates[entry_idx],
+        延後交易日數=entry_idx-(i+1L))
     plan[[length(plan)+1L]] <- list(rate_idx=i,rate_date=rated,
        buy_idx=entry_idx,buy_date=dates[entry_idx], weights=ww,
        score=sc,chosen=chosen)
+    last_valid_plan_k <- k
   }
   if (!length(plan))
     stop(paste0("全部 ",length(qend)," 個評分季度都無法建立固定 ",n,
                 " 檔的選股計畫。最後檢查：",first_skip_detail,
                 "。請核對歷史股價覆蓋率、風險門檻與產業分散限制；勿直接降低門檻。"))
-  # C50: 最後一個已完成季度末的 T+1 是前一季持股的出場日。
-  # 在計畫尾部加入「純現金平倉邊界」，不在此日買入新一季的十檔股票。
-  last_q <- tail(qend, 1L)
-  end_idx <- last_q + 1L
-  if (end_idx > length(dates) || end_idx <= plan[[length(plan)]]$buy_idx)
-    stop("回測終點沒有完整持有區間；無法建立最後一筆淨值。")
+  # 最後一筆有效計畫的「下一個完整季末」是平倉邊界。
+  # 中途發現後續無法選出 10 檔時，不能把最後邊界強行設在全資料末日。
+  # 若末季所有舊持股都沒有可交易的真實價格，只放棄最後一個未完成季度；
+  # 不會刪除前面已完成的績效，也不會把缺價股票賣在虛構價格上。
+  end_idx <- NA_integer_
+  repeat {
+    if(!length(plan))stop("沒有可用的完整歷史持有季度：最早幾季缺少必要交易報價。")
+    boundary_k <- last_valid_plan_k+1L
+    if (boundary_k>length(qend))stop("找不到最後已完成季度的出場邊界。")
+    last_q <- qend[boundary_k]
+    end_idx <- v52_trade_idx(last_q+1L,names(plan[[length(plan)]]$weights),
+               plan[[length(plan)]]$buy_idx)
+    if(is.finite(end_idx))break
+    truncated_reason <- paste0("後段持股缺少可成交的出場價格（",dates[last_q],
+                               " 起兩個交易日內）；最後一季未納入")
+    plan <- utils::head(plan,-1L)
+    last_valid_plan_k <- last_valid_plan_k-1L
+  }
+  if (end_idx>length(dates) || end_idx<=plan[[length(plan)]]$buy_idx)
+    stop("最後一季仍缺少完整持有區間。")
   plan[[length(plan)+1L]] <- list(
     rate_idx=last_q, rate_date=dates[last_q],
     buy_idx=end_idx, buy_date=dates[end_idx],
@@ -256,16 +318,33 @@ v5_backtest_v4 <- function(df, hold=63, n=10, cap=0.20,
     nxt <- plan[[j+1L]]
     start_i <- cur$buy_idx;end_i <- nxt$buy_idx
     if (end_i<=start_i) stop("持有期間重疊或無交易日。")
+    # 先檢查整季估值完整性。若缺價超過 2 個交易日，保留之前已完成
+    # 的季度績效，最後不完整的季度不會顯示，也不跨過缺失季度接續回測。
+    symbol_check <- names(held)
+    bad_day <- NA_integer_
+    if(end_i-start_i>1L) for (ii in seq.int(start_i+1L,end_i-1L)) {
+      check <- v52_valuation(ii,symbol_check)
+      if (length(check$missing)) {bad_day<-ii;break}
+    }
+    if (is.finite(bad_day)) {
+      truncated_reason <- paste0("歷史資料僅涵蓋前 ",length(rec)," 個已完成季度；",
+        dates[bad_day]," 的持股缺價已超過 ",max_valuation_stale,
+        " 個交易日（",paste(v52_valuation(bad_day,symbol_check)$missing,collapse=","),
+        "）。未用未來股價補值。")
+      if(!length(rec))stop(truncated_reason)
+      break
+    }
     old_equity_after_buy <- equity_after_buy
     old_shares <- held
     holding_symbols <- names(old_shares)
     if (!length(holding_symbols)) stop("持股清單為空。")
     if (end_i-start_i > 1L) for (ii in seq.int(start_i+1L,end_i-1L)) {
-      px <- as.numeric(pm[ii,holding_symbols]);names(px)<-holding_symbols
-      if (any(!is.finite(px)|px<=0))
-        stop(paste0("持有期 ",dates[ii]," 有缺少價格的股票：",
-                    paste(holding_symbols[!is.finite(px)|px<=0],collapse=","),
-                    "。禁止用事後刪股方式改善回測。"))
+      observed <- v52_valuation(ii,holding_symbols)
+      px <- observed$price
+      if(length(observed$stale))
+        stale_rows[[length(stale_rows)+1L]] <- data.frame(
+          date=as.Date(dates[ii]),symbol=observed$stale,
+          用途="僅供當日估值（沿用前次收盤價）")
       ev <- sum(old_shares*px)
       daily[[length(daily)+1L]] <- data.frame(date=dates[ii],
          equity10=ev/capital,equity50=pm[ii,"0050"]/bench_start)
@@ -322,8 +401,21 @@ v5_backtest_v4 <- function(df, hold=63, n=10, cap=0.20,
       命中率=hit,IC=ic,Spread=spread,持股=held_label,
       stringsAsFactors=FALSE)
   }
+  if(!length(rec))stop("尚無已完成且價格有效的季度；請檢查歷史持股覆蓋率。")
   q <- do.call(rbind,rec)
+  # 未完成季度的暫時估值不應留在「已完成」的歷史序列。
   day <- do.call(rbind,daily)
+  day <- day[day$date<=utils::tail(q$出場日,1L),,drop=FALSE]
+  day <- day[!duplicated(day$date),,drop=FALSE]
+  if(length(stale_rows)) {
+    stale_table <- do.call(rbind,stale_rows)
+    stale_table <- stale_table[stale_table$date<=utils::tail(q$出場日,1L),,drop=FALSE]
+  } else stale_table <- data.frame(date=as.Date(character()),symbol=character(),用途=character())
+  if(length(delayed_rows)) {
+    delayed_table <- do.call(rbind,delayed_rows)
+    delayed_table <- delayed_table[delayed_table$實際交易日<=utils::tail(q$出場日,1L),,drop=FALSE]
+  } else delayed_table <- data.frame(評分日=as.Date(character()),原定交易日=as.Date(character()),
+                                   實際交易日=as.Date(character()),延後交易日數=integer())
   if (anyDuplicated(day$date) || any(diff(day$date)<=0)) stop("每日淨值時間軸重複或逆序。")
   if (any(!is.finite(day$equity10)|!is.finite(day$equity50)|day$equity10<=0|day$equity50<=0))
     stop("每日淨值異常。")
@@ -351,11 +443,20 @@ v5_backtest_v4 <- function(df, hold=63, n=10, cap=0.20,
       hit=mean(q$命中率,na.rm=TRUE),ic=mean(q$IC,na.rm=TRUE),
       spread=mean(q$Spread,na.rm=TRUE),
       universe_type=universe_type,initial_skipped_quarters=initial_skips,
+      truncated_reason=truncated_reason,
+      price_carry_observations=nrow(stale_table),delayed_trades=nrow(delayed_table),
+      last_verified_date=utils::tail(q$出場日,1L),
       daily_mdd=min(dd10/cummax(dd10)-1),bench_daily_mdd=min(dd50/cummax(dd50)-1))
   list(quarters=q,daily=day,stats=stats,
-       trades=do.call(rbind,trade_log),version="C50 research proxy (quarter terminal boundary corrected)",
+       trades=do.call(rbind,trade_log),valuation_carry=stale_table,
+       delayed_trades=delayed_table,
+       version="C52 tolerant verified-prefix backtest (C50 boundary retained)",
        warnings=c(if(is.null(membership)) "沒有歷史成分股名單：結果仍可能有存活者偏誤。" else
                               "歷史成分股名單須人工核對完整性。",
+                 "估值缺價只沿用過去最多 2 個交易日；成交需有真實報價，最多延後 2 個交易日。",
+                 if(!is.null(truncated_reason))truncated_reason,
+                 if(length(bench_missing))paste0("部分股票交易日無 0050 報價，兩者僅比較共同 0050 有效交易日：",
+                   length(bench_missing)," 日"),
                  "以調整後收盤價代理成交價；持倉允許小數股、不含流動性衝擊。",
                  "季度報酬以換股後淨值為邊界，當期出場日的換股交易費用計入該期。"))
 }

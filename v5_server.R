@@ -8,27 +8,31 @@
   # 1. 季度回測（v4 分數 + T+1 成交）
   # ----------------------------------------------------------
 
-  # C49: 第一次需要時自動執行；頁首按鈕（同一個 v5_run_bt）可重算。
-  # 只有 data() 或 v5_run_bt 改變時才失效；改觀看日期不觸發選股。
-  v5_bt_error <- shiny::reactiveVal(NULL)
-  v5_bt <- shiny::reactive({
-    input$v5_run_bt
-    d <- as.data.frame(data())
-    v5_bt_error(NULL)
-    result <- tryCatch(
-      withProgress(message = "正在建立歷史季度策略每日淨值…", value = 0, {
-        v5_backtest_v4(d, hold = 63, n = 10, cap = 0.20,
-          capital = 1000000, t1 = TRUE, start_after = 300,
-          progress = function(k, n) setProgress(k/n, detail = paste0("第 ",k," / ",n," 個季度")))
-      }),
-      error=function(e) {v5_bt_error(conditionMessage(e));NULL}
-    )
-    # Never overwrite the real conditionMessage captured by tryCatch.
-    if (is.null(result) && is.null(v5_bt_error()))
-      v5_bt_error("回測未產生結果。請查看資料期間與選股限制；若情況持續，請保存部署紀錄。")
-    result
-  })
+  # C52: app-scope 快取，同資料版本與同模型參數只計算一次，跨訪客共用。
+  # 點頁首按鈕時 input$v5_run_bt 改變，才會強制重建；日期/季度選單不影響 key。
+  # 注意：資料變動必須使 key 改變，避免沿用舊績效。
+  v52_cached_run <- shiny::bindCache(
+    shiny::reactive({
+      d <- as.data.frame(data())
+      tryCatch({
+        result <- withProgress(message = "正在建立歷史季度策略每日淨值…", value = 0, {
+          v5_backtest_v4(d, hold = 63, n = 10, cap = 0.20,
+            capital = 1000000, t1 = TRUE, start_after = 300,
+            progress = function(k, n) setProgress(k/n,
+              detail = paste0("第 ",k," / ",n," 個季度")))
+        })
+        list(result=result,error=NULL)
+      },error=function(e)list(result=NULL,error=conditionMessage(e)))
+    }),
+    digest::digest(data()[,c("date","symbol","adjusted")],algo="xxhash64"),
+    if(is.null(input$v5_run_bt)) 0L else as.integer(input$v5_run_bt),
+    "C52-2026-11-16-policy-v1",
+    cache="app"
+  )
+  v5_bt_error <- shiny::reactive({v52_cached_run()$error})
+  v5_bt <- shiny::reactive({v52_cached_run()$result})
 
+  # C52: 讓使用者知道目前有幾季可用，以及後段是否因缺價而截斷。
   output$v5_bt_acc <- shiny::renderTable({
     r <- v5_bt()
     shiny::req(!is.null(r),!is.null(r$stats))
@@ -64,7 +68,7 @@
     r <- v5_bt()
     shiny::req(!is.null(r),!is.null(r$stats))
     s <- r$stats
-    data.frame(
+    summary_table <- data.frame(
       項目 = c("回測季數", "累積報酬（扣成本）", "年化報酬", "年化波動",
               "Sharpe", "最大回撤", "0050 同期累積", "0050 年化",
               "平均換手率", "累計交易成本"),
@@ -82,6 +86,18 @@
       ),
       check.names = FALSE, stringsAsFactors = FALSE
     )
+    summary_table <- rbind(summary_table,
+      data.frame(項目="回測有效截止日",數值=as.character(s$last_verified_date),
+                 stringsAsFactors=FALSE),
+      data.frame(項目="短暫缺價估值筆數",數值=as.character(s$price_carry_observations),
+                 stringsAsFactors=FALSE),
+      data.frame(項目="交易日順延次數",數值=as.character(s$delayed_trades),
+                 stringsAsFactors=FALSE))
+    if(!is.null(s$truncated_reason) && nzchar(s$truncated_reason))
+      summary_table <- rbind(summary_table,
+        data.frame(項目="後段資料未納入原因",數值=s$truncated_reason,
+                   stringsAsFactors=FALSE))
+    summary_table
   }, striped = TRUE, bordered = TRUE, hover = TRUE)
 
   output$v5_bt_curve <- shiny::renderPlot({
