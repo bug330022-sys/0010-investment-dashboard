@@ -1,0 +1,6 @@
+/* C53: only the overview comparison selector; leave C52 computation/UI unchanged. */
+.c53-stats-quarter-control { width:100%; max-width: 560px; min-width:0; margin:8px 0 12px; }
+.c53-stats-quarter-control .form-group { margin-bottom:0; }
+.c53-stats-quarter-control label { font-weight:650; }
+.c53-stats-quarter-control select { min-width:0; width:100%; min-height:43px; font-size:14px; }
+@media(max-width:700px) { .c53-stats-quarter-control { max-width:100%; } }
