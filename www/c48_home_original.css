@@ -1,0 +1,13 @@
+/* C48｜還原 C44 的總覽視覺：不新增大型提示／額外狀態框。 */
+/* C47 的全寬每日報酬保留，手機採上下排列。 */
+.c43-home-grid > .c43-home-main > .section-box .shiny-input-container {max-width:100%;}
+.c43-home-grid .c44-curve-frame {min-width:0;max-width:100%;}
+.c43-home-grid .c44-chart-frame img {max-width:100%;object-fit:contain;}
+.c47-daily-plot-row .c44-chart-frame {min-width:0;}
+@media (min-width:1201px) {
+ body .c43-home-grid > .c43-home-main > details.c44-chart-details {grid-column:1/-1!important;}
+}
+@media(max-width:740px){
+ .c47-daily-plot-row{margin-left:0;margin-right:0;}
+ .c47-daily-plot-row>[class*=col-]{padding-left:0;padding-right:0;}
+}
