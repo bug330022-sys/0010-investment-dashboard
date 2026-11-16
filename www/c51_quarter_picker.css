@@ -1,0 +1,22 @@
+/* C51 | Quarterly view selection only. No homepage redesign. */
+.c43-home-grid .section-box #c51_curve_scope,
+.c43-home-grid .section-box #c51_daily_quarter{
+  width:100%;max-width:760px;min-width:0;
+}
+.c43-home-grid .section-box .form-group:has(#c51_curve_scope),
+.c43-home-grid .section-box .form-group:has(#c51_daily_quarter){
+  width:100%;max-width:760px;min-width:0;
+}
+.c43-home-grid #c51_curve_scope,
+.c43-home-grid #c51_daily_quarter{
+  font-size:14px;line-height:1.45;min-height:43px;
+  border-radius:8px;white-space:normal;
+}
+.c43-home-grid .c47-daily-plot-row{min-width:0;width:calc(100% + 24px);}
+.c43-home-grid .c47-daily-plot-row > [class*="col-"]{min-width:0;}
+.c43-home-grid .c47-daily-plot-row .shiny-plot-output,
+.c43-home-grid .c47-daily-plot-row img{max-width:100%!important;}
+@media(max-width:740px){
+  .c43-home-grid .c47-daily-plot-row{width:100%;margin:0;display:block;}
+  .c43-home-grid .c47-daily-plot-row > [class*="col-"]{width:100%;max-width:100%;padding:0;float:none;}
+}
