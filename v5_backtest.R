@@ -1,205 +1,345 @@
 # ============================================================
-# v5_backtest.R
-# v4 季度回測：T+1 成交、交易明細、成本、準確度
-# 依賴：v4_score.R、v4_drawdown.R
+# C48 | 單一連續日淨值季度回測：研究測試版
+# 評分只使用評分日以前資料；下季 T+1 收盤換倉；同日完整計入買賣成本。
+# 所有策略與 0050 使用相同交易日；任何選中股票缺價都停止，不做事後剔除。
+# 注意：adjusted 價格作為含股利調整的「成交代理價」，不是可保證成交價。
+# 注意：沒有歷史 0050 成分股名單時，股票池仍是目前成分的回溯代理。
 # ============================================================
+V5_COST <- list(fee=0.001425, min_fee=20, tax=0.003, slip=0.001)
 
-V5_COST <- list(fee = 0.001425, min_fee = 20, tax = 0.003, slip = 0.001)
-
-# 每季最後一個交易日
 v5_quarter_ends <- function(dates) {
   dates <- as.Date(dates)
-  key <- paste0(format(dates, "%Y"), "Q", ceiling(as.integer(format(dates, "%m")) / 3))
+  key <- paste0(format(dates, "%Y"), "Q",
+                ceiling(as.integer(format(dates, "%m")) / 3))
   sort(as.integer(tapply(seq_along(dates), key, max)))
 }
 
-# 單筆交易成本
-v5_cost_one <- function(amount, side = c("buy", "sell"), cost = V5_COST) {
+v5_cost_one <- function(amount, side=c("buy","sell"), cost=V5_COST) {
   side <- match.arg(side)
-  fee <- max(cost$min_fee, amount * cost$fee)
-  tax <- if (side == "sell") amount * cost$tax else 0
-  slip <- amount * cost$slip
-  c(fee = fee, tax = tax, slip = slip, total = fee + tax + slip)
+  if (!is.finite(amount) || amount <= 1e-8)
+    return(c(fee=0,tax=0,slip=0,total=0))
+  fee <- max(cost$min_fee, amount*cost$fee)
+  tax <- if (side=="sell") amount*cost$tax else 0
+  slip <- amount*cost$slip
+  c(fee=fee,tax=tax,slip=slip,total=fee+tax+slip)
 }
 
-# ------------------------------------------------------------
-# 主回測
-#   df       : 長表（symbol, date, adjusted）
-#   hold     : 持有交易日數（63）
-#   t1       : TRUE = 評分日後一個交易日成交
-#   capital  : 期初資金
-# ------------------------------------------------------------
-
-v5_backtest_v4 <- function(df, hold = 63, n = 10, cap = 0.20,
-                           max_ind = V4_SCREEN$max_industry,
-                           capital = 1e6, cost = V5_COST,
-                           start_after = 300, t1 = TRUE,
-                           progress = NULL) {
-
-  d <- as.data.frame(df)
-  d$date <- as.Date(d$date)
-  d <- d[!is.na(d$adjusted) & d$adjusted > 0, , drop = FALSE]
-  d <- d[d$symbol %in% c("0050", unique(d$symbol)), , drop = FALSE]
-  if (!nrow(d)) return(NULL)
-
-  dates <- sort(unique(d$date))
-  qe <- v5_quarter_ends(dates)
-  qe <- qe[qe > start_after & qe + hold + 2 <= length(dates)]
-  if (!length(qe)) return(NULL)
-
-  w <- as.data.frame(
-    tidyr::pivot_wider(d[, c("date", "symbol", "adjusted")],
-                       names_from = symbol, values_from = adjusted)
-  )
-  pm <- as.matrix(w[, -1, drop = FALSE])
-  rownames(pm) <- as.character(as.Date(w$date))
-  storage.mode(pm) <- "double"
-
-  prev_w <- NULL
-  prev_ret <- NULL
-  equity <- 1
-  eq_bench <- 1
-  capital_now <- capital
-
-  rec <- list()
-  tradelog <- list()
-
-  for (k in seq_along(qe)) {
-    i <- qe[k]
-    if (!is.null(progress)) progress(k, length(qe))
-    d0 <- dates[i]
-
-    sc <- v4_score_table(d[d$date <= d0, , drop = FALSE])
-    if (is.null(sc) || nrow(sc) < n) next
-
-    sel <- v4_pick(sc, n, max_ind)
-    if (nrow(sel) < 3) next
-    ww <- v4_weights(sel, scheme = "inv_vol", cap = cap)
-
-    buy_i  <- if (t1) i + 1 else i
-    sell_i <- min(buy_i + hold, nrow(pm))
-    if (sell_i <= buy_i) next
-
-    syms <- names(ww)
-    syms <- syms[syms %in% colnames(pm)]
-    if (length(syms) < 3) next
-    ww <- ww[syms] / sum(ww[syms])
-
-    buy_px  <- pm[buy_i, syms]
-    sell_px <- pm[sell_i, syms]
-    ok <- is.finite(buy_px) & is.finite(sell_px) & buy_px > 0
-    if (!any(ok)) next
-    syms <- syms[ok]; ww <- ww[ok] / sum(ww[ok])
-    buy_px <- buy_px[ok]; sell_px <- sell_px[ok]
-
-    r <- as.numeric(sell_px / buy_px - 1)
-    names(r) <- syms
-    gross <- sum(ww * r)
-
-    # ---- 交易成本（逐檔）----
-    target_amt <- ww * capital_now
-    if (is.null(prev_w)) {
-      prev_amt <- rep(0, length(syms)); names(prev_amt) <- syms
-    } else {
-      drift <- prev_w * (1 + prev_ret)
-      drift <- drift / sum(drift)
-      prev_amt <- as.numeric(drift[syms]) * capital_now
-      prev_amt[!is.finite(prev_amt)] <- 0
-      names(prev_amt) <- syms
-    }
-
-    delta <- target_amt - prev_amt
-    buys  <- ifelse(delta > 0, delta, 0)
-    sells <- ifelse(delta < 0, -delta, 0)
-
-    fee_b  <- sum(ifelse(buys  > 0, pmax(cost$min_fee, buys  * cost$fee), 0))
-    slip_b <- sum(buys * cost$slip)
-    fee_s  <- sum(ifelse(sells > 0, pmax(cost$min_fee, sells * cost$fee), 0))
-    tax_s  <- sum(sells * cost$tax)
-    slip_s <- sum(sells * cost$slip)
-    cost_total <- fee_b + slip_b + fee_s + tax_s + slip_s
-    cost_rate <- cost_total / capital_now
-
-    net <- gross - cost_rate
-    turnover <- sum(abs(delta), na.rm = TRUE) / 2 / capital_now
-
-    bench <- NA_real_
-    if ("0050" %in% colnames(pm)) {
-      bb <- pm[buy_i, "0050"]
-      ss <- pm[sell_i, "0050"]
-      if (is.finite(bb) && is.finite(ss) && bb > 0) bench <- ss / bb - 1
-    }
-
-    # ---- 準確度：IC、命中率、Spread ----
-    acc_syms <- intersect(sc$symbol, colnames(pm))
-    fwd_all <- pm[sell_i, acc_syms] / pm[buy_i, acc_syms] - 1
-    ok2 <- is.finite(fwd_all)
-    score_vec <- sc$p10_smooth[match(acc_syms, sc$symbol)]
-    ic <- if (sum(ok2) >= 5) {
-      suppressWarnings(stats::cor(score_vec[ok2], fwd_all[ok2], method = "spearman"))
-    } else NA_real_
-
-    ord <- order(-fwd_all, na.last = TRUE)
-    top_actual <- acc_syms[utils::head(ord, n)]
-    hit <- length(intersect(syms, top_actual)) / length(syms)
-
-    bot <- acc_syms[utils::tail(order(fwd_all, na.last = TRUE), n)]
-    spread <- mean(fwd_all[syms], na.rm = TRUE) - mean(fwd_all[bot], na.rm = TRUE)
-
-    capital_now <- capital_now * (1 + net)
-    equity <- equity * (1 + net)
-    eq_bench <- eq_bench * (1 + ifelse(is.finite(bench), bench, 0))
-
-    lab <- paste0(
-      get_stock_name(syms), " ", sprintf("%.1f%%", ww * 100),
-      collapse = "、"
-    )
-
-    rec[[length(rec) + 1]] <- data.frame(
-      評分日 = d0, 成交日 = dates[buy_i], 出場日 = dates[sell_i],
-      檔數 = length(syms),
-      換手率 = turnover,
-      買進金額 = sum(buys), 賣出金額 = sum(sells),
-      手續費 = fee_b + fee_s,
-      證交稅 = tax_s,
-      滑價 = slip_b + slip_s,
-      成本合計 = cost_total,
-      成本率 = cost_rate,
-      毛報酬 = gross, 淨報酬 = net, 基準0050 = bench,
-      超額 = net - ifelse(is.finite(bench), bench, 0),
-      累積淨值 = equity, 累積0050 = eq_bench,
-      命中率 = hit, IC = ic, Spread = spread,
-      持股 = lab,
-      stringsAsFactors = FALSE
-    )
-
-    prev_w <- ww
-    prev_ret <- r
+# 計入聯集：被完全移除的舊股票也必須賣出。
+# 用反覆求解使「交易後配置資金 + 買賣費用 = 交易前淨值」。
+v48_trade_at_close <- function(prior_shares, target_w, prices, cost=V5_COST) {
+  prior_shares <- prior_shares[is.finite(prior_shares) & prior_shares >= 0]
+  target_w <- target_w[is.finite(target_w) & target_w > 0]
+  if (length(target_w)) target_w <- target_w / sum(target_w)
+  syms <- union(names(prior_shares), names(target_w))
+  if (!length(syms)) stop("沒有可交易股票。")
+  p <- as.numeric(prices[syms]); names(p) <- syms
+  if (any(!is.finite(p) | p <= 0))
+    stop(paste0("再平衡日股票價格缺漏：", paste(syms[!is.finite(p)|p<=0],collapse=",")))
+  oldval <- stats::setNames(rep(0,length(syms)),syms)
+  if (length(prior_shares)) oldval[names(prior_shares)] <- prior_shares * p[names(prior_shares)]
+  before <- sum(oldval)
+  if (!is.finite(before) || before <= 0) stop("交易前淨值為零或無效。")
+  after <- before
+  calc <- function(candidate) {
+    target <- stats::setNames(rep(0,length(syms)),syms)
+    if (length(target_w)) target[names(target_w)] <- as.numeric(target_w)*candidate
+    delta <- target-oldval
+    buy <- pmax(delta,0); sell <- pmax(-delta,0)
+    buy_fee <- ifelse(buy>1e-8,pmax(cost$min_fee,buy*cost$fee),0)
+    sell_fee <- ifelse(sell>1e-8,pmax(cost$min_fee,sell*cost$fee),0)
+    fee <- sum(buy_fee+sell_fee)
+    tax <- sum(sell)*cost$tax
+    slip <- sum(buy+sell)*cost$slip
+    list(target=target, delta=delta, buy=buy,sell=sell,fee=fee,tax=tax,
+         slip=slip,total=fee+tax+slip)
   }
+  for (j in seq_len(60L)) {
+    tr <- calc(after)
+    new_after <- before-tr$total
+    if (!is.finite(new_after) || new_after <= 0) stop("交易成本超過資金；停止回測。")
+    if (abs(after-new_after) < 1e-7) {after <- new_after;break}
+    after <- new_after
+  }
+  tr <- calc(after)
+  if (abs(before-after-tr$total)>0.02) stop("交易成本與交易後資金不守恆。")
+  shares <- tr$target/p
+  shares <- shares[shares > 1e-12]
+  list(shares=shares, after=after, before=before,
+       buy=tr$buy, sell=tr$sell,
+       fee=tr$fee, tax=tr$tax, slip=tr$slip, cost=tr$total,
+       turnover=sum(abs(tr$delta))/(2*before), price=p,
+       deltas=tr$delta)
+}
 
-  if (!length(rec)) return(NULL)
-  q <- do.call(rbind, rec)
+# 若提供完整歷史 0050 名單，CSV 欄位：symbol,effective_from,effective_to
+# effective_to 留空代表仍有效；本版本不自行編造歷史成分。
+v48_membership <- function(path="data/0050_membership_history.csv") {
+  if (!file.exists(path)) return(NULL)
+  x <- utils::read.csv(path,stringsAsFactors=FALSE,fileEncoding="UTF-8")
+  if (!all(c("symbol","effective_from","effective_to") %in% names(x)))
+    stop("歷史成分股 CSV 缺少 symbol、effective_from、effective_to 欄位。")
+  x$effective_from <- as.Date(x$effective_from)
+  x$effective_to <- as.Date(ifelse(is.na(x$effective_to)|!nzchar(x$effective_to),
+                                     "9999-12-31",x$effective_to))
+  if (anyNA(x$effective_from) || anyNA(x$effective_to) || any(x$effective_to<x$effective_from))
+    stop("歷史成分股 CSV 日期無效。")
+  x
+}
 
-  per_year <- 252 / hold
-  ann <- function(x) if (length(x)) prod(1 + x)^(per_year / length(x)) - 1 else NA_real_
-  dd <- q$累積淨值 / cummax(q$累積淨值) - 1
+v5_backtest_v4 <- function(df, hold=63, n=10, cap=0.20,
+                           max_ind=V4_SCREEN$max_industry, capital=1e6,
+                           cost=V5_COST,start_after=300,t1=TRUE,progress=NULL) {
+  # 舊 hold 參數只保留相容性。真正出場日由下一個季度 T+1 計算，避免 63 日重疊。
+  if (!isTRUE(t1)) stop("C48 正式季度回測僅支援下一交易日 T+1 換股。")
+  if (!is.finite(capital)||capital<=0 || n<2) stop("回測資金或持股數參數無效。")
+  d <- as.data.frame(df)
+  if (!all(c("date","symbol","adjusted") %in% names(d)))
+    stop("股價資料缺少 date、symbol 或 adjusted。")
+  d$date <- as.Date(d$date)
+  d$symbol <- as.character(d$symbol)
+  d$adjusted <- suppressWarnings(as.numeric(d$adjusted))
+  d <- d[!is.na(d$date)&!is.na(d$symbol)&nzchar(d$symbol),,drop=FALSE]
+  if (anyDuplicated(d[,c("date","symbol")])) stop("股票與日期有重複資料；請先整理 stock_data.rds。")
+  d <- d[order(d$date,d$symbol),,drop=FALSE]
+  bench0 <- d[d$symbol=="0050",,drop=FALSE]
+  bench0 <- bench0[is.finite(bench0$adjusted)&bench0$adjusted>0,,drop=FALSE]
+  # 若多檔股票有當日有效報價，0050 卻缺價，禁止把那天悄悄排除。
+  active <- d[d$symbol!="0050" & is.finite(d$adjusted) & d$adjusted>0,,drop=FALSE]
+  other_counts <- table(as.character(active$date))
+  market_days <- as.Date(names(other_counts)[other_counts>=n])
+  bench_missing <- setdiff(market_days,bench0$date)
+  if (length(bench_missing))
+    stop(paste0("有股票交易、0050 卻缺少有效價格的日期：",
+                paste(utils::head(bench_missing,8L),collapse=",")))
+  dates <- sort(unique(bench0$date))
+  if (length(dates)<start_after+30L) stop("0050 的有效價格不足以回測。")
+  if (anyDuplicated(bench0$date)) stop("0050 有同日重複價格。")
+  # 依確定的 0050 有效交易日建立價格矩陣（拒絕 row-index 錯位）。
+  d <- d[d$date %in% dates,,drop=FALSE]
+  if (!requireNamespace("tidyr",quietly=TRUE)) stop("缺少 tidyr 套件。")
+  pw <- as.data.frame(tidyr::pivot_wider(d[,c("date","symbol","adjusted"),drop=FALSE],
+                       names_from=symbol,values_from=adjusted))
+  pw <- pw[order(as.Date(pw$date)),,drop=FALSE]
+  pm <- as.matrix(pw[,-1,drop=FALSE]);storage.mode(pm)<-"double"
+  rownames(pm) <- as.character(as.Date(pw$date))
+  if (!identical(as.Date(rownames(pm)),dates)) stop("股票與 0050 交易日無法正確對齊。")
+  if (!"0050"%in%colnames(pm) || any(!is.finite(pm[,"0050"]) | pm[,"0050"]<=0))
+    stop("0050 交易日價格缺漏；不以零報酬替代。")
+  membership <- v48_membership()
+  universe_type <- if (is.null(membership)) "當前股票池歷史代理（存在成分股事後偏誤風險）" else
+    "依 CSV 有效日期過濾的歷史成分股池（完整性須人工核對）"
+  qend <- v5_quarter_ends(dates)
+  # 最新日期所屬季度還沒結束，不能當成已完成季度。
+  if (length(qend)>0) qend <- head(qend,-1L)
+  qend <- qend[qend>=start_after & qend<length(dates)]
+  if (length(qend)<2L) return(NULL)
 
-  stats <- list(
-    n = nrow(q),
-    cum = utils::tail(q$累積淨值, 1) - 1,
-    ann = ann(q$淨報酬),
-    vol = stats::sd(q$淨報酬) * sqrt(per_year),
-    sharpe = if (stats::sd(q$淨報酬) > 0) ann(q$淨報酬) / (stats::sd(q$淨報酬) * sqrt(per_year)) else NA_real_,
-    mdd = min(dd, na.rm = TRUE),
-    bench_cum = utils::tail(q$累積0050, 1) - 1,
-    bench_ann = ann(q$基準0050),
-    win = mean(q$淨報酬 > q$基準0050, na.rm = TRUE),
-    avg_turnover = mean(q$換手率, na.rm = TRUE),
-    total_cost = sum(q$成本合計, na.rm = TRUE),
-    hit = mean(q$命中率, na.rm = TRUE),
-    ic = mean(q$IC, na.rm = TRUE),
-    spread = mean(q$Spread, na.rm = TRUE)
-  )
+  plan <- list(); initial_skips <- 0L
+  for (k in seq_along(qend)) {
+    i <- qend[k];rated <- dates[i]
+    if (!is.null(progress)) progress(k,length(qend))
+    available <- d[d$date<=rated & d$symbol!="0050",,drop=FALSE]
+    if (!is.null(membership)) {
+      sy <- unique(membership$symbol[membership$effective_from<=rated &
+                                     membership$effective_to>=rated])
+      available <- available[available$symbol %in% sy,,drop=FALSE]
+    }
+    sc <- v4_score_table(available,end_date=rated)
+    chosen <- if (is.null(sc)) NULL else v4_pick(sc,n,max_industry=max_ind)
+    valid <- !is.null(chosen) && nrow(chosen)==n
+    if (!valid) {
+      if (!length(plan)) {initial_skips <- initial_skips+1L;next}
+      # 最後一個評分日只是用來做最後一筆平倉，不需要下一期的新持股。
+      if (k==length(qend)) {
+        # 最後一期只充當出場邊界；沒有下一季選股也能平倉。
+        plan[[length(plan)+1L]] <- list(rate_idx=i,rate_date=rated,
+          buy_idx=i+1L,buy_date=dates[i+1L],weights=numeric(0),
+          score=NULL,chosen=NULL)
+        break
+      }
+      stop(paste0("評分日 ",rated," 僅能選出 ",if(is.null(chosen))0 else nrow(chosen),
+                  " 檔，少於要求的 ",n," 檔。回測不得默默略過季度。"))
+    }
+    ww <- v4_weights(chosen,scheme="inv_vol",cap=cap)
+    if (length(ww)!=n || any(!is.finite(ww)) || any(ww<0) || sum(ww)<=0)
+      stop(paste0("評分日 ",rated," 權重計算失敗。"))
+    entry_idx <- i+1L
+    syms <- names(ww)
+    pv <- as.numeric(pm[entry_idx,syms]);names(pv)<-syms
+    if (any(!is.finite(pv)|pv<=0)) {
+      if (!length(plan)) {initial_skips<-initial_skips+1L;next}
+      stop(paste0("評分日 ",rated," 選出股票於下一交易日無成交代理價，不能事後替換。"))
+    }
+    plan[[length(plan)+1L]] <- list(rate_idx=i,rate_date=rated,
+       buy_idx=entry_idx,buy_date=dates[entry_idx], weights=ww,
+       score=sc,chosen=chosen)
+  }
+  if (!length(plan)) return(NULL)
+  # 檢查最後一個已完成季度的下一交易日，作為最後平倉邊界。
+  last_q <- tail(qend,1)
+  end_idx <- last_q+1L
+  if (end_idx<=plan[[length(plan)]]$buy_idx) return(NULL)
+  if (length(plan)<2L) return(NULL)
+  # 最後一個計畫是時間邊界：不使用該期持股，避免結尾多買一次。
+  # 真實回測區間為 plan[[1]] 至最後一個評分日之 T+1。
+  last_boundary <- plan[[length(plan)]]$buy_idx
+  trade_points <- vapply(plan,function(x)x$buy_idx,integer(1))
+  if (any(diff(trade_points)<=0)) stop("再平衡交易日期重複或逆序。")
 
-  list(quarters = q, stats = stats)
+  first <- plan[[1L]]
+  px0 <- as.numeric(pm[first$buy_idx,names(first$weights)]);
+  names(px0) <- names(first$weights)
+  # 為了沿用同一筆成交及成本算法，初始使用現金直接計算買入費。
+  # 現金交易前淨值 capital 不由舊持倉組成，使用以下專用求解。
+  v48_cash_buy <- function(target_w,prices,cash) {
+    target_w <- target_w/sum(target_w)
+    post <- cash
+    for (ii in 1:50) {
+      amts <- target_w*post
+      fee <- sum(pmax(cost$min_fee,amts*cost$fee))
+      slip <- sum(amts)*cost$slip
+      new_post <- cash-fee-slip
+      if (new_post<=0) stop("初次買入手續費超過資金。")
+      if (abs(new_post-post)<1e-7){post<-new_post;break}
+      post<-new_post
+    }
+    amts <- target_w*post
+    fees <- sum(pmax(cost$min_fee,amts*cost$fee)); slips <- sum(amts)*cost$slip
+    if (abs(cash-post-fees-slips)>0.02) stop("首次買入成本不守恆。")
+    list(shares=amts/prices,after=post, before=cash,
+         buy=amts,sell=stats::setNames(rep(0,length(amts)),names(amts)),
+         fee=fees,tax=0,slip=slips,cost=fees+slips,turnover=sum(amts)/(2*cash))
+  }
+  entering <- v48_cash_buy(first$weights,px0,capital)
+  held <- entering$shares
+  start_fee <- entering
+  base_equity <- capital
+  equity_after_buy <- entering$after
+  bench_start <- pm[first$buy_idx,"0050"]
+  daily <- list(data.frame(date=dates[first$buy_idx],
+    equity10=equity_after_buy/capital,equity50=1,stringsAsFactors=FALSE))
+  rec <- list(); trade_log <- list()
+  add_trade <- function(tx,date,price_map) {
+    vals <- c(tx$buy,tx$sell)
+    if (is.null(names(tx$buy))) return(NULL)
+    ss <- union(names(tx$buy),names(tx$sell))
+    if (!length(ss))return(NULL)
+    out <- lapply(ss,function(sym) {
+      b <- if (sym%in%names(tx$buy)) as.numeric(tx$buy[sym]) else 0
+      sl <- if (sym%in%names(tx$sell)) as.numeric(tx$sell[sym]) else 0
+      if (b+sl<=1e-8)return(NULL)
+      data.frame(date=as.Date(date),symbol=sym,buy=b,sell=sl,
+                 proxy_adjusted_price=as.numeric(price_map[sym]),stringsAsFactors=FALSE)
+    })
+    do.call(rbind,out)
+  }
+  trade_log[[1]] <- add_trade(entering,dates[first$buy_idx],px0)
+  completed <- length(plan)-1L
+  for (j in seq_len(completed)) {
+    cur <- plan[[j]]
+    nxt <- plan[[j+1L]]
+    start_i <- cur$buy_idx;end_i <- nxt$buy_idx
+    if (end_i<=start_i) stop("持有期間重疊或無交易日。")
+    old_equity_after_buy <- equity_after_buy
+    old_shares <- held
+    holding_symbols <- names(old_shares)
+    if (!length(holding_symbols)) stop("持股清單為空。")
+    if (end_i-start_i > 1L) for (ii in seq.int(start_i+1L,end_i-1L)) {
+      px <- as.numeric(pm[ii,holding_symbols]);names(px)<-holding_symbols
+      if (any(!is.finite(px)|px<=0))
+        stop(paste0("持有期 ",dates[ii]," 有缺少價格的股票：",
+                    paste(holding_symbols[!is.finite(px)|px<=0],collapse=","),
+                    "。禁止用事後刪股方式改善回測。"))
+      ev <- sum(old_shares*px)
+      daily[[length(daily)+1L]] <- data.frame(date=dates[ii],
+         equity10=ev/capital,equity50=pm[ii,"0050"]/bench_start)
+    }
+    pxend <- as.numeric(pm[end_i,holding_symbols]);names(pxend)<-holding_symbols
+    if (any(!is.finite(pxend)|pxend<=0))
+      stop(paste0("季度交接日 ",dates[end_i]," 舊持股價格缺失，停止回測。"))
+    before_rebalance <- sum(old_shares*pxend)
+    # 最後一季在最後邊界全部出清；不再買入未回測的下一季股票。
+    target <- if (j==completed) numeric(0) else nxt$weights
+    allsyms <- union(holding_symbols,names(target))
+    trade_px <- as.numeric(pm[end_i,allsyms]);names(trade_px)<-allsyms
+    trans <- v48_trade_at_close(old_shares,target,trade_px,cost)
+    trade_log[[length(trade_log)+1L]] <- add_trade(trans,dates[end_i],trade_px)
+    held <- trans$shares
+    equity_after_buy <- trans$after
+    daily[[length(daily)+1L]] <- data.frame(date=dates[end_i],
+       equity10=equity_after_buy/capital,equity50=pm[end_i,"0050"]/bench_start)
+    starting_equity <- if (j==1L) capital else old_equity_after_buy
+    net <- equity_after_buy/starting_equity-1
+    gross <- before_rebalance/old_equity_after_buy-1
+    bench <- pm[end_i,"0050"]/pm[start_i,"0050"]-1
+    if (!is.finite(net)||net<=-1 || !is.finite(bench) || bench<=-1) stop("無效報酬或淨值。")
+    # 季度邊界以「換股後淨值」衡量：完整成本歸屬每個季末的換股事件。
+    cost_period <- trans$cost + if(j==1L) start_fee$cost else 0
+    fee_period <- trans$fee + if(j==1L) start_fee$fee else 0
+    tax_period <- trans$tax
+    slip_period <- trans$slip + if(j==1L) start_fee$slip else 0
+    buy_period <- sum(trans$buy) + if(j==1L)sum(start_fee$buy) else 0
+    sell_period <- sum(trans$sell)
+    turnover_period <- trans$turnover + if(j==1L)start_fee$turnover else 0
+    score <- cur$score
+    universe_score <- score[score$symbol%in%colnames(pm),,drop=FALSE]
+    ss <- universe_score$symbol
+    fwd <- as.numeric(pm[end_i,ss]/pm[start_i,ss]-1)
+    valid_fwd <- is.finite(fwd)
+    ic <- if(sum(valid_fwd)>=5L) suppressWarnings(stats::cor(universe_score$p10_smooth[valid_fwd],
+                             fwd[valid_fwd],method="spearman")) else NA_real_
+    future_rank <- ss[order(-fwd,na.last=TRUE)]
+    top_actual <- utils::head(future_rank,n)
+    bottom_actual <- utils::tail(future_rank,n)
+    hit <- length(intersect(names(cur$weights),top_actual))/n
+    spread <- if(all(names(cur$weights)%in%ss))
+      mean(fwd[match(names(cur$weights),ss)],na.rm=TRUE)-mean(fwd[match(bottom_actual,ss)],na.rm=TRUE) else NA_real_
+    held_label <- paste0(if(exists("get_stock_name",mode="function"))get_stock_name(names(cur$weights)) else
+                          names(cur$weights)," ",sprintf("%.1f%%",cur$weights*100),collapse="、")
+    rec[[length(rec)+1L]] <- data.frame(
+      評分日=as.Date(cur$rate_date),成交日=as.Date(dates[start_i]),出場日=as.Date(dates[end_i]),
+      檔數=length(cur$weights),換手率=turnover_period,買進金額=buy_period,賣出金額=sell_period,
+      手續費=fee_period,證交稅=tax_period,滑價=slip_period,
+      成本合計=cost_period,成本率=cost_period/starting_equity,
+      毛報酬=gross,淨報酬=net,基準0050=bench,超額=net-bench,
+      累積淨值=equity_after_buy/capital,累積0050=pm[end_i,"0050"]/bench_start,
+      命中率=hit,IC=ic,Spread=spread,持股=held_label,
+      stringsAsFactors=FALSE)
+  }
+  q <- do.call(rbind,rec)
+  day <- do.call(rbind,daily)
+  if (anyDuplicated(day$date) || any(diff(day$date)<=0)) stop("每日淨值時間軸重複或逆序。")
+  if (any(!is.finite(day$equity10)|!is.finite(day$equity50)|day$equity10<=0|day$equity50<=0))
+    stop("每日淨值異常。")
+  # 強制驗證季度績效能還原每日淨值；誤差超過 1e-8 即停止。
+  eq_recompute <- cumprod(1+q$淨報酬)
+  if (max(abs(eq_recompute-q$累積淨值))>1e-8 ||
+      max(abs(cumprod(1+q$基準0050)-q$累積0050))>1e-8)
+    stop("季度報酬和累積淨值不一致。")
+  if (max(abs(day$equity10[match(q$出場日,day$date)]-q$累積淨值))>1e-8)
+    stop("季度曲線終點與每日淨值不一致。")
+  if (any(!is.finite(q$成本合計)) || any(q$成本合計<0))
+    stop("交易成本欄位不合理。")
+  day$log_return10 <- c(log(day$equity10[1]),diff(log(day$equity10)))
+  day$log_return50 <- c(0,diff(log(day$equity50)))
+  lr10 <- day$log_return10
+  lr50 <- day$log_return50
+  annual <- function(x) exp(mean(x)*252)-1
+  dd10 <- c(1,day$equity10);dd50 <- c(1,day$equity50)
+  stats <- list(n=nrow(q),cum=tail(day$equity10,1)-1,ann=annual(lr10),
+      vol=stats::sd(lr10)*sqrt(252),
+      sharpe=if(stats::sd(lr10)>0) mean(lr10)*252/(stats::sd(lr10)*sqrt(252)) else NA_real_,
+      mdd=min(dd10/cummax(dd10)-1),bench_cum=tail(day$equity50,1)-1,
+      bench_ann=annual(lr50), win=mean(q$淨報酬>q$基準0050),
+      avg_turnover=mean(q$換手率),total_cost=sum(q$成本合計),
+      hit=mean(q$命中率,na.rm=TRUE),ic=mean(q$IC,na.rm=TRUE),
+      spread=mean(q$Spread,na.rm=TRUE),
+      universe_type=universe_type,initial_skipped_quarters=initial_skips,
+      daily_mdd=min(dd10/cummax(dd10)-1),bench_daily_mdd=min(dd50/cummax(dd50)-1))
+  list(quarters=q,daily=day,stats=stats,
+       trades=do.call(rbind,trade_log),version="C48 research proxy",
+       warnings=c(if(is.null(membership)) "沒有歷史成分股名單：結果仍可能有存活者偏誤。" else
+                              "歷史成分股名單須人工核對完整性。",
+                 "以調整後收盤價代理成交價；持倉允許小數股、不含流動性衝擊。",
+                 "季度報酬以換股後淨值為邊界，當期出場日的換股交易費用計入該期。"))
 }

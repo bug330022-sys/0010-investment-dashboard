@@ -2835,6 +2835,7 @@ ui <- fluidPage(
     tags$link(rel = "stylesheet", type = "text/css", href = "c45_official_history.css"),
     # C47: whole-width expanded daily graphs and quarter-based controls.
     tags$link(rel = "stylesheet", type = "text/css", href = "c47_quarter_wide_charts.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "c48_home_original.css"),
     tags$script(src = "c41_theme_switch.js"),
     # When a collapsed Shiny chart is opened, ask Shiny to recalculate its plot width.
     tags$script(HTML("(function(){ function refresh(){ window.dispatchEvent(new Event('resize')); } document.addEventListener('toggle', function(e){ if (e.target && e.target.matches('details.c44-chart-details') && e.target.open) { setTimeout(refresh,70); setTimeout(refresh,280); } }, true); if (window.jQuery) { window.jQuery(document).on('shown.bs.tab', function(){setTimeout(refresh,100);}); } })();"))
@@ -2876,62 +2877,60 @@ tabPanel(
                   p(class = "page-description", "自訂十檔組合與元大台灣50｜績效與風險對照")),
               div(class = "home-date", "資料更新至：", textOutput("v7_home_date", inline = TRUE))),
           div(class = "home-window", "績效統計基準期間：", textOutput("v7_home_period", inline = TRUE)),
-          uiOutput("c45_status"),
           # C44: 0010 and 0050 are the compared subjects. VS is a small separator,
           # while the original five difference metrics remain in a secondary strip.
           div(class = "home-compare-grid c44-compare-wrap",
               div(class = "c44-compare-pair",
                   div(class = "home-side home-side-0010",
                       h2("0010"), p("自訂十檔投資組合", class = "home-side-subtitle"),
-                      div(class = "home-stat", span("季度策略累積淨報酬"), strong(uiOutput("v7_10_ret", inline = TRUE))),
+                      div(class = "home-stat", span("策略累積淨報酬"), strong(uiOutput("v7_10_ret", inline = TRUE))),
                       div(class = "home-stat", span("年化報酬"), strong(uiOutput("v7_10_ann", inline = TRUE))),
-                      div(class = "home-stat", span("季末最大回撤"), strong(uiOutput("v7_10_mdd", inline = TRUE))),
-                      div(class = "home-stat", span("季度報酬年化波動"), strong(uiOutput("v7_10_vol", inline = TRUE))),
-                      div(class = "home-stat", span("季度估計 Sharpe"), strong(uiOutput("v7_10_sharpe", inline = TRUE)))),
+                      div(class = "home-stat", span("每日最大回撤"), strong(uiOutput("v7_10_mdd", inline = TRUE))),
+                      div(class = "home-stat", span("年化波動"), strong(uiOutput("v7_10_vol", inline = TRUE))),
+                      div(class = "home-stat", span("Sharpe 比率"), strong(uiOutput("v7_10_sharpe", inline = TRUE)))),
                   div(class = "c44-vs-marker", span("VS")),
                   div(class = "home-side home-side-0050",
                       h2("0050"), p("元大台灣50 ETF", class = "home-side-subtitle"),
                       div(class = "home-stat", span("0050 同期累積報酬"), strong(uiOutput("v7_50_ret", inline = TRUE))),
                       div(class = "home-stat", span("年化報酬"), strong(uiOutput("v7_50_ann", inline = TRUE))),
-                      div(class = "home-stat", span("季末最大回撤"), strong(uiOutput("v7_50_mdd", inline = TRUE))),
-                      div(class = "home-stat", span("季度報酬年化波動"), strong(uiOutput("v7_50_vol", inline = TRUE))),
-                      div(class = "home-stat", span("季度估計 Sharpe"), strong(uiOutput("v7_50_sharpe", inline = TRUE))))
+                      div(class = "home-stat", span("每日最大回撤"), strong(uiOutput("v7_50_mdd", inline = TRUE))),
+                      div(class = "home-stat", span("年化波動"), strong(uiOutput("v7_50_vol", inline = TRUE))),
+                      div(class = "home-stat", span("Sharpe 比率"), strong(uiOutput("v7_50_sharpe", inline = TRUE))))
               ),
               div(class = "c44-diff-panel",
                   div(class = "c44-diff-title", strong("比較差額"), span("0010 − 0050｜差額與比率差")),
                   div(class = "c44-diff-metrics",
                       div(class = "home-stat", span("超額報酬"), strong(uiOutput("v7_diff_ret", inline = TRUE))),
                       div(class = "home-stat", span("年化報酬差"), strong(uiOutput("v7_diff_ann", inline = TRUE))),
-                      div(class = "home-stat", span("季末回撤差"), strong(uiOutput("v7_diff_mdd", inline = TRUE))),
-                      div(class = "home-stat", span("季度波動差"), strong(uiOutput("v7_diff_vol", inline = TRUE))),
+                      div(class = "home-stat", span("回撤差"), strong(uiOutput("v7_diff_mdd", inline = TRUE))),
+                      div(class = "home-stat", span("波動差"), strong(uiOutput("v7_diff_vol", inline = TRUE))),
                       div(class = "home-stat", span("Sharpe 差"), strong(uiOutput("v7_diff_sharpe", inline = TRUE))))
               )
           ),
-          p(class = "home-small-note", "0010 累積績效沿用既有季度回測（尚待 C46 所列交易成本／歷史成分股偏誤驗證）；0050 使用同季度比較。這是研究測試版，不代表已完成策略稽核。差額以百分點（pp）表示，季末最大回撤不等於日內最大回撤。"),
-          div(class = "home-qualifier",
-              "C45 正式歷史口徑：使用「模型驗證 → 季度策略回測」同一次回測的已完成季度結果；",
-              "調整總覽日期僅篩選季度，不重新選股、估計權重或交易成本。季度績效圖只顯示已完成的季末點，沒有虛構每日淨值。")
+          p(class = "home-small-note", "0010 為季末評分、下一交易日換股的連續每日淨值；0050 為相同日期的調整後價格。報酬差以百分點（pp）表示。"),
+          div(class = "home-qualifier", "歷史策略回測：含買賣手續費、稅與滑價；如未提供歷史 0050 成分名單，仍屬當前成分股池的歷史代理研究，可能有存活者偏誤。")
       ),
       # C43: two independent home columns; no more cross-row height reservations.
       div(class = "c43-home-grid",
         div(class = "c43-home-main",
       div(class = "section-box",
           h2("0010 與 0050 累積報酬走勢"),
-          p(class = "page-description", "先執行「模型驗證 → 季度策略回測」。改選季度只會篩選已完成季度報酬，不重新選股；下方直接列出實際成交與出場日期。本圖使用季末淨值點，不是每日策略淨值。"),
-          radioButtons("c45_view_mode", "累積績效顯示基準", choices = c("區間重新基準化（所選完整季度從 0%）" = "window", "固定歷史基期（全回測同一個 0%）" = "fixed"), selected = "fixed", inline = TRUE),
-          selectInput("c47_curve_quarter", "累積報酬｜選擇要觀察的季度：",
-                      choices=c("先執行季度回測"="waiting"), selected="waiting", width="100%"),
+          p(class = "page-description", "同一條歷史策略淨值依所選期間顯示；0010 每季按當時評分換股，日期切換不重新選股。中途選取的區間以首日為 0%；若涵蓋回測第一天，會包含建倉交易成本。"),
+          dateRangeInput("v9_curve_range", "累積報酬圖｜選擇起訖日期：",
+                         start=max(data_min_date, data_max_date-365), end=data_max_date,
+                         min=data_min_date, max=data_max_date, format="yyyy-mm-dd", separator=" 至 ", language="zh-TW"),
           textOutput("v9_curve_actual_range"),
           div(class = "c44-chart-frame c44-curve-frame", plotOutput("v7_home_curve", height = "420px"))),
-      tags$details(class = "method-details v25-home-expand c44-chart-details", tags$summary("展開每日對數報酬比較｜按季度檢視（0010 為探索性試算）"),
+      tags$details(class = "method-details v25-home-expand c44-chart-details", tags$summary("展開每日報酬波動對照"),
 div(class = "section-box",
           h2("日對數報酬率｜0010 與 0050"),
-          p(class = "page-description c47-daily-warning", "研究口徑提示：0050 為該季實際價格的日對數報酬；0010 目前仍是【現行十檔與現行權重】放回該季的探索性試算，不代表當季歷史選股策略。現階段不得把兩圖當成正式策略日報酬或用來驗證回測模型。"),
-          selectInput("c47_daily_quarter", "日對數報酬｜選擇完整季度：",
-                      choices=c("先執行季度回測"="waiting"), selected="waiting", width="100%"),
+          p(class = "page-description", "0010 與 0050 都使用同一組歷史交易日與同一縱軸尺度，並獨立於累積報酬圖選擇日期。0010 已扣除季度換股成本。"),
+          dateRangeInput("v9_daily_range", "日對數報酬圖｜選擇起訖日期：",
+                         start=max(data_min_date, data_max_date-126), end=data_max_date,
+                         min=data_min_date, max=data_max_date, format="yyyy-mm-dd", separator=" 至 ", language="zh-TW"),
           textOutput("v9_daily_actual_range"),
           fluidRow(class = "c47-daily-plot-row",
-            column(6, h3("0010｜日對數報酬率（探索性）"), div(class = "c44-chart-frame c47-daily-plot", plotOutput("v8_p10_daily_log", height = "360px"))),
+            column(6, h3("0010｜日對數報酬率"), div(class = "c44-chart-frame c47-daily-plot", plotOutput("v8_p10_daily_log", height = "360px"))),
             column(6, h3("0050｜日對數報酬率"), div(class = "c44-chart-frame c47-daily-plot", plotOutput("v8_0050_daily_log", height = "360px")))
           )))
         ),
@@ -5004,205 +5003,77 @@ server <- function(input, output, session) {
   output$v7_home_date_second <- shiny::renderText(as.character(latest_date()))
 
 # ============================================================
-# C45 | 單一歷史季度回測來源，禁止依總覽日期重新選股
+# C48 | 總覽從單一回測每日淨值顯示；日期選單只改顯示。
+# 保留 C44 的原版位置、五個績效指標與 C47 全寬日圖。
 # ============================================================
-# 資料源：v5_server.R 裡的 eventReactive v5_bt()。
-# 本檔未重新執行任何選股、權重、交易成本公式。
-# 沒有完整每日持股淨值時，只顯示可驗證的「季末」點。
-c45_checked_history <- shiny::reactive({
-  no_data <- function(msg) list(data = NULL, error = msg)
-  if (is.null(input$v5_run_bt) || input$v5_run_bt < 1L) {
-    return(no_data("尚未執行季度策略回測。請先至「模型驗證 → 季度策略回測」按下執行按鈕。"))
-  }
-  z <- tryCatch(v5_bt(), error = function(e) NULL)
-  if (is.null(z) || !is.data.frame(z$quarters) || !nrow(z$quarters)) {
-    return(no_data("季度回測尚無有效資料，請查看模型驗證頁的結果或部署紀錄。"))
-  }
-  q <- z$quarters
-  required <- c("評分日", "成交日", "出場日", "淨報酬", "基準0050")
-  missing <- setdiff(required, colnames(q))
-  if (length(missing)) {
-    return(no_data(paste0("缺少季度回測必要欄位：", paste(missing, collapse = "、"), "。為避免誤報，本頁不自行猜測資料格式。")))
-  }
-  rated <- suppressWarnings(as.Date(q[["評分日"]]))
-  entry <- suppressWarnings(as.Date(q[["成交日"]]))
-  exit <- suppressWarnings(as.Date(q[["出場日"]]))
-  r10 <- suppressWarnings(as.numeric(as.character(q[["淨報酬"]])))
-  r50 <- suppressWarnings(as.numeric(as.character(q[["基準0050"]])))
-  if (anyNA(rated) || anyNA(entry) || anyNA(exit) ||
-      any(!is.finite(r10)) || any(!is.finite(r50)) ||
-      any(r10 <= -1) || any(r50 <= -1) || any(rated > entry) || any(entry > exit)) {
-    return(no_data("季度資料有遺漏、無效報酬或日期不合理；已停止繪圖，避免出現假的績效。"))
-  }
-  order_idx <- order(exit, rated)
-  q <- q[order_idx, , drop = FALSE]
-  rated <- rated[order_idx]
-  entry <- entry[order_idx]
-  exit <- exit[order_idx]
-  r10 <- r10[order_idx]
-  r50 <- r50[order_idx]
-  if (anyDuplicated(exit) || (length(exit) > 1 && any(entry[-1] < exit[-length(exit)]))) {
-    return(no_data("季度回測出場日期重複或持有區間重疊；無法將季度報酬安全串接，請檢查 v5 回測。"))
-  }
-  res <- data.frame(
-    rate_date = rated, entry_date = entry, exit_date = exit,
-    r10 = r10, r50 = r50,
-    equity10 = cumprod(1 + r10),
-    equity50 = cumprod(1 + r50),
-    stringsAsFactors = FALSE
-  )
-  list(data = res, error = NULL)
+v48_history <- shiny::reactive({
+  z <- v5_bt()
+  if (is.null(z) || !is.null(z$error) || !is.data.frame(z$daily) || nrow(z$daily)<3L)
+    return(NULL)
+  z
 })
-
-# C47: 依「實際進場～出場」建立季度選單。兩種圖都只讀同一次回測的日期。
-shiny::observeEvent(c45_checked_history(), {
-  h <- c45_checked_history()
-  if (is.null(h$data) || !nrow(h$data)) return()
-  q <- h$data
-  q_name <- paste0(format(q$entry_date, "%Y"), " Q",
-    (as.integer(format(q$entry_date, "%m"))-1L) %/% 3L + 1L,
-    "｜", q$entry_date, " ～ ", q$exit_date)
-  keys <- format(q$rate_date, "%Y-%m-%d")
-  individual <- stats::setNames(keys, q_name)
-  current_curve <- shiny::isolate(input$c47_curve_quarter)
-  current_daily <- shiny::isolate(input$c47_daily_quarter)
-  shiny::updateSelectInput(session, "c47_curve_quarter",
-    choices=c("全部已完成季度"="all", individual),
-    selected=if (current_curve %in% c("all",keys)) current_curve else "all")
-  shiny::updateSelectInput(session, "c47_daily_quarter", choices=individual,
-    selected=if (current_daily %in% keys) current_daily else utils::tail(keys, 1L))
-}, ignoreInit=FALSE)
-
-c45_selected_quarters <- shiny::reactive({
-  h <- c45_checked_history()
-  if (is.null(h$data)) return(NULL)
-  key <- input$c47_curve_quarter
-  if (is.null(key) || key == "waiting") return(NULL)
-  q <- h$data
-  if (identical(key, "all")) return(q)
-  q[format(q$rate_date, "%Y-%m-%d") == key, , drop=FALSE]
+v48_error <- shiny::reactive({
+  z <- v5_bt()
+  if (is.null(z)) {
+    msg <- v5_bt_error()
+    return(if (is.null(msg)) "可用歷史季度資料不足，尚未建立淨值。" else msg)
+  }
+  if (!is.null(z$error)) return(as.character(z$error))
+  if (is.null(z$daily)) return("完整季度數不足或缺少歷史價格；不會改用當期持股資料代替。")
+  NULL
 })
-
-c47_daily_quarter_info <- shiny::reactive({
-  h <- c45_checked_history()
-  shiny::req(!is.null(h$data), nrow(h$data)>0L)
-  key <- input$c47_daily_quarter
-  shiny::req(length(key)==1L, key != "waiting")
-  q <- h$data[format(h$data$rate_date,"%Y-%m-%d") == key, , drop=FALSE]
-  shiny::validate(shiny::need(nrow(q)==1L,"尚未選擇完整季度，請先執行回測。"))
-  q
-})
-
-c45_metrics <- function(x, continuous = TRUE) {
-  empty <- c(ret = NA_real_, ann = NA_real_, mdd = NA_real_, vol = NA_real_, sharpe = NA_real_)
-  if (!length(x) || any(!is.finite(x)) || any(x <= -1)) return(empty)
-  n <- length(x)
-  path <- cumprod(c(1, 1 + x))
-  ret <- tail(path, 1) - 1
-  # 季度樣本不足 4 季時，不報不穩定的年化/波動/Sharpe。
-  ann <- if (n >= 4 && continuous) tail(path, 1)^(4 / n) - 1 else NA_real_
-  quarter_logs <- log1p(x)
-  vol <- if (n >= 4 && continuous && stats::sd(quarter_logs) > 0) stats::sd(quarter_logs) * sqrt(4) else NA_real_
-  sharpe <- if (is.finite(vol) && vol > 0) 4 * mean(quarter_logs) / vol else NA_real_
-  dd <- min(path / cummax(path) - 1)
-  c(ret = ret, ann = ann, mdd = dd, vol = vol, sharpe = sharpe)
+# 一份歷史淨值，一份日期視窗：選不同起點不會觸發重新選股。
+v48_slice <- function(range) {
+  z <- v48_history()
+  if (is.null(z)) return(NULL)
+  d <- z$daily
+  if (is.null(range)||length(range)!=2L) return(NULL)
+  take <- d$date >= as.Date(range[1]) & d$date <= as.Date(range[2])
+  d <- d[take,,drop=FALSE]
+  if (nrow(d)<3L) return(NULL)
+  # 完整歷史區間含首日建倉成本；中途選日期只做視覺重新基準化。
+  include_start <- identical(as.Date(d$date[1]),as.Date(z$daily$date[1]))
+  base10 <- if (include_start) 1 else d$equity10[1]
+  base50 <- if (include_start) 1 else d$equity50[1]
+  data.frame(date=d$date,
+             p10=d$equity10/base10,
+             etf=d$equity50/base50,
+             fixed10=d$equity10,fixed50=d$equity50)
 }
-
-# 仍保留舊 output ID，以免 C44 的卡片與其它地方斷線。
-# 所有績效卡片和圖形都遵守使用者選的同一個顯示基準。
-# fixed: 由第一季連續累積到所選最後一季；window: 只計所選完整季度。
-c45_stat_quarters <- shiny::reactive({
-  q <- c45_selected_quarters()
-  h <- c45_checked_history()$data
-  if (is.null(q) || !nrow(q) || is.null(h)) return(NULL)
-  if (identical(input$c45_view_mode, "fixed")) {
-    h[h$exit_date <= tail(q$exit_date, 1), , drop = FALSE]
-  } else {
-    q
-  }
-})
-
-c45_continuous <- function(q) {
-  if (is.null(q) || nrow(q) < 2) return(TRUE)
-  year <- as.integer(format(q$rate_date, "%Y"))
-  quarter <- (as.integer(format(q$rate_date, "%m")) - 1L) %/% 3L
-  all(diff(year * 4L + quarter) == 1L)
-}
-
-v7_home_pair <- shiny::reactive({
-  q <- c45_stat_quarters()
-  if (is.null(q) || !nrow(q)) return(NULL)
-  data.frame(date = c(q$entry_date[1], q$exit_date),
-             p10 = cumprod(c(1, 1 + q$r10)),
-             etf = cumprod(c(1, 1 + q$r50)))
-})
+v9_curve_pair <- shiny::reactive({v48_slice(input$v9_curve_range)})
+v9_daily_pair <- shiny::reactive({v48_slice(input$v9_daily_range)})
+v7_home_pair <- shiny::reactive({v9_curve_pair()})
 output$v7_home_period <- shiny::renderText({
-  q <- c45_stat_quarters()
-  if (is.null(q) || !nrow(q)) return("尚無已完成季度")
-  prefix <- if (identical(input$c45_view_mode, "fixed")) "固定基期" else "選定區間"
-  paste0(prefix, "｜", q$entry_date[1], " ～ ", tail(q$exit_date, 1),
-         "（", nrow(q), " 季）")
+  z <- v9_curve_pair()
+  if (is.null(z)) return(paste0("歷史績效暫不可用｜",v48_error()))
+  paste0(min(z$date)," ～ ",max(z$date),"（",nrow(z)," 個交易日）")
 })
 output$v7_home_period_second <- shiny::renderText({
-  q <- c45_stat_quarters()
-  if (is.null(q) || !nrow(q)) return("尚無已完成季度")
-  paste0(q$entry_date[1], " ～ ", tail(q$exit_date, 1))
+  z <- v9_curve_pair()
+  if (is.null(z)) return("尚無完整的歷史策略淨值")
+  paste0(min(z$date)," ～ ",max(z$date))
 })
-
+# 日淨值才計每日回撤／波動度；起點為所選期間的同一共同有效日。
+v48_metrics <- function(value) {
+  empty <- c(ret=NA_real_,ann=NA_real_,mdd=NA_real_,vol=NA_real_,sharpe=NA_real_)
+  if(length(value)<3L||any(!is.finite(value)|value<=0))return(empty)
+  v <- value # v48_slice 已經統一顯示基準；不可再次除掉首季建倉成本
+  lr <- diff(log(v))
+  if(abs(v[1]-1)>1e-10) lr <- c(log(v[1]),lr)
+  n <- length(lr)
+  ret <- tail(v,1)-1
+  path <- c(1,v)
+  mdd <- min(path/cummax(path)-1)
+  ann <- if(n>=20)exp(mean(lr)*252)-1 else NA_real_
+  vol <- if(n>=20)stats::sd(lr)*sqrt(252) else NA_real_
+  sharpe <- if(is.finite(vol)&&vol>0)mean(lr)*252/vol else NA_real_
+  c(ret=ret,ann=ann,mdd=mdd,vol=vol,sharpe=sharpe)
+}
 v7_home_stats <- shiny::reactive({
-  q <- c45_stat_quarters()
-  if (is.null(q) || !nrow(q)) {
-    na <- c45_metrics(numeric(0))
-    return(list(p10 = na, etf = na))
-  }
-  continuous <- c45_continuous(q)
-  list(p10 = c45_metrics(q$r10, continuous), etf = c45_metrics(q$r50, continuous))
+  z<-v9_curve_pair()
+  if(is.null(z))return(list(p10=v48_metrics(numeric()),etf=v48_metrics(numeric())))
+  list(p10=v48_metrics(z$p10),etf=v48_metrics(z$etf))
 })
-
-shiny::observeEvent(input$c45_go_backtest, {
-  shiny::updateTabsetPanel(session, "main_tabs", selected = "模型驗證")
-  shiny::updateTabsetPanel(session, "v25_validation_tabs", selected = "季度策略回測")
-})
-
-output$c45_status <- shiny::renderUI({
-  hist <- c45_checked_history()
-  if (!is.null(hist$error)) {
-    return(tags$div(class = "c45-status c45-status-warn",
-      tags$strong("C45｜歷史績效尚未就緒"), tags$p(hist$error),
-      shiny::actionLink("c45_go_backtest", "前往季度策略回測 →")))
-  }
-  q <- c45_selected_quarters()
-  if (is.null(q) || !nrow(q)) {
-    return(tags$div(class = "c45-status c45-status-warn",
-      tags$strong("選定區間沒有已完成的回測季度"),
-      tags$p("請擴大日期範圍。此頁僅納入出場日在區間內的完整季度，不自行填補半季績效。")))
-  }
-  source_q <- c45_stat_quarters()
-  warning_gap <- if (!c45_continuous(source_q)) "｜季度有缺口：不顯示推算的年化與波動" else ""
-  suffix <- if (identical(input$c45_view_mode, "fixed"))
-    "｜卡片與圖均以全歷史固定基期計算至所選最後一季" else
-    "｜卡片與圖均以所選完整季度為基期"
-  tags$div(class = "c45-status c45-status-ok",
-    tags$span(paste0("C45 正式季度口徑｜顯示 ", nrow(q), " 季", suffix, warning_gap)),
-    shiny::downloadButton("c45_quarter_csv", "下載一致性查核 CSV", class = "btn-sm"))
-})
-
-output$c45_quarter_csv <- shiny::downloadHandler(
-  filename = function() paste0("0010_0050_C45_fixed_history_", Sys.Date(), ".csv"),
-  content = function(file) {
-    full <- c45_checked_history()$data
-    shiny::req(!is.null(full), nrow(full) > 0L)
-    export <- data.frame(
-      評分日 = full$rate_date, 成交日 = full$entry_date, 出場日 = full$exit_date,
-      `0010季度淨報酬` = full$r10, `0050同期季度報酬` = full$r50,
-      `0010固定基期淨值` = full$equity10,
-      `0050固定基期淨值` = full$equity50,
-      `季度超額報酬_百分點` = (full$r10 - full$r50) * 100,
-      check.names = FALSE
-    )
-    utils::write.csv(export, file, row.names = FALSE, fileEncoding = "UTF-8")
-  }
-)
 
   # v35 數字：僅報酬類以正向柔綠、負向柔紅；波動、回撤、Sharpe 等維持中性色。
   v8_color_value <- function(x, label, use_color = TRUE) {
@@ -5236,138 +5107,80 @@ output$c45_quarter_csv <- shiny::downloadHandler(
   }
 
 
-# C45：歷史策略圖表不再依日期重建當期十檔；只讀取 v5_bt() 已完成的季度。
-# v9_daily_pair 仍保留作「探索性當期持股試算」的日波動附圖。
-v9_available_prices <- shiny::reactive({
-  pm <- v4_pm()
-  ww <- v4_w()
-  symbols <- names(ww)
-  shiny::req(length(symbols) > 0, all(symbols %in% colnames(pm)), "0050" %in% colnames(pm))
-  m <- pm[, c(symbols, "0050"), drop = FALSE]
-  ok <- apply(m, 1, function(row) all(is.finite(row) & row > 0))
-  m <- m[ok, , drop = FALSE]
-  shiny::req(nrow(m) >= 3)
-  m
-})
-
-v9_slice_pair <- function(selected_range) {
-  # 僅給下方『探索性當期持股日報酬』使用；不可作正式季度績效。
-  shiny::req(!is.null(selected_range), length(selected_range) == 2)
-  m <- v9_available_prices()
-  dates <- as.Date(rownames(m))
-  take <- which(dates >= as.Date(selected_range[1]) & dates <= as.Date(selected_range[2]))
-  shiny::validate(shiny::need(length(take) >= 3, "選定期間共同有效交易日不足，請放寬日期範圍。"))
-  m <- m[take, , drop = FALSE]
-  symbols <- setdiff(colnames(m), "0050")
-  ww <- v4_w()[symbols]
-  ww <- as.numeric(ww / sum(ww))
-  relative <- sweep(m[, symbols, drop = FALSE], 2, m[1, symbols], "/")
-  data.frame(date = as.Date(rownames(m)),
-             p10 = as.numeric(relative %*% ww),
-             etf = as.numeric(m[, "0050"] / m[1, "0050"]))
-}
-
-v9_daily_pair <- shiny::reactive({
-  quarter <- c47_daily_quarter_info()
-  v9_slice_pair(c(quarter$entry_date[1], quarter$exit_date[1]))
+# C48: 兩張圖全部沿用歷史策略同一份日淨值；不存在第二套當期權重回溯。
+output$v9_curve_actual_range <- shiny::renderText({
+  z <- v9_curve_pair()
+  if(is.null(z))return(paste0("歷史績效尚未就緒：",v48_error()))
+  paste0("實際共同交易期間：",min(z$date)," 至 ",max(z$date),
+    "｜",nrow(z)," 個交易日（日期僅影響觀看範圍）")
 })
 output$v9_daily_actual_range <- shiny::renderText({
-  quarter <- c47_daily_quarter_info()
   z <- v9_daily_pair()
-  paste0("回測季度：",quarter$entry_date[1]," ～ ",quarter$exit_date[1],
-    "｜實際共同交易日：",min(z$date)," ～ ",max(z$date),
-    "（",nrow(z)," 日；0010 是目前持股探索性試算）")
+  if(is.null(z))return(paste0("歷史日報酬尚未就緒：",v48_error()))
+  paste0("實際共同交易期間：",min(z$date)," 至 ",max(z$date),
+         "｜",nrow(z)," 個交易日")
 })
-
-c45_chart_pair <- shiny::reactive({
-  h <- c45_checked_history()
-  if (is.null(h$data) || !nrow(h$data)) return(NULL)
-  q <- c45_selected_quarters()
-  if (is.null(q) || !nrow(q)) return(NULL)
-  if (identical(input$c45_view_mode, "fixed")) {
-    # 永遠使用全回測開始時所建立的淨值，不因窗口變動重新歸零。
-    p10 <- q$equity10
-    etf <- q$equity50
-    # C47: 選單只顯示一季時，也需要保留該季開始前的固定歷史淨值點。
-    first_at <- match(q$exit_date[1], h$data$exit_date)
-    shiny::req(!is.na(first_at))
-    before10 <- if (first_at > 1L) h$data$equity10[first_at - 1L] else 1
-    before50 <- if (first_at > 1L) h$data$equity50[first_at - 1L] else 1
-    dates <- c(q$entry_date[1], q$exit_date)
-    p10 <- c(before10, p10)
-    etf <- c(before50, etf)
-  } else {
-    # 只將相同季度報酬的顯示基期重新設為 1；不重估任何季度。
-    dates <- c(q$entry_date[1], q$exit_date)
-    p10 <- cumprod(c(1, 1 + q$r10))
-    etf <- cumprod(c(1, 1 + q$r50))
-  }
-  data.frame(date = as.Date(dates), p10 = p10, etf = etf)
-})
-
-output$v9_curve_actual_range <- shiny::renderText({
-  q <- c45_selected_quarters()
-  if (is.null(q) || !nrow(q)) return("請先執行季度回測，或選擇有已完成季度的期間。")
-  paste0("納入 ", nrow(q), " 個完整季度｜起始成交 ", q$entry_date[1],
-         "｜末季出場 ", tail(q$exit_date, 1), "｜切換季度不會重估歷史權重")
-})
-
 output$v7_home_curve <- shiny::renderPlot({
-  z <- c45_chart_pair()
-  shiny::validate(shiny::need(!is.null(z) && nrow(z) >= 2,
-    "請先至「模型驗證 → 季度策略回測」執行一次完整回測，並選擇有已完成季度的日期區間。"))
-  d <- rbind(data.frame(date = z$date, pct = (z$p10 - 1) * 100, label = "0010"),
-             data.frame(date = z$date, pct = (z$etf - 1) * 100, label = "0050"))
-  y_axis <- if (identical(input$c45_view_mode, "fixed"))
-    "全歷史固定基期累積報酬" else "所選完整季度累積報酬"
-  ggplot2::ggplot(d, ggplot2::aes(x = date, y = pct, colour = label)) +
-    ggplot2::geom_hline(yintercept = 0, linetype = "dashed", colour = "gray65") +
-    ggplot2::geom_line(linewidth = 1.2, linetype = "solid", na.rm = TRUE) +
-    ggplot2::geom_point(size = 2, na.rm = TRUE) +
-    ggplot2::scale_colour_manual(values = if (identical(input$c41_theme_mode, "light"))
-      c("0010" = "#226AA1", "0050" = "#B97825") else
-      c("0010" = "#65B5F1", "0050" = "#F0AC58")) +
-    ggplot2::scale_y_continuous(labels = function(x) sprintf("%+.1f%%", x)) +
-    ggplot2::labs(x = NULL, y = y_axis, colour = NULL,
-                  caption = "只使用已完成季度的出場日淨值；非每日交易淨值。") +
-    c40_theme_minimal(base_size = 13) +
-    ggplot2::theme(legend.position = "bottom",
-                   panel.grid.minor = ggplot2::element_blank())
+  z <- v9_curve_pair()
+  shiny::validate(shiny::need(!is.null(z)&&nrow(z)>2,
+    paste0("歷史淨值未通過檢查：",v48_error())))
+  d<-rbind(data.frame(date=z$date,pct=(z$p10-1)*100,label="0010"),
+           data.frame(date=z$date,pct=(z$etf-1)*100,label="0050"))
+  ggplot2::ggplot(d,ggplot2::aes(x=date,y=pct,colour=label))+
+    ggplot2::geom_hline(yintercept=0,linetype="dashed",colour="gray65")+
+    ggplot2::geom_line(linewidth=1.2,linetype="solid")+
+    ggplot2::scale_colour_manual(values=if(identical(input$c41_theme_mode,"light"))
+      c("0010"="#226AA1","0050"="#B97825") else
+      c("0010"="#65B5F1","0050"="#F0AC58"))+
+    ggplot2::scale_y_continuous(labels=function(x)sprintf("%+.1f%%",x))+
+    ggplot2::labs(x=NULL,y="所選期間累積報酬",colour=NULL,
+                  caption="同一條日淨值時間軸，改變日期只改顯示基期；不重新選股")+
+    c40_theme_minimal(base_size=13)+
+    ggplot2::theme(legend.position="bottom",panel.grid.minor=ggplot2::element_blank())
 })
-
-  v8_daily <- shiny::reactive({
-    z <- v9_daily_pair()
-    daily <- data.frame(date=z$date[-1],
-                        p10=100*diff(log(z$p10)),
-                        etf=100*diff(log(z$etf)))
-    daily[is.finite(daily$p10) & is.finite(daily$etf), , drop=FALSE]
-  })
-  v8_daily_limits <- shiny::reactive({
-    z <- v8_daily()
-    vmax <- max(abs(c(z$p10,z$etf)), na.rm=TRUE)
-    if (!is.finite(vmax) || vmax <= 0) vmax <- 1
-    c(-vmax*1.12, vmax*1.12)
-  })
-  v8_daily_plot <- function(z, col, title) {
-    d <- data.frame(date=z$date, pct=z[[col]])
-    ggplot2::ggplot(d, ggplot2::aes(x=date,y=pct)) +
-      ggplot2::geom_hline(yintercept=0, colour="gray65") +
-      ggplot2::geom_col(ggplot2::aes(fill=pct>=0), width=.85, show.legend=FALSE) +
-      ggplot2::scale_fill_manual(values=c("TRUE"="#C04F58", "FALSE"="#278066")) +
-      ggplot2::scale_y_continuous(limits=v8_daily_limits(),labels=function(x) paste0(round(x,1),"%")) +
-      ggplot2::labs(x=NULL,y="日對數報酬率（%）") +
-      c40_theme_minimal(base_size=11) +
-      ggplot2::theme(panel.grid.minor=ggplot2::element_blank(),
-                     plot.margin=ggplot2::margin(14, 15, 12, 16))
+v8_daily <- shiny::reactive({
+  z <- v9_daily_pair()
+  if (is.null(z)||nrow(z)<3L)return(NULL)
+  # 含完整回測首日時，第一筆負報酬是實際支付的建倉成本。
+  # 中途選日期則以首日為比較基準，因此不顯示首日之前的報酬。
+  from_full_start <- abs(z$p10[1]-1)>1e-10 || abs(z$etf[1]-1)>1e-10
+  if (from_full_start) {
+    return(data.frame(date=z$date,
+        p10=100*c(log(z$p10[1]),diff(log(z$p10))),
+        etf=100*c(log(z$etf[1]),diff(log(z$etf)))))
   }
-  output$v8_p10_daily_log <- shiny::renderPlot({
-    z <- v8_daily(); shiny::req(nrow(z)>0)
-    v8_daily_plot(z,"p10", "0010")
-  })
-  output$v8_0050_daily_log <- shiny::renderPlot({
-    z <- v8_daily(); shiny::req(nrow(z)>0)
-    v8_daily_plot(z,"etf", "0050")
-  })
+  data.frame(date=z$date[-1],p10=100*diff(log(z$p10)),
+             etf=100*diff(log(z$etf)))
+})
+v8_daily_limits <- shiny::reactive({
+  z <- v8_daily()
+  if(is.null(z)) return(c(-1,1))
+  vmax <- max(abs(c(z$p10,z$etf)),na.rm=TRUE)
+  if (!is.finite(vmax)||vmax<=0)vmax<-1
+  c(-vmax*1.12,vmax*1.12)
+})
+v8_daily_plot <- function(z,col,title) {
+  d <- data.frame(date=z$date,pct=z[[col]])
+  ggplot2::ggplot(d,ggplot2::aes(x=date,y=pct))+
+    ggplot2::geom_hline(yintercept=0,colour="gray65")+
+    ggplot2::geom_col(ggplot2::aes(fill=pct>=0),width=.85,show.legend=FALSE)+
+    ggplot2::scale_fill_manual(values=c("TRUE"="#C04F58","FALSE"="#278066"))+
+    ggplot2::scale_y_continuous(limits=v8_daily_limits(),
+                                labels=function(x)paste0(round(x,1),"%"))+
+    ggplot2::labs(x=NULL,y="日對數報酬率")+
+    c40_theme_minimal(base_size=11)+
+    ggplot2::theme(panel.grid.minor=ggplot2::element_blank())
+}
+output$v8_p10_daily_log <- shiny::renderPlot({
+  z<-v8_daily();shiny::validate(shiny::need(!is.null(z)&&nrow(z)>0,
+       paste0("歷史日報酬未就緒：",v48_error())))
+  v8_daily_plot(z,"p10","0010")
+})
+output$v8_0050_daily_log <- shiny::renderPlot({
+  z<-v8_daily();shiny::validate(shiny::need(!is.null(z)&&nrow(z)>0,
+       paste0("歷史日報酬未就緒：",v48_error())))
+  v8_daily_plot(z,"etf","0050")
+})
 
   output$v8_market_log_return <- shiny::renderUI({
     d <- selected_market_date()
@@ -5393,10 +5206,10 @@ output$v7_home_curve <- shiny::renderPlot({
     direction <- if (!is.finite(extra)) "尚無法比較" else if (extra > 0) "高於" else if (extra < 0) "低於" else "與其相同"
     volatility <- if (!is.finite(risk)) "本期資料不足，暫不比較年化波動。" else
       sprintf("年化波動相差 %+.2f 個百分點。", risk)
-    if (!is.finite(extra)) return("請先執行季度策略回測，並選擇包含已完成季度的日期。")
+    if (!is.finite(extra)) return(paste0("歷史績效暫時無法比較：",v48_error()))
     paste0("在目前選擇的績效基期下，0010 扣成本累積報酬", direction,
            " 0050（差額 ", sprintf("%+.2f", extra), " 個百分點）。", volatility,
-           "市場風險值採季度報酬估計，季內波動不在此處展示；回測不代表未來績效。")
+           "風險指標以同一段每日淨值估計；回測不代表未來績效。")
   })
 
   v4_hold_ret <- shiny::reactive({

@@ -8,22 +8,29 @@
   # 1. 季度回測（v4 分數 + T+1 成交）
   # ----------------------------------------------------------
 
-  v5_bt <- shiny::eventReactive(input$v5_run_bt, {
+  # C48: 首頁第一次需要時自動執行一次；按下原按鈕可要求重算。
+  # 只有 data() 或 v5_run_bt 改變時才失效；改觀看日期不觸發選股。
+  v5_bt_error <- shiny::reactiveVal(NULL)
+  v5_bt <- shiny::reactive({
+    input$v5_run_bt
     d <- as.data.frame(data())
-    withProgress(message = "季度回測（T+1 成交）…", value = 0, {
-      v5_backtest_v4(
-        d, hold = 63, n = 10, cap = 0.20, capital = 1000000,
-        t1 = TRUE, start_after = 300,
-        progress = function(k, n) {
-          setProgress(k / n, detail = paste0("第 ", k, " / ", n, " 季"))
-        }
-      )
-    })
-  }, ignoreInit = TRUE)
+    v5_bt_error(NULL)
+    result <- tryCatch(
+      withProgress(message = "正在建立歷史季度策略每日淨值…", value = 0, {
+        v5_backtest_v4(d, hold = 63, n = 10, cap = 0.20,
+          capital = 1000000, t1 = TRUE, start_after = 300,
+          progress = function(k, n) setProgress(k/n, detail = paste0("第 ",k," / ",n," 個季度")))
+      }),
+      error=function(e) {v5_bt_error(conditionMessage(e));NULL}
+    )
+    if (is.null(result))
+      v5_bt_error("沒有足夠的完整季度或固定 10 檔股票可進行回測；若資料有錯誤，請查看部署紀錄。")
+    result
+  })
 
   output$v5_bt_acc <- shiny::renderTable({
     r <- v5_bt()
-    shiny::req(!is.null(r))
+    shiny::req(!is.null(r),!is.null(r$stats))
     s <- r$stats
 
     data.frame(
@@ -54,7 +61,7 @@
 
   output$v5_bt_stats <- shiny::renderTable({
     r <- v5_bt()
-    shiny::req(!is.null(r))
+    shiny::req(!is.null(r),!is.null(r$stats))
     s <- r$stats
     data.frame(
       項目 = c("回測季數", "累積報酬（扣成本）", "年化報酬", "年化波動",
@@ -79,14 +86,15 @@
   output$v5_bt_curve <- shiny::renderPlot({
     r <- v5_bt()
     shiny::req(!is.null(r))
-    q <- r$quarters
+    shiny::req(is.null(r$error),is.data.frame(r$daily))
+    day <- r$daily
     df <- rbind(
-      data.frame(date = q$成交日, value = q$累積淨值, series = "0010（扣成本）"),
-      data.frame(date = q$成交日, value = q$累積0050, series = "0050")
+      data.frame(date = day$date, value = day$equity10, series = "0010（扣成本）"),
+      data.frame(date = day$date, value = day$equity50, series = "0050")
     )
     ggplot2::ggplot(df, ggplot2::aes(x = date, y = value, colour = series)) +
       ggplot2::geom_line(linewidth = 1) +
-      ggplot2::labs(title = "季度再平衡淨值（T+1 成交）", x = NULL,
+      ggplot2::labs(title = "季度換股策略｜連續每日淨值（調整後收盤價代理）", x = NULL,
                     y = "淨值（起始 = 1）", colour = NULL) +
       ggplot2::theme_minimal() +
       ggplot2::theme(legend.position = "bottom",
@@ -95,7 +103,7 @@
 
   output$v5_bt_log <- shiny::renderTable({
     r <- v5_bt()
-    shiny::req(!is.null(r))
+    shiny::req(!is.null(r),!is.null(r$quarters))
     q <- r$quarters
     data.frame(
       評分日 = format(q$評分日, "%Y-%m-%d"),
@@ -263,7 +271,7 @@
 
   output$v5_bt_result <- shiny::renderText({
     r <- v5_bt()
-    shiny::req(!is.null(r))
+    shiny::req(!is.null(r),!is.null(r$stats))
     s <- r$stats
     paste0("回測 ", s$n, " 季，0010 扣成本累積 ",
            sprintf("%+.1f%%", s$cum * 100), "，0050 同期 ",
