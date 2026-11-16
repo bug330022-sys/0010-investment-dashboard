@@ -2838,6 +2838,8 @@ ui <- fluidPage(
     tags$link(rel = "stylesheet", type = "text/css", href = "c48_home_original.css"),
     # C49: compact run button in the hero and honest error/empty state.
     tags$link(rel = "stylesheet", type = "text/css", href = "c49_header_run_and_diagnostics.css"),
+    # C51: fixed-quarter dropdowns and same-width daily plot; all prior visual themes unchanged.
+    tags$link(rel = "stylesheet", type = "text/css", href = "c51_quarter_picker.css"),
     tags$script(src = "c41_theme_switch.js"),
     # When a collapsed Shiny chart is opened, ask Shiny to recalculate its plot width.
     tags$script(HTML("(function(){ function refresh(){ window.dispatchEvent(new Event('resize')); } document.addEventListener('toggle', function(e){ if (e.target && e.target.matches('details.c44-chart-details') && e.target.open) { setTimeout(refresh,70); setTimeout(refresh,280); } }, true); if (window.jQuery) { window.jQuery(document).on('shown.bs.tab', function(){setTimeout(refresh,100);}); } })();"))
@@ -2924,19 +2926,17 @@ tabPanel(
         div(class = "c43-home-main",
       div(class = "section-box",
           h2("0010 與 0050 累積報酬走勢"),
-          p(class = "page-description", "同一條歷史策略淨值依所選期間顯示；0010 每季按當時評分換股，日期切換不重新選股。中途選取的區間以首日為 0%；若涵蓋回測第一天，會包含建倉交易成本。"),
-          dateRangeInput("v9_curve_range", "累積報酬圖｜選擇起訖日期：",
-                         start=max(data_min_date, data_max_date-365), end=data_max_date,
-                         min=data_min_date, max=data_max_date, format="yyyy-mm-dd", separator=" 至 ", language="zh-TW"),
+          p(class = "page-description", "0010 與 0050 沿用同一條歷史每日淨值，改選季度只調整顯示區間、不重新選股。每季依實際成交／出場日期切分；單季以該季起點為比較基準，若包含回測首日，則保留首次建倉成本。"),
+          selectInput("c51_curve_scope", "累積報酬圖｜選擇季度：",
+                      choices=c("歷史績效準備中"="waiting"), selected="waiting", width="100%"),
           textOutput("v9_curve_actual_range"),
           uiOutput("c49_home_curve_view")),
       tags$details(class = "method-details v25-home-expand c44-chart-details", tags$summary("展開每日報酬波動對照"),
 div(class = "section-box",
           h2("日對數報酬率｜0010 與 0050"),
-          p(class = "page-description", "0010 與 0050 都使用同一組歷史交易日與同一縱軸尺度，並獨立於累積報酬圖選擇日期。0010 已扣除季度換股成本。"),
-          dateRangeInput("v9_daily_range", "日對數報酬圖｜選擇起訖日期：",
-                         start=max(data_min_date, data_max_date-126), end=data_max_date,
-                         min=data_min_date, max=data_max_date, format="yyyy-mm-dd", separator=" 至 ", language="zh-TW"),
+          p(class = "page-description", "每日對數報酬直接由正式回測的連續每日淨值計算，0010 含交易成本；每次選取一個完整持有季度。季度交接日的報酬只歸屬前一個持有季度，不會重複計算。"),
+          selectInput("c51_daily_quarter", "每日對數報酬圖｜選擇季度：",
+                      choices=c("歷史績效準備中"="waiting"), selected="waiting", width="100%"),
           textOutput("v9_daily_actual_range"),
           fluidRow(class = "c47-daily-plot-row",
             column(6, h3("0010｜日對數報酬率"), div(class = "c44-chart-frame c47-daily-plot", plotOutput("v8_p10_daily_log", height = "360px"))),
@@ -5043,18 +5043,71 @@ output$c49_home_curve_view <- shiny::renderUI({
 output$c49_full_failure <- shiny::renderText({
   v48_error()
 })
-# C49: default viewport is clamped to actual validated backtest date span.
-# This runs when the full history changes, not when the user changes dates.
-shiny::observeEvent(v48_history(), {
+# C51: Build validated, user-facing quarter labels directly from the FINAL backtest.
+# Use holding quarter (entry date), not merely calendar quarter of the scoring date.
+c51_quarters <- shiny::reactive({
   z <- v48_history()
-  if (is.null(z) || !nrow(z$daily)) return()
-  d <- as.Date(z$daily$date)
-  lo <- min(d); hi <- max(d)
-  shiny::updateDateRangeInput(session, "v9_curve_range",
-     start = max(lo, hi-365), end = hi, min = lo, max = hi)
-  shiny::updateDateRangeInput(session, "v9_daily_range",
-     start = max(lo, hi-126), end = hi, min = lo, max = hi)
-}, ignoreInit = FALSE)
+  if (is.null(z) || !is.data.frame(z$quarters) || !nrow(z$quarters)) return(NULL)
+  q <- z$quarters
+  q$成交日 <- as.Date(q$成交日)
+  q$出場日 <- as.Date(q$出場日)
+  q$評分日 <- as.Date(q$評分日)
+  if (anyNA(q$成交日) || anyNA(q$出場日) ||
+      any(q$出場日 <= q$成交日) || anyDuplicated(q$成交日)) {
+    stop("C51 季度回測日期異常，不能建立季度選單。")
+  }
+  q <- q[order(q$成交日), , drop=FALSE]
+  q$c51_key <- format(q$成交日, "%Y-%m-%d")
+  mm <- as.integer(format(q$成交日, "%m"))
+  q$c51_label <- paste0(format(q$成交日, "%Y"), " Q", (mm-1L)%/%3L+1L,
+    "｜",format(q$成交日, "%Y-%m-%d"), " ～ ",format(q$出場日, "%Y-%m-%d"))
+  q
+})
+
+shiny::observeEvent(c51_quarters(), {
+  q <- c51_quarters()
+  if (is.null(q) || !nrow(q)) return()
+  opts <- stats::setNames(q$c51_key, q$c51_label)
+  old_curve <- shiny::isolate(input$c51_curve_scope)
+  old_daily <- shiny::isolate(input$c51_daily_quarter)
+  valid_curve <- c("all", "recent4", "recent8", q$c51_key)
+  shiny::updateSelectInput(session, "c51_curve_scope",
+    choices=c("全部已完成季度（長期累積）"="all",
+              "最近 4 個完整季度"="recent4",
+              "最近 8 個完整季度"="recent8",opts),
+    selected=if(length(old_curve)==1L && !is.na(old_curve) && old_curve %in% valid_curve) old_curve else "all")
+  shiny::updateSelectInput(session, "c51_daily_quarter", choices=opts,
+    selected=if(length(old_daily)==1L && !is.na(old_daily) && old_daily %in% q$c51_key) old_daily else utils::tail(q$c51_key,1))
+}, ignoreInit=FALSE)
+
+c51_curve_quarters <- shiny::reactive({
+  q <- c51_quarters()
+  if(is.null(q) || !nrow(q)) return(NULL)
+  key <- input$c51_curve_scope
+  if(length(key)!=1L || is.na(key) || key=="waiting")key <- "all"
+  if(key=="all") return(q)
+  if(key=="recent4") return(utils::tail(q,4L))
+  if(key=="recent8") return(utils::tail(q,8L))
+  picked <- q[q$c51_key==key,,drop=FALSE]
+  if(!nrow(picked))return(q)
+  picked
+})
+
+c51_daily_selected <- shiny::reactive({
+  q <- c51_quarters()
+  if(is.null(q)||!nrow(q))return(NULL)
+  key <- input$c51_daily_quarter
+  if(length(key)!=1L || is.na(key) || key=="waiting")return(utils::tail(q,1L))
+  picked <- q[q$c51_key==key,,drop=FALSE]
+  if(!nrow(picked))return(utils::tail(q,1L))
+  picked
+})
+
+c51_curve_window <- shiny::reactive({
+  q <- c51_curve_quarters()
+  if(is.null(q)||!nrow(q))return(NULL)
+  as.Date(c(q$成交日[1], utils::tail(q$出場日,1)))
+})
 
 v48_error <- shiny::reactive({
   z <- v5_bt()
@@ -5084,8 +5137,12 @@ v48_slice <- function(range) {
              etf=d$equity50/base50,
              fixed10=d$equity10,fixed50=d$equity50)
 }
-v9_curve_pair <- shiny::reactive({v48_slice(input$v9_curve_range)})
-v9_daily_pair <- shiny::reactive({v48_slice(input$v9_daily_range)})
+v9_curve_pair <- shiny::reactive({v48_slice(c51_curve_window())})
+v9_daily_pair <- shiny::reactive({
+  q <- c51_daily_selected()
+  if(is.null(q))return(NULL)
+  v48_slice(c(q$成交日[1],q$出場日[1]))
+})
 v7_home_pair <- shiny::reactive({v9_curve_pair()})
 output$v7_home_period <- shiny::renderText({
   z <- v9_curve_pair()
@@ -5153,16 +5210,20 @@ v7_home_stats <- shiny::reactive({
 
 # C48: 兩張圖全部沿用歷史策略同一份日淨值；不存在第二套當期權重回溯。
 output$v9_curve_actual_range <- shiny::renderText({
-  z <- v9_curve_pair()
-  if(is.null(z))return(paste0("歷史績效尚未就緒：",v48_error()))
-  paste0("實際共同交易期間：",min(z$date)," 至 ",max(z$date),
-    "｜",nrow(z)," 個交易日（日期僅影響觀看範圍）")
+  z <- v9_curve_pair(); q <- c51_curve_quarters()
+  if(is.null(z)||is.null(q))return(paste0("歷史績效尚未就緒：",v48_error()))
+  if(nrow(q)==1L) {
+    paste0("選定 ",q$c51_label[1],"｜",nrow(z)," 個共同交易日｜改選季度不重新選股")
+  } else {
+    paste0("已完成 ",nrow(q)," 季｜",q$成交日[1]," ～ ",utils::tail(q$出場日,1),
+           "｜",nrow(z)," 個共同交易日")
+  }
 })
 output$v9_daily_actual_range <- shiny::renderText({
-  z <- v9_daily_pair()
-  if(is.null(z))return(paste0("歷史日報酬尚未就緒：",v48_error()))
-  paste0("實際共同交易期間：",min(z$date)," 至 ",max(z$date),
-         "｜",nrow(z)," 個交易日")
+  q <- c51_daily_selected(); z <- v9_daily_pair()
+  if(is.null(z)||is.null(q))return(paste0("歷史日報酬尚未就緒：",v48_error()))
+  paste0("選定 ",q$c51_label[1],"｜評分日 ",q$評分日[1],
+    "｜成交日與出場日為完整回測邊界（交易交接日不重複計入每日報酬）")
 })
 output$v7_home_curve <- shiny::renderPlot({
   z <- v9_curve_pair()
@@ -5177,24 +5238,33 @@ output$v7_home_curve <- shiny::renderPlot({
       c("0010"="#226AA1","0050"="#B97825") else
       c("0010"="#65B5F1","0050"="#F0AC58"))+
     ggplot2::scale_y_continuous(labels=function(x)sprintf("%+.1f%%",x))+
-    ggplot2::labs(x=NULL,y="所選期間累積報酬",colour=NULL,
-                  caption="同一條日淨值時間軸，改變日期只改顯示基期；不重新選股")+
+    ggplot2::labs(x=NULL,y="所選季度累積報酬",colour=NULL,
+                  caption="同一條逐季換股淨值：季度選擇只改顯示期間，不重算歷史持股與權重")+
     c40_theme_minimal(base_size=13)+
     ggplot2::theme(legend.position="bottom",panel.grid.minor=ggplot2::element_blank())
 })
 v8_daily <- shiny::reactive({
-  z <- v9_daily_pair()
-  if (is.null(z)||nrow(z)<3L)return(NULL)
-  # 含完整回測首日時，第一筆負報酬是實際支付的建倉成本。
-  # 中途選日期則以首日為比較基準，因此不顯示首日之前的報酬。
-  from_full_start <- abs(z$p10[1]-1)>1e-10 || abs(z$etf[1]-1)>1e-10
-  if (from_full_start) {
-    return(data.frame(date=z$date,
-        p10=100*c(log(z$p10[1]),diff(log(z$p10))),
-        etf=100*c(log(z$etf[1]),diff(log(z$etf)))))
-  }
-  data.frame(date=z$date[-1],p10=100*diff(log(z$p10)),
-             etf=100*diff(log(z$etf)))
+  q <- c51_daily_selected(); z <- v48_history()
+  if(is.null(q)||is.null(z))return(NULL)
+  h <- z$daily
+  h$date <- as.Date(h$date)
+  entry <- as.Date(q$成交日[1]); exit <- as.Date(q$出場日[1])
+  # Quarter boundary is POST-rebalance equity. For all but the first quarter,
+  # log returns belong to (entry, exit], not [entry, exit] (avoid double count).
+  # The first quarter includes the opening-day buy cost in its very first log return.
+  first_quarter <- identical(entry,as.Date(h$date[1]))
+  chosen <- h$date > entry & h$date <= exit
+  if(first_quarter)chosen <- (h$date >= entry & h$date <= exit)
+  d <- h[chosen,,drop=FALSE]
+  if(!nrow(d))return(NULL)
+  if(any(!is.finite(d$log_return10)|!is.finite(d$log_return50)))
+    stop("C51 選定季度的日報酬存在缺值，請檢查回測資料。")
+  # Sum of quarter log returns must reproduce exactly the corresponding quarter return.
+  q10 <- expm1(sum(d$log_return10))
+  q50 <- expm1(sum(d$log_return50))
+  if(abs(q10-q$淨報酬[1])>1e-7 || abs(q50-q$基準0050[1])>1e-7)
+    stop(paste0("C51 ",q$c51_label[1]," 季度報酬與每日淨值不一致；請核對資料及成本。"))
+  data.frame(date=d$date,p10=100*d$log_return10,etf=100*d$log_return50)
 })
 v8_daily_limits <- shiny::reactive({
   z <- v8_daily()
@@ -5211,7 +5281,7 @@ v8_daily_plot <- function(z,col,title) {
     ggplot2::scale_fill_manual(values=c("TRUE"="#C04F58","FALSE"="#278066"))+
     ggplot2::scale_y_continuous(limits=v8_daily_limits(),
                                 labels=function(x)paste0(round(x,1),"%"))+
-    ggplot2::labs(x=NULL,y="日對數報酬率")+
+    ggplot2::labs(x=NULL,y="日對數報酬率（%）")+
     c40_theme_minimal(base_size=11)+
     ggplot2::theme(panel.grid.minor=ggplot2::element_blank())
 }

@@ -1,5 +1,5 @@
 # ============================================================
-# C48 | 單一連續日淨值季度回測：研究測試版
+# C51 | 整合 C50 末季出場邊界修正：歷史連續日淨值季度回測（測試版）
 # 評分只使用評分日以前資料；下季 T+1 收盤換倉；同日完整計入買賣成本。
 # 所有策略與 0050 使用相同交易日；任何選中股票缺價都停止，不做事後剔除。
 # 注意：adjusted 價格作為含股利調整的「成交代理價」，不是可保證成交價。
@@ -136,11 +136,16 @@ v5_backtest_v4 <- function(df, hold=63, n=10, cap=0.20,
     stop(paste0("可驗證的完整季度不足：目前僅 ", length(qend),
                 " 個可評分季度（要求至少 2 個）；0050 有效交易日 ",length(dates),"。"))
 
+  # C50: qend 最後一筆是「已完成季末」；其 T+1 僅作為前季平倉邊界。
+  # 不在最後季末再次開倉，因為最新（當季）的完整出場日尚未到來。
+  # 例如資料至 2026-11 時：06/30 評分、07/01 買入、10/01 平倉；
+  # 09/30 是這筆持倉的出場邊界，而不是另一筆可計入已實現報酬的新持倉。
+  score_qend <- head(qend, -1L)
   plan <- list(); initial_skips <- 0L
   first_skip_detail <- ""
-  for (k in seq_along(qend)) {
-    i <- qend[k];rated <- dates[i]
-    if (!is.null(progress)) progress(k,length(qend))
+  for (k in seq_along(score_qend)) {
+    i <- score_qend[k];rated <- dates[i]
+    if (!is.null(progress)) progress(k,length(score_qend))
     available <- d[d$date<=rated & d$symbol!="0050",,drop=FALSE]
     if (!is.null(membership)) {
       sy <- unique(membership$symbol[membership$effective_from<=rated &
@@ -160,14 +165,7 @@ v5_backtest_v4 <- function(df, hold=63, n=10, cap=0.20,
         first_skip_detail <- reason
         next
       }
-      # 最後一個評分日只是用來做最後一筆平倉，不需要下一期的新持股。
-      if (k==length(qend)) {
-        # 最後一期只充當出場邊界；沒有下一季選股也能平倉。
-        plan[[length(plan)+1L]] <- list(rate_idx=i,rate_date=rated,
-          buy_idx=i+1L,buy_date=dates[i+1L],weights=numeric(0),
-          score=NULL,chosen=NULL)
-        break
-      }
+      # 中途若不足固定十檔，一律明確停止；不允許事後跳過績差季度。
       stop(paste0(reason,"。回測不會放寬固定十檔或事後挑選其他股票。"))
     }
     ww <- v4_weights(chosen,scheme="inv_vol",cap=cap)
@@ -188,15 +186,18 @@ v5_backtest_v4 <- function(df, hold=63, n=10, cap=0.20,
     stop(paste0("全部 ",length(qend)," 個評分季度都無法建立固定 ",n,
                 " 檔的選股計畫。最後檢查：",first_skip_detail,
                 "。請核對歷史股價覆蓋率、風險門檻與產業分散限制；勿直接降低門檻。"))
-  # 檢查最後一個已完成季度的下一交易日，作為最後平倉邊界。
-  last_q <- tail(qend,1)
-  end_idx <- last_q+1L
-  if (end_idx<=plan[[length(plan)]]$buy_idx)
+  # C50: 最後一個已完成季度末的 T+1 是前一季持股的出場日。
+  # 在計畫尾部加入「純現金平倉邊界」，不在此日買入新一季的十檔股票。
+  last_q <- tail(qend, 1L)
+  end_idx <- last_q + 1L
+  if (end_idx > length(dates) || end_idx <= plan[[length(plan)]]$buy_idx)
     stop("回測終點沒有完整持有區間；無法建立最後一筆淨值。")
-  if (length(plan)<2L)
-    stop(paste0("只有 ",length(plan)," 個有效的季度邊界；至少要兩個才能完成一個持有區間。"))
-  # 最後一個計畫是時間邊界：不使用該期持股，避免結尾多買一次。
-  # 真實回測區間為 plan[[1]] 至最後一個評分日之 T+1。
+  plan[[length(plan)+1L]] <- list(
+    rate_idx=last_q, rate_date=dates[last_q],
+    buy_idx=end_idx, buy_date=dates[end_idx],
+    weights=numeric(0), score=NULL, chosen=NULL
+  )
+  # 真實回測區間：首個有效評分季 T+1 建倉，最後已完成季度的 T+1 平倉。
   last_boundary <- plan[[length(plan)]]$buy_idx
   trade_points <- vapply(plan,function(x)x$buy_idx,integer(1))
   if (any(diff(trade_points)<=0)) stop("再平衡交易日期重複或逆序。")
@@ -352,7 +353,7 @@ v5_backtest_v4 <- function(df, hold=63, n=10, cap=0.20,
       universe_type=universe_type,initial_skipped_quarters=initial_skips,
       daily_mdd=min(dd10/cummax(dd10)-1),bench_daily_mdd=min(dd50/cummax(dd50)-1))
   list(quarters=q,daily=day,stats=stats,
-       trades=do.call(rbind,trade_log),version="C48 research proxy",
+       trades=do.call(rbind,trade_log),version="C50 research proxy (quarter terminal boundary corrected)",
        warnings=c(if(is.null(membership)) "沒有歷史成分股名單：結果仍可能有存活者偏誤。" else
                               "歷史成分股名單須人工核對完整性。",
                  "以調整後收盤價代理成交價；持倉允許小數股、不含流動性衝擊。",
