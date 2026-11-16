@@ -8,7 +8,7 @@
   # 1. 季度回測（v4 分數 + T+1 成交）
   # ----------------------------------------------------------
 
-  # C48: 首頁第一次需要時自動執行一次；按下原按鈕可要求重算。
+  # C49: 第一次需要時自動執行；頁首按鈕（同一個 v5_run_bt）可重算。
   # 只有 data() 或 v5_run_bt 改變時才失效；改觀看日期不觸發選股。
   v5_bt_error <- shiny::reactiveVal(NULL)
   v5_bt <- shiny::reactive({
@@ -23,8 +23,9 @@
       }),
       error=function(e) {v5_bt_error(conditionMessage(e));NULL}
     )
-    if (is.null(result))
-      v5_bt_error("沒有足夠的完整季度或固定 10 檔股票可進行回測；若資料有錯誤，請查看部署紀錄。")
+    # Never overwrite the real conditionMessage captured by tryCatch.
+    if (is.null(result) && is.null(v5_bt_error()))
+      v5_bt_error("回測未產生結果。請查看資料期間與選股限制；若情況持續，請保存部署紀錄。")
     result
   })
 

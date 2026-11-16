@@ -132,9 +132,12 @@ v5_backtest_v4 <- function(df, hold=63, n=10, cap=0.20,
   # 最新日期所屬季度還沒結束，不能當成已完成季度。
   if (length(qend)>0) qend <- head(qend,-1L)
   qend <- qend[qend>=start_after & qend<length(dates)]
-  if (length(qend)<2L) return(NULL)
+  if (length(qend)<2L)
+    stop(paste0("可驗證的完整季度不足：目前僅 ", length(qend),
+                " 個可評分季度（要求至少 2 個）；0050 有效交易日 ",length(dates),"。"))
 
   plan <- list(); initial_skips <- 0L
+  first_skip_detail <- ""
   for (k in seq_along(qend)) {
     i <- qend[k];rated <- dates[i]
     if (!is.null(progress)) progress(k,length(qend))
@@ -148,7 +151,15 @@ v5_backtest_v4 <- function(df, hold=63, n=10, cap=0.20,
     chosen <- if (is.null(sc)) NULL else v4_pick(sc,n,max_industry=max_ind)
     valid <- !is.null(chosen) && nrow(chosen)==n
     if (!valid) {
-      if (!length(plan)) {initial_skips <- initial_skips+1L;next}
+      got <- if (is.null(chosen)) 0L else nrow(chosen)
+      pass_count <- if (is.null(sc)) 0L else sum(sc$pass %in% TRUE)
+      reason <- paste0("評分日 ",rated,"：通過風險篩選 ",pass_count,
+                       " 檔，依產業上限最後僅能選 ",got," / ",n," 檔")
+      if (!length(plan)) {
+        initial_skips <- initial_skips+1L
+        first_skip_detail <- reason
+        next
+      }
       # 最後一個評分日只是用來做最後一筆平倉，不需要下一期的新持股。
       if (k==length(qend)) {
         # 最後一期只充當出場邊界；沒有下一季選股也能平倉。
@@ -157,8 +168,7 @@ v5_backtest_v4 <- function(df, hold=63, n=10, cap=0.20,
           score=NULL,chosen=NULL)
         break
       }
-      stop(paste0("評分日 ",rated," 僅能選出 ",if(is.null(chosen))0 else nrow(chosen),
-                  " 檔，少於要求的 ",n," 檔。回測不得默默略過季度。"))
+      stop(paste0(reason,"。回測不會放寬固定十檔或事後挑選其他股票。"))
     }
     ww <- v4_weights(chosen,scheme="inv_vol",cap=cap)
     if (length(ww)!=n || any(!is.finite(ww)) || any(ww<0) || sum(ww)<=0)
@@ -174,12 +184,17 @@ v5_backtest_v4 <- function(df, hold=63, n=10, cap=0.20,
        buy_idx=entry_idx,buy_date=dates[entry_idx], weights=ww,
        score=sc,chosen=chosen)
   }
-  if (!length(plan)) return(NULL)
+  if (!length(plan))
+    stop(paste0("全部 ",length(qend)," 個評分季度都無法建立固定 ",n,
+                " 檔的選股計畫。最後檢查：",first_skip_detail,
+                "。請核對歷史股價覆蓋率、風險門檻與產業分散限制；勿直接降低門檻。"))
   # 檢查最後一個已完成季度的下一交易日，作為最後平倉邊界。
   last_q <- tail(qend,1)
   end_idx <- last_q+1L
-  if (end_idx<=plan[[length(plan)]]$buy_idx) return(NULL)
-  if (length(plan)<2L) return(NULL)
+  if (end_idx<=plan[[length(plan)]]$buy_idx)
+    stop("回測終點沒有完整持有區間；無法建立最後一筆淨值。")
+  if (length(plan)<2L)
+    stop(paste0("只有 ",length(plan)," 個有效的季度邊界；至少要兩個才能完成一個持有區間。"))
   # 最後一個計畫是時間邊界：不使用該期持股，避免結尾多買一次。
   # 真實回測區間為 plan[[1]] 至最後一個評分日之 T+1。
   last_boundary <- plan[[length(plan)]]$buy_idx

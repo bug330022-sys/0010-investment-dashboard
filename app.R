@@ -2836,6 +2836,8 @@ ui <- fluidPage(
     # C47: whole-width expanded daily graphs and quarter-based controls.
     tags$link(rel = "stylesheet", type = "text/css", href = "c47_quarter_wide_charts.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "c48_home_original.css"),
+    # C49: compact run button in the hero and honest error/empty state.
+    tags$link(rel = "stylesheet", type = "text/css", href = "c49_header_run_and_diagnostics.css"),
     tags$script(src = "c41_theme_switch.js"),
     # When a collapsed Shiny chart is opened, ask Shiny to recalculate its plot width.
     tags$script(HTML("(function(){ function refresh(){ window.dispatchEvent(new Event('resize')); } document.addEventListener('toggle', function(e){ if (e.target && e.target.matches('details.c44-chart-details') && e.target.open) { setTimeout(refresh,70); setTimeout(refresh,280); } }, true); if (window.jQuery) { window.jQuery(document).on('shown.bs.tab', function(){setTimeout(refresh,100);}); } })();"))
@@ -2854,10 +2856,17 @@ ui <- fluidPage(
       "統計研究｜非投資建議｜資料更新至：",
       textOutput("header_latest_date", inline = TRUE)
     ),
-    # C41: UI-only switch. Existing main tabs and IDs are untouched.
-    div(class = "c41-theme-switch", role = "group", `aria-label` = "網站明暗模式",
-      tags$button(id = "c41-theme-light", type = "button", `aria-pressed` = "false", "☀ 淺色"),
-      tags$button(id = "c41-theme-dark", type = "button", `aria-pressed` = "true", "☾ 深色")
+    # C49: keep the ORIGINAL v5_run_bt input ID, but move its only button
+    # beside the light/dark switch for one-click re-run from any main tab.
+    div(class = "c49-head-controls",
+      div(class = "c49-run-group",
+        actionButton("v5_run_bt", "重新執行季度回測", class = "btn-primary c49-run-button"),
+        textOutput("c49_bt_status", inline = TRUE)
+      ),
+      div(class = "c41-theme-switch", role = "group", `aria-label` = "網站明暗模式",
+        tags$button(id = "c41-theme-light", type = "button", `aria-pressed` = "false", "☀ 淺色"),
+        tags$button(id = "c41-theme-dark", type = "button", `aria-pressed` = "true", "☾ 深色")
+      )
     )
   ),
   
@@ -2920,7 +2929,7 @@ tabPanel(
                          start=max(data_min_date, data_max_date-365), end=data_max_date,
                          min=data_min_date, max=data_max_date, format="yyyy-mm-dd", separator=" 至 ", language="zh-TW"),
           textOutput("v9_curve_actual_range"),
-          div(class = "c44-chart-frame c44-curve-frame", plotOutput("v7_home_curve", height = "420px"))),
+          uiOutput("c49_home_curve_view")),
       tags$details(class = "method-details v25-home-expand c44-chart-details", tags$summary("展開每日報酬波動對照"),
 div(class = "section-box",
           h2("日對數報酬率｜0010 與 0050"),
@@ -3231,8 +3240,7 @@ tabPanel(
               h3("0010 季度再平衡回測"),
               p(class = "g18-intro", "每季依當時資料選股、於次一交易日進場，觀察扣除成本後是否優於 0050。可按評分年度查看季度結果。"),
               div(class = "g18-warning", "年份依「評分日」分組，不是日曆年度報酬；部分季度的成交至出場期間可能跨年。"),
-              actionButton("v5_run_bt", "執行完整季度回測", class = "btn-primary"),
-              p(class = "g18-hint", "只在按下按鈕時執行回測；後續切換年份直接篩選結果，不會重新運算。歷史波動風險依既有模型使用 EWMA（λ = 0.94），並非每季完整 GARCH 估計。"),
+              p(class = "g18-hint", "季度回測可在網站頁首、深淺色切換旁按『重新執行季度回測』。網站會先自動嘗試建立歷史績效；切換年份或觀看日期不會重新選股。歷史波動風險使用 EWMA（λ = 0.94），並非每季完整 GARCH 估計。"),
               div(class = "g18-control-row",
                 selectInput("g18_bt_year", "查看評分年度", choices = c("全部年度" = "all"),
                   selected = "all", width = "100%")
@@ -5012,6 +5020,42 @@ v48_history <- shiny::reactive({
     return(NULL)
   z
 })
+# C49: keep one run button and show success/errors in a small header status.
+output$c49_bt_status <- shiny::renderText({
+  z <- v5_bt()
+  if (is.null(z)) return("未完成｜請查看總覽原因")
+  if (is.null(z$quarters) || !nrow(z$quarters)) return("尚無完成季度")
+  paste0("已完成 ", nrow(z$quarters), " 季")
+})
+output$c49_home_curve_view <- shiny::renderUI({
+  z <- v48_history()
+  if (is.null(z)) {
+    return(div(class = "c49-history-empty", role = "status",
+      tags$strong("歷史績效尚未產生"),
+      p("網站已嘗試建立歷史季度策略；資料或選股條件未通過檢查。"),
+      div(class="c49-history-reason", textOutput("c49_full_failure", inline = TRUE)),
+      p(class="c49-history-help", "請核對上方原因與資料來源；修正後可按頁首『重新執行季度回測』。不會拿現在十檔股票的回溯試算取代歷史策略。")
+    ))
+  }
+  div(class = "c44-chart-frame c44-curve-frame",
+      plotOutput("v7_home_curve", height = "420px"))
+})
+output$c49_full_failure <- shiny::renderText({
+  v48_error()
+})
+# C49: default viewport is clamped to actual validated backtest date span.
+# This runs when the full history changes, not when the user changes dates.
+shiny::observeEvent(v48_history(), {
+  z <- v48_history()
+  if (is.null(z) || !nrow(z$daily)) return()
+  d <- as.Date(z$daily$date)
+  lo <- min(d); hi <- max(d)
+  shiny::updateDateRangeInput(session, "v9_curve_range",
+     start = max(lo, hi-365), end = hi, min = lo, max = hi)
+  shiny::updateDateRangeInput(session, "v9_daily_range",
+     start = max(lo, hi-126), end = hi, min = lo, max = hi)
+}, ignoreInit = FALSE)
+
 v48_error <- shiny::reactive({
   z <- v5_bt()
   if (is.null(z)) {
@@ -5123,7 +5167,7 @@ output$v9_daily_actual_range <- shiny::renderText({
 output$v7_home_curve <- shiny::renderPlot({
   z <- v9_curve_pair()
   shiny::validate(shiny::need(!is.null(z)&&nrow(z)>2,
-    paste0("歷史淨值未通過檢查：",v48_error())))
+    paste0("歷史季度回測尚未通過檢查：",v48_error())))
   d<-rbind(data.frame(date=z$date,pct=(z$p10-1)*100,label="0010"),
            data.frame(date=z$date,pct=(z$etf-1)*100,label="0050"))
   ggplot2::ggplot(d,ggplot2::aes(x=date,y=pct,colour=label))+
