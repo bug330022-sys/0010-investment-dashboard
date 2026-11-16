@@ -2829,7 +2829,11 @@ ui <- fluidPage(
     # C42 final override: responsive metrics and clear action buttons in both themes.
     tags$link(rel = "stylesheet", type = "text/css", href = "c42_readability_fix.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "c43_home_layout.css"),
-    tags$script(src = "c41_theme_switch.js")
+    # C44: home-only responsive chart frames and a clearer 0010 vs 0050 hierarchy.
+    tags$link(rel = "stylesheet", type = "text/css", href = "c44_home_charts_compare.css"),
+    tags$script(src = "c41_theme_switch.js"),
+    # When a collapsed Shiny chart is opened, ask Shiny to recalculate its plot width.
+    tags$script(HTML("(function(){ function refresh(){ window.dispatchEvent(new Event('resize')); } document.addEventListener('toggle', function(e){ if (e.target && e.target.matches('details.c44-chart-details') && e.target.open) { setTimeout(refresh,70); setTimeout(refresh,280); } }, true); if (window.jQuery) { window.jQuery(document).on('shown.bs.tab', function(){setTimeout(refresh,100);}); } })();"))
   ),
   
   
@@ -2864,32 +2868,39 @@ tabPanel(
       "總覽",
       div(class = "section-box home-intro",
           div(class = "home-heading",
-              div(h2("0010 VS 0050"),
+              div(h2("0010 與 0050｜績效比較"),
                   p(class = "page-description", "自訂十檔組合與元大台灣50｜績效與風險對照")),
               div(class = "home-date", "資料更新至：", textOutput("v7_home_date", inline = TRUE))),
           div(class = "home-window", "共同比較期間：", textOutput("v7_home_period", inline = TRUE)),
-          div(class = "home-compare-grid",
-              div(class = "home-side home-side-0010",
-                  h2("0010"), p("自訂十檔投資組合", class = "home-side-subtitle"),
-                  div(class = "home-stat", span("持股回溯報酬"), strong(uiOutput("v7_10_ret", inline = TRUE))),
-                  div(class = "home-stat", span("年化報酬"), strong(uiOutput("v7_10_ann", inline = TRUE))),
-                  div(class = "home-stat", span("最大回撤"), strong(uiOutput("v7_10_mdd", inline = TRUE))),
-                  div(class = "home-stat", span("年化波動"), strong(uiOutput("v7_10_vol", inline = TRUE))),
-                  div(class = "home-stat", span("Sharpe 比率"), strong(uiOutput("v7_10_sharpe", inline = TRUE)))),
-              div(class = "home-side home-center",
-                  h2("VS"), p("0010 − 0050", class = "home-side-subtitle"),
-                  div(class = "home-stat", span("超額報酬"), strong(uiOutput("v7_diff_ret", inline = TRUE))),
-                  div(class = "home-stat", span("年化報酬差"), strong(uiOutput("v7_diff_ann", inline = TRUE))),
-                  div(class = "home-stat", span("最大回撤差"), strong(uiOutput("v7_diff_mdd", inline = TRUE))),
-                  div(class = "home-stat", span("年化波動差"), strong(uiOutput("v7_diff_vol", inline = TRUE))),
-                  div(class = "home-stat", span("Sharpe 差"), strong(uiOutput("v7_diff_sharpe", inline = TRUE)))),
-              div(class = "home-side home-side-0050",
-                  h2("0050"), p("元大台灣50 ETF", class = "home-side-subtitle"),
-                  div(class = "home-stat", span("持股回溯報酬"), strong(uiOutput("v7_50_ret", inline = TRUE))),
-                  div(class = "home-stat", span("年化報酬"), strong(uiOutput("v7_50_ann", inline = TRUE))),
-                  div(class = "home-stat", span("最大回撤"), strong(uiOutput("v7_50_mdd", inline = TRUE))),
-                  div(class = "home-stat", span("年化波動"), strong(uiOutput("v7_50_vol", inline = TRUE))),
-                  div(class = "home-stat", span("Sharpe 比率"), strong(uiOutput("v7_50_sharpe", inline = TRUE))))
+          # C44: 0010 and 0050 are the compared subjects. VS is a small separator,
+          # while the original five difference metrics remain in a secondary strip.
+          div(class = "home-compare-grid c44-compare-wrap",
+              div(class = "c44-compare-pair",
+                  div(class = "home-side home-side-0010",
+                      h2("0010"), p("自訂十檔投資組合", class = "home-side-subtitle"),
+                      div(class = "home-stat", span("持股回溯報酬"), strong(uiOutput("v7_10_ret", inline = TRUE))),
+                      div(class = "home-stat", span("年化報酬"), strong(uiOutput("v7_10_ann", inline = TRUE))),
+                      div(class = "home-stat", span("最大回撤"), strong(uiOutput("v7_10_mdd", inline = TRUE))),
+                      div(class = "home-stat", span("年化波動"), strong(uiOutput("v7_10_vol", inline = TRUE))),
+                      div(class = "home-stat", span("Sharpe 比率"), strong(uiOutput("v7_10_sharpe", inline = TRUE)))),
+                  div(class = "c44-vs-marker", span("VS")),
+                  div(class = "home-side home-side-0050",
+                      h2("0050"), p("元大台灣50 ETF", class = "home-side-subtitle"),
+                      div(class = "home-stat", span("持股回溯報酬"), strong(uiOutput("v7_50_ret", inline = TRUE))),
+                      div(class = "home-stat", span("年化報酬"), strong(uiOutput("v7_50_ann", inline = TRUE))),
+                      div(class = "home-stat", span("最大回撤"), strong(uiOutput("v7_50_mdd", inline = TRUE))),
+                      div(class = "home-stat", span("年化波動"), strong(uiOutput("v7_50_vol", inline = TRUE))),
+                      div(class = "home-stat", span("Sharpe 比率"), strong(uiOutput("v7_50_sharpe", inline = TRUE))))
+              ),
+              div(class = "c44-diff-panel",
+                  div(class = "c44-diff-title", strong("比較差額"), span("0010 − 0050｜差額與比率差")),
+                  div(class = "c44-diff-metrics",
+                      div(class = "home-stat", span("超額報酬"), strong(uiOutput("v7_diff_ret", inline = TRUE))),
+                      div(class = "home-stat", span("年化報酬差"), strong(uiOutput("v7_diff_ann", inline = TRUE))),
+                      div(class = "home-stat", span("最大回撤差"), strong(uiOutput("v7_diff_mdd", inline = TRUE))),
+                      div(class = "home-stat", span("年化波動差"), strong(uiOutput("v7_diff_vol", inline = TRUE))),
+                      div(class = "home-stat", span("Sharpe 差"), strong(uiOutput("v7_diff_sharpe", inline = TRUE))))
+              )
           ),
           p(class = "home-small-note", "報酬數字：正向柔綠、負向柔紅。差額以百分點（pp）表示；風險指標不以正負代表好壞。"),
           div(class = "home-qualifier",
@@ -2906,8 +2917,8 @@ tabPanel(
                          start=max(data_min_date, data_max_date-365), end=data_max_date,
                          min=data_min_date, max=data_max_date, format="yyyy-mm-dd", separator=" 至 ", language="zh-TW"),
           textOutput("v9_curve_actual_range"),
-          plotOutput("v7_home_curve", height = "420px")),
-      tags$details(class = "method-details v25-home-expand", tags$summary("展開每日報酬波動對照"),
+          div(class = "c44-chart-frame c44-curve-frame", plotOutput("v7_home_curve", height = "420px"))),
+      tags$details(class = "method-details v25-home-expand c44-chart-details", tags$summary("展開每日報酬波動對照"),
 div(class = "section-box",
           h2("日對數報酬率｜0010 與 0050"),
           p(class = "page-description", "兩圖使用同一組日期與共同縱軸尺度，可獨立於上方的累積報酬圖調整期間。0010 為目前持股與權重的回溯試算。"),
@@ -2916,8 +2927,8 @@ div(class = "section-box",
                          min=data_min_date, max=data_max_date, format="yyyy-mm-dd", separator=" 至 ", language="zh-TW"),
           textOutput("v9_daily_actual_range"),
           fluidRow(
-            column(6, h3("0010｜日對數報酬率"), plotOutput("v8_p10_daily_log", height = "290px")),
-            column(6, h3("0050｜日對數報酬率"), plotOutput("v8_0050_daily_log", height = "290px"))
+            column(6, h3("0010｜日對數報酬率"), div(class = "c44-chart-frame", plotOutput("v8_p10_daily_log", height = "290px"))),
+            column(6, h3("0050｜日對數報酬率"), div(class = "c44-chart-frame", plotOutput("v8_0050_daily_log", height = "290px")))
           )))
         ),
         div(class = "c43-home-side",
@@ -2954,10 +2965,10 @@ div(class = "section-box",
       )
         )
       ),
-      tags$details(class = "method-details v25-home-expand", tags$summary("展開成分股近 30 日漲跌排名"),
+      tags$details(class = "method-details v25-home-expand c44-chart-details c44-rank-details", tags$summary("展開成分股近 30 日漲跌排名"),
 div(class = "section-box",
           h2("近 30 個交易日成分股漲跌幅"),
-          plotOutput("market_30d_return_ranking", height = "700px")
+          div(class = "c44-chart-frame c44-rank-frame", plotOutput("market_30d_return_ranking", height = "700px"))
       )),
       div(class = "section-box",
           h2("0010 本期持股與權重"),
@@ -6632,7 +6643,7 @@ server <- function(input, output, session) {
         linetype = "dashed"
       ) +
       labs(
-        title = "50 檔成分股近 30 個交易日累積對數報酬",
+        title = "50 檔成分股近 30 個交易日\n累積對數報酬",
         x = "累積對數報酬",
         y = NULL
       ) +
@@ -6648,8 +6659,11 @@ server <- function(input, output, session) {
       theme(
         plot.title = element_text(
           hjust = 0.5,
-          face = "bold"
-        )
+          face = "bold",
+          size = 12
+        ),
+        axis.text.y = element_text(size = 9),
+        plot.margin = ggplot2::margin(12, 16, 12, 12)
       )
     
   })
