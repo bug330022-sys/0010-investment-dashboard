@@ -3,11 +3,11 @@
   "status": "success",
   "latest_date": "2026-11-16",
   "earliest_date": "2016-01-04",
-  "updated_at": "2026-11-17 05:15:18",
+  "updated_at": "2026-11-18 04:00:57",
   "stock_count": 51,
-  "row_count": 132045,
+  "row_count": 132095,
   "source": "Yahoo Finance",
   "official_market_source": "TWSE OpenAPI",
   "update_type": "incremental",
-  "update_from": "2026-11-03"
+  "update_from": "2026-11-06"
 }
