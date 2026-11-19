@@ -1,13 +1,13 @@
 {
   "project": "0050 Investment Research Dashboard",
   "status": "success",
-  "latest_date": "2026-11-17",
+  "latest_date": "2026-11-18",
   "earliest_date": "2016-01-04",
-  "updated_at": "2026-11-19 03:35:24",
+  "updated_at": "2026-11-20 03:38:38",
   "stock_count": 51,
-  "row_count": 132146,
+  "row_count": 132197,
   "source": "Yahoo Finance",
   "official_market_source": "TWSE OpenAPI",
   "update_type": "incremental",
-  "update_from": "2026-11-06"
+  "update_from": "2026-11-07"
 }
